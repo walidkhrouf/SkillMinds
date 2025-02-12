@@ -1,0 +1,320 @@
+/*========================================
+  CSS Variables & Global Settings
+========================================*/
+:root {
+  --primary-color: #a47f18;
+  --secondary-color: #159e8b;
+  --accent-color: #a17540;
+  --header-bg: rgba(255, 255, 255, 0.2);
+  --header-bg-hover: rgba(255, 255, 255, 0.3);
+  --dark-bg: #121212;
+  --light-bg: #fff;
+  --header-height: 70px;
+  --transition-speed: 0.5s;
+}
+
+/*========================================
+  Head Section
+========================================*/
+.head {
+  padding: 20px 0;
+  color: var(--light-bg);
+  animation: fadeInDown 1s ease;
+}
+.logo h1 {
+  font-size: 35px;
+  font-weight: 900;
+  transform: translateY(-10px);
+  animation: slideIn 0.8s ease-out forwards;
+}
+.head .icon {
+  margin-left: 10px;
+}
+
+/*========================================
+  Header Styling
+========================================*/
+header {
+  background-color: var(--header-bg);
+  margin: 0 30px;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-height: var(--header-height);
+  display: flex;
+  align-items: center;
+}
+header:hover {
+  background-color: var(--header-bg-hover);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.header-nav {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 0 20px;
+}
+
+/*========================================
+  Navigation Links (Desktop)
+========================================*/
+.nav-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
+}
+.nav-links li {
+  margin-right: 30px;
+  position: relative;
+}
+.nav-links li a {
+  color: var(--light-bg);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.5s, transform 0.3s;
+  padding: 0;
+}
+.nav-links li a::after {
+  content: "";
+  display: block;
+  width: 0%;
+  height: 2px;
+  background: var(--accent-color);
+  transition: width 0.3s;
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+}
+.nav-links li a:hover::after,
+.nav-links li a.active::after {
+  width: 100%;
+}
+.nav-links li a:hover,
+.nav-links li a.active {
+  color: var(--accent-color);
+  transform: translateY(-3px);
+}
+
+/*========================================
+  Register Button (Desktop)
+========================================*/
+.start {
+  display: flex;
+  align-items: center;
+}
+.certificate-btn {
+  background-color: var(--primary-color);
+  color: var(--light-bg);
+  padding: 10px 40px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.5s, transform 0.5s, box-shadow 0.5s;
+  font-size: 16px;
+  margin: 0;
+}
+.certificate-btn:hover {
+  /* In light mode, change to a creative accent rather than white */
+  background-color: var(--accent-color);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/*========================================
+  Header Actions (Includes Dark Mode)
+========================================*/
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: var(--header-height);
+}
+
+/*========================================
+  Dark Mode Toggle Button
+========================================*/
+.darkmode-toggle {
+  background: var(--light-bg);
+  color: var(--primary-color);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  z-index: 1000;
+}
+.darkmode-toggle i {
+  line-height: 1;
+}
+.darkmode-toggle:hover {
+  background: var(--primary-color);
+  color: var(--light-bg);
+  transform: scale(1.1);
+}
+
+/*========================================
+  Hamburger Toggle (Mobile Scroll Down Button)
+========================================*/
+.toggle {
+  display: none;
+  background: none;
+  color: var(--light-bg);
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  transition: transform 0.3s;
+  z-index: 1000;
+}
+.toggle:hover {
+  transform: rotate(90deg);
+}
+
+/*========================================
+  Mobile Layout & Responsive Adjustments
+========================================*/
+@media screen and (max-width: 920px) {
+  header {
+    margin: 0;
+    background-color: var(--primary-color);
+    padding: 0 10px;
+  }
+  .header-nav {
+    padding: 0 10px;
+    justify-content: space-between;
+  }
+  
+  .start {
+    display: none;
+  }
+  
+  /* Creative off-canvas scroll down menu */
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background-size: 200% 200%;
+    animation: gradientAnimation 8s ease infinite;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 20;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
+  }
+  .nav-links.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nav-links li {
+    margin: 20px 0;
+  }
+  /* Optional: Stylish hover for nav items */
+  .nav-links li a:hover {
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  
+  .mobile-certificate {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .mobile-certificate .certificate-btn {
+    width: 100%;
+    padding: 12px 30px;
+    font-size: 16px;
+  }
+  
+  .toggle {
+    display: block;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 25;
+  }
+  
+  .darkmode-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    padding: 6px;
+    font-size: 18px;
+    z-index: 25;
+    width: auto;
+    height: auto;
+    display: flex;
+  }
+}
+
+/* Hide the mobile-only register button on desktop */
+@media screen and (min-width: 908px) {
+  .mobile-certificate {
+    display: none;
+  }
+}
+
+/*========================================
+  Animations
+========================================*/
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/*========================================
+  Global Dark Mode Styles
+========================================*/
+body.dark-mode {
+  background-color: var(--dark-bg);
+  color: #e0e0e0;
+}
+body.dark-mode header {
+  background-color: #1f1f1f;
+}
+body.dark-mode .nav-links li a {
+  color: #e0e0e0;
+}
+body.dark-mode .nav-links li a:hover,
+body.dark-mode .nav-links li a.active {
+  color: #ff9800;
+}
+body.dark-mode .certificate-btn {
+  background-color: #ff9800;
+  color: #121212;
+}

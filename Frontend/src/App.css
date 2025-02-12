@@ -1,0 +1,301 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
+
+:root {
+  --primary-color: #a47f18;
+  --secondary-color: #fff;
+  --background-color: #f8f8f8;
+  --text-color: #333;
+  --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.06);
+  --transition-speed: 0.5s;
+}
+
+/* Global Reset & Base */
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Container & Utility Classes */
+.container {
+  max-width: 85%;
+  margin: auto;
+  padding: 0 15px;
+}
+.flexSB {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.row {
+  width: 50%;
+}
+.flex {
+  display: flex;
+}
+.padding {
+  padding: 80px 0;
+}
+
+/* Links & List */
+a {
+  text-decoration: none;
+  transition: color var(--transition-speed) ease;
+}
+a:hover {
+  color: var(--primary-color);
+}
+li {
+  list-style-type: none;
+}
+
+/* Icon Styles */
+.icon {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 50%;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: var(--primary-color);
+  transition: background-color var(--transition-speed),
+              color var(--transition-speed);
+}
+.icon:hover {
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+/* Button Styles */
+button {
+  padding: 17px 30px;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  border: none;
+  margin: 30px 10px 0 0;
+  border-radius: 3px;
+  cursor: pointer;
+  box-shadow: 0 24px 36px -11px rgba(0, 0, 0, 0.09);
+  transition: box-shadow var(--transition-speed), transform var(--transition-speed);
+}
+button i {
+  margin-left: 20px;
+}
+button:hover {
+  box-shadow: none;
+  transform: translateY(-3px);
+}
+.primary-btn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+/* Heading Section */
+#heading {
+  text-align: center;
+  padding: 40px 0;
+  animation: slideDown var(--transition-speed) ease both;
+}
+#heading h3 {
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--primary-color);
+  text-transform: uppercase;
+}
+#heading h1 {
+  font-size: 45px;
+  margin: 20px 0;
+  text-transform: capitalize;
+}
+
+/* Paragraph */
+p {
+  line-height: 30px;
+  font-size: 18px;
+}
+
+/* Back Section */
+.back {
+  background-image: url("../public/images/back.webp");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100vh;
+  padding-top: 30%;
+  padding-right: 50px;
+  color: var(--secondary-color);
+  text-align: center;
+  animation: zoomIn 1s ease;
+}
+.back h1 {
+  font-size: 100px;
+  font-weight: 400;
+}
+.back h2 {
+  font-weight: 500;
+  font-size: 17px;
+  text-transform: uppercase;
+}
+.margin {
+  margin-top: 40.3%;
+}
+
+/* Grid Layouts */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 30px;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 30px;
+}
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-gap: 10px;
+}
+
+/* Outline Button */
+.outline-btn {
+  margin: 0;
+  box-shadow: none;
+  border: 2px solid var(--primary-color);
+  width: 100%;
+  transition: background-color var(--transition-speed),
+              color var(--transition-speed);
+}
+.outline-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+/* Shadow Effect */
+.shadow {
+  box-shadow: var(--box-shadow);
+  background-color: var(--secondary-color);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 1024px) {
+  .container {
+    max-width: 95%;
+  }
+  .row {
+    width: 100%;
+  }
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .grid2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid3 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .back {
+    padding-top: 20%;
+    padding-right: 30px;
+  }
+  .back h1 {
+    font-size: 80px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    max-width: 98%;
+  }
+  .grid, .grid2, .grid3 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px;
+  }
+  .back {
+    background-attachment: scroll; /* Disable fixed background for mobile */
+    padding-top: 40%;
+    height: 80vh;
+    padding-right: 15px;
+  }
+  .back h1 {
+    font-size: 60px;
+  }
+  #heading h1 {
+    font-size: 35px;
+  }
+  #heading h3 {
+    font-size: 16px;
+  }
+  button {
+    padding: 15px 25px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .container {
+    padding: 0 5px;
+  }
+  .grid, .grid2, .grid3 {
+    grid-template-columns: 1fr;
+    grid-gap: 15px;
+  }
+  .back {
+    padding-top: 50%;
+    height: 70vh;
+    padding-right: 5px;
+  }
+  .back h1 {
+    font-size: 40px;
+  }
+  #heading h1 {
+    font-size: 28px;
+  }
+  #heading h3 {
+    font-size: 14px;
+  }
+  button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
