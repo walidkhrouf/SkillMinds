@@ -18,6 +18,7 @@ mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+//all routes
 
 
 const PORT = process.env.PORT || 5000;

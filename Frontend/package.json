@@ -13,6 +13,7 @@
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
+    "education-academia": "file:",
     "generate-react-cli": "^8.4.9",
     "install": "^0.13.0",
     "material-icons": "^1.10.11",
