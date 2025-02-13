@@ -1,12 +1,11 @@
-//user entity code 
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const profileImageSchema = new Schema({
   filename: String,
   contentType: String,
-  length: Number
+  length: Number,
+  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
 }, { _id: false });
 
 const linkedAccountsSchema = new Schema({

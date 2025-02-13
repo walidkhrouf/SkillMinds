@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const fileSchema = new Schema({
   filename: String,
   contentType: String,
-  length: Number
+  length: Number,
+  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
 }, { _id: false });
 
 const courseSchema = new Schema({
