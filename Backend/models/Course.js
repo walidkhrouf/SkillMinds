@@ -15,7 +15,7 @@ const courseSchema = new Schema({
   skillId: { type: Schema.Types.ObjectId, ref: "Skill", required: true },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   price: { type: Number, default: 0 },
-  file: fileSchema,
+  file: fileSchema,  // Stores file metadata along with GridFS reference
   createdAt: { type: Date, default: Date.now }
 });
 
