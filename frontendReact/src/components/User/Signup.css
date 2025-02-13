@@ -1,0 +1,87 @@
+/* src/components/Signup.css */
+.auth-container {
+    max-width: 400px;
+    margin: 120px auto 40px; /* Increased top margin (120px) to push it below the header */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  body.dark-mode .auth-container {
+    background-color: #333; /* A dark background */
+    color: #fff;            /* White text */
+  }
+  
+  /* Also adjust input fields so they’re readable */
+  body.dark-mode .auth-container input {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #555;
+  }
+  
+  /* Optionally, adjust button colors if needed */
+  body.dark-mode .auth-container .auth-btn {
+    background-color: #a47f18; /* or any color that provides good contrast */
+    color: #fff;
+  }
+  
+  
+  .auth-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .form-actions {
+    margin-top: 10px;
+  }
+  
+  .auth-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #a47f18;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .auth-btn:hover {
+    background-color: #8f6713;
+  }
+  
+  .switch-auth {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .switch-auth a {
+    color: #a47f18;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
