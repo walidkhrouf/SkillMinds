@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Sub-schema for media files (e.g., images, videos)
+// Define a sub-schema for media attachments (e.g., images, videos)
 const mediaSchema = new Schema({
-  filename: String,
-  contentType: String,
-  length: Number,
-  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
+  filename: { type: String },
+  contentType: { type: String },
+  length: { type: Number },
+  fileId: { type: Schema.Types.ObjectId } // Reference to the file in GridFS
 }, { _id: false });
 
 const groupPostSchema = new Schema({
@@ -14,8 +14,7 @@ const groupPostSchema = new Schema({
   groupId: { type: Schema.Types.ObjectId, ref: "Group", required: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   content: { type: String, required: true },
-  // Array to hold one or more media files (optional)
-  media: [mediaSchema],
+  media: [mediaSchema], // Add an array of media attachments
   createdAt: { type: Date, default: Date.now }
 });
 

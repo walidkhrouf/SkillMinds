@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Define a sub-schema for media files (photo, video, etc.)
 const mediaSchema = new Schema({
   filename: { type: String },
   contentType: { type: String },
   length: { type: Number },
-  fileId: { type: Schema.Types.ObjectId } // Reference to the file stored in GridFS
+  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
 }, { _id: false });
 
 const tutorialSchema = new Schema({
@@ -15,8 +14,7 @@ const tutorialSchema = new Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   category: { type: String, enum: ["Programming", "Business", "Design", "Marketing"], required: true },
-  // Array to hold media objects; can store multiple photos, videos, etc.
-  media: [mediaSchema],
+  media: [mediaSchema], // Array of media attachments
   createdAt: { type: Date, default: Date.now }
 });
 

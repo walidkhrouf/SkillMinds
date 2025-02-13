@@ -1,9 +1,9 @@
-// databaseconnection.js
+// config/databaseConnection.js
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Import all your models from the models folder's index.js file
-const models = require('../models'); // Adjust the path if necessary
+// Import all your models from the models folder
+const models = require('../models'); // Adjust the path if needed
 
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devminds_db';
 
@@ -21,13 +21,12 @@ mongoose.connect(mongoURI, {
           await models[modelName].createCollection();
           console.log(`Collection for ${modelName} created (or already exists)`);
         } catch (err) {
-          console.error(`Error creating collection for ${modelName} using createCollection():`, err);
-          // Fallback: insert a dummy document then remove it
+          console.error(`Error creating collection for ${modelName}:`, err);
+          // Fallback: insert and then remove a dummy document to force collection creation
           try {
-            console.log(`Attempting fallback for ${modelName}: inserting dummy document`);
             const dummyDoc = await models[modelName].create({});
             await models[modelName].deleteOne({ _id: dummyDoc._id });
-            console.log(`Fallback: Dummy document inserted and removed for ${modelName} - collection should now exist`);
+            console.log(`Fallback: Dummy document inserted and removed for ${modelName}`);
           } catch (fallbackErr) {
             console.error(`Fallback failed for ${modelName}:`, fallbackErr);
           }
