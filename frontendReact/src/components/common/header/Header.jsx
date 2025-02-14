@@ -12,6 +12,9 @@ const Header = () => {
   const isAuthPage =
     location.pathname === "/signin" || location.pathname === "/signup";
 
+  // Determine if we're on an admin page (adjust based on your routing)
+  const isAdminPage = location.pathname.startsWith("/admin");
+
   const handleToggle = () => setMenuOpen((prev) => !prev);
   const closeMenu = () => setMenuOpen(false);
 
@@ -27,10 +30,15 @@ const Header = () => {
     });
   };
 
+  // Add admin-header class if on an admin page so header becomes transparent
+  const headerClass = `${isAuthPage ? "auth-header" : ""} ${
+    isAdminPage ? "admin-header" : ""
+  }`;
+
   return (
     <>
       <Head />
-      <header className={isAuthPage ? "auth-header" : ""}>
+      <header className={headerClass}>
         <nav className="header-nav">
           {/* Navigation Links */}
           <ul
@@ -94,7 +102,6 @@ const Header = () => {
                 Contact
               </NavLink>
             </li>
-            {/* Mobile-only signin/signup link */}
             <li className="mobile-certificate">
               <NavLink to="/signin" className="certificate-btn">
                 Signin/Signup
@@ -110,7 +117,11 @@ const Header = () => {
               </NavLink>
             </div>
             <button className="darkmode-toggle" onClick={toggleDarkMode}>
-              {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
+              {darkMode ? (
+                <i className="fas fa-sun"></i>
+              ) : (
+                <i className="fas fa-moon"></i>
+              )}
             </button>
           </div>
 

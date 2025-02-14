@@ -1,5 +1,4 @@
-// src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/common/header/Header";
 import Home from "./components/home/Home";
 import About from "./components/about/About";
@@ -9,14 +8,18 @@ import Pricing from "./components/pricing/Pricing";
 import Blog from "./components/blog/Blog";
 import Contact from "./components/contact/Contact";
 import Footer from "./components/common/footer/Footer";
-import "./App.css"; // Global or component-specific styles
+import "./App.css";
 import Signin from "./components/User/Signin";
 import Signup from "./components/User/Signup";
+import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 
-function App() {
+const AppContent = () => {
+  const { pathname } = useLocation();
+  const hideLayout = pathname === "/admin";
+  
   return (
-    <Router>
-      <Header />
+    <>
+      {!hideLayout && <Header />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -27,8 +30,17 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
-      <Footer />
+      {!hideLayout && <Footer />}
+    </>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

@@ -1,0 +1,333 @@
+import { useState } from "react";
+import {
+  BarChart,
+  PieChart,
+  Bar,
+  Pie,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import "./AdminDashboard.css";
+
+const dummyUsers = [
+  { id: 1, name: "Alice", email: "alice@example.com", role: "Learner" },
+  { id: 2, name: "Bob", email: "bob@example.com", role: "Mentor" },
+  { id: 3, name: "Charlie", email: "charlie@example.com", role: "Admin" },
+];
+
+const dummyCourses = [
+  { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
+  { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
+];
+
+const dummyJobs = [
+  { id: 1, title: "Frontend Developer", company: "Tech Corp", location: "Remote" },
+  { id: 2, title: "Backend Developer", company: "Dev Solutions", location: "Onsite" },
+];
+
+const dummyGroups = [
+  { id: 1, name: "React Enthusiasts", members: 120 },
+  { id: 2, name: "Node.js Developers", members: 80 },
+];
+
+const dummyEvents = [
+  { id: 1, name: "React Conference", date: "2023-12-01" },
+  { id: 2, name: "Node.js Meetup", date: "2023-11-15" },
+];
+
+const statsData = {
+  users: {
+    total: 345,
+    roles: [
+      { role: "Learner", count: 250 },
+      { role: "Mentor", count: 80 },
+      { role: "Admin", count: 15 },
+    ],
+  },
+  courses: {
+    total: 89,
+    categories: [
+      { name: "Technical", value: 60 },
+      { name: "Business", value: 15 },
+      { name: "Design", value: 10 },
+      { name: "Other", value: 4 },
+    ],
+  },
+  skills: {
+    total: 45,
+    trending: ["React", "Node.js", "AI Fundamentals", "Cybersecurity"],
+  },
+};
+
+const AdminDashboard = () => {
+  const [activeSection, setActiveSection] = useState("statistics");
+  const [darkMode, setDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
+      return newMode;
+    });
+  };
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case "statistics":
+        return (
+          <div className="section-content">
+            <h2>Overview Statistics</h2>
+            <div className="stats-grid">
+              <div className="stats-card">
+                <h3>Users Overview</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={statsData.users.roles}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="role" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="var(--primary-color)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="stats-card">
+                <h3>Course Categories</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={statsData.courses.categories}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="var(--accent-color)"
+                      label
+                    />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="stats-card metric-group">
+                <div className="metric-box">
+                  <h4>Total Users</h4>
+                  <p className="metric-value">{statsData.users.total}</p>
+                </div>
+                <div className="metric-box">
+                  <h4>Total Courses</h4>
+                  <p className="metric-value">{statsData.courses.total}</p>
+                </div>
+                <div className="metric-box">
+                  <h4>Skills Available</h4>
+                  <p className="metric-value">{statsData.skills.total}</p>
+                </div>
+              </div>
+              <div className="stats-card">
+                <h3>Trending Skills</h3>
+                <ul className="trending-list">
+                  {statsData.skills.trending.map((skill, index) => (
+                    <li key={index} className="trending-item">
+                      <span className="trending-rank">#{index + 1}</span>
+                      {skill}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        );
+      case "users":
+        return (
+          <div className="section-content">
+            <h2>Users</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dummyUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>{user.role}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case "courses":
+        return (
+          <div className="section-content">
+            <h2>Courses</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dummyCourses.map((course) => (
+                  <tr key={course.id}>
+                    <td>{course.id}</td>
+                    <td>{course.title}</td>
+                    <td>{course.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case "jobs":
+        return (
+          <div className="section-content">
+            <h2>Jobs</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Company</th>
+                  <th>Location</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dummyJobs.map((job) => (
+                  <tr key={job.id}>
+                    <td>{job.id}</td>
+                    <td>{job.title}</td>
+                    <td>{job.company}</td>
+                    <td>{job.location}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case "groups":
+        return (
+          <div className="section-content">
+            <h2>Groups</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Members</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dummyGroups.map((group) => (
+                  <tr key={group.id}>
+                    <td>{group.id}</td>
+                    <td>{group.name}</td>
+                    <td>{group.members}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case "events":
+        return (
+          <div className="section-content">
+            <h2>Events</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dummyEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td>{event.id}</td>
+                    <td>{event.name}</td>
+                    <td>{event.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      default:
+        return <div>Select a section from the sidebar.</div>;
+    }
+  };
+
+  return (
+    <>
+      <button
+        className="admin-darkmode-toggle"
+        onClick={toggleDarkMode}
+      >
+        {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
+      </button>
+      <section className="admin-dashboard">
+        <aside className="dashboard-sidebar">
+          <h1 className="logo">SkillMinds Admin</h1>
+          <ul>
+            <li
+              className={activeSection === "statistics" ? "active" : ""}
+              onClick={() => setActiveSection("statistics")}
+            >
+              📊 Statistics
+            </li>
+            <li
+              className={activeSection === "users" ? "active" : ""}
+              onClick={() => setActiveSection("users")}
+            >
+              👥 Users
+            </li>
+            <li
+              className={activeSection === "courses" ? "active" : ""}
+              onClick={() => setActiveSection("courses")}
+            >
+              📚 Courses
+            </li>
+            <li
+              className={activeSection === "jobs" ? "active" : ""}
+              onClick={() => setActiveSection("jobs")}
+            >
+              💼 Jobs
+            </li>
+            <li
+              className={activeSection === "groups" ? "active" : ""}
+              onClick={() => setActiveSection("groups")}
+            >
+              👥 Groups
+            </li>
+            <li
+              className={activeSection === "events" ? "active" : ""}
+              onClick={() => setActiveSection("events")}
+            >
+              🗓 Events
+            </li>
+          </ul>
+        </aside>
+        <main className="dashboard-content">{renderSection()}</main>
+      </section>
+    </>
+  );
+};
+
+export default AdminDashboard;

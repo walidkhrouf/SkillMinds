@@ -13,14 +13,11 @@
   --transition-speed: 0.5s;
 }
 
+
 /*========================================
   Head Section
 ========================================*/
-.head {
-  padding: 20px 0;
-  color: var(--light-bg);
-  animation: fadeInDown 1s ease;
-}
+
 .logo h1 {
   font-size: 35px;
   font-weight: 900;
