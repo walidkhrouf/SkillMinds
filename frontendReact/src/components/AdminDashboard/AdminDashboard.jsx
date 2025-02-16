@@ -13,12 +13,6 @@ import {
 } from "recharts";
 import "./AdminDashboard.css";
 
-const dummyUsers = [
-  { id: 1, name: "Alice", email: "alice@example.com", role: "Learner" },
-  { id: 2, name: "Bob", email: "bob@example.com", role: "Mentor" },
-  { id: 3, name: "Charlie", email: "charlie@example.com", role: "Admin" },
-];
-
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
   { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
@@ -61,6 +55,218 @@ const statsData = {
     total: 45,
     trending: ["Design", "Development", "Full Stack", "Cybersecurity"],
   },
+};
+
+const UserManager = () => {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editingData, setEditingData] = useState({
+    username: "",
+    email: "",
+    role: "",
+    phoneNumber: "",
+    bio: "",
+    location: "",
+  });
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await fetch("http://localhost:5000/api/users/all");
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  const handleRowClick = async (id) => {
+    if (selectedUser && selectedUser._id === id) {
+      setSelectedUser(null);
+      setEditingUserId(null);
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedUser(data);
+        setEditingUserId(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startEditing = (user) => {
+    setEditingUserId(user._id);
+    setEditingData({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      phoneNumber: user.phoneNumber || "",
+      bio: user.bio || "",
+      location: user.location || "",
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingUserId(null);
+  };
+
+  const handleEditingChange = (e) => {
+    setEditingData({ ...editingData, [e.target.name]: e.target.value });
+  };
+
+  const saveEditedUser = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingData),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsers(users.map(u => (u._id === data._id ? data : u)));
+        setSelectedUser(data);
+        setEditingUserId(null);
+        alert("User updated successfully");
+      } else {
+        alert(data.message || "Error updating user");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating user");
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsers(users.filter(u => u._id !== userId));
+        setSelectedUser(null);
+        alert("User deleted successfully");
+      } else {
+        alert(data.message || "Error deleting user");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting user");
+    }
+  };
+
+  return (
+    <div className="user-manager">
+      <table className="user-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(user => (
+            <tr key={user._id} onClick={() => handleRowClick(user._id)}>
+              <td>{user.username}</td>
+              <td>{user.email}</td>
+              <td>{user.role}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {selectedUser && (
+        <div className="user-details-card">
+          <div className="user-details-header">
+            <h3>User Details</h3>
+            {editingUserId !== selectedUser._id ? (
+              <div className="user-actions">
+                <button onClick={() => startEditing(selectedUser)}>Modify</button>
+                <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
+              </div>
+            ) : (
+              <div className="user-actions">
+                <button onClick={() => saveEditedUser(selectedUser._id)}>Save</button>
+                <button onClick={cancelEditing}>Cancel</button>
+              </div>
+            )}
+          </div>
+          <div className="user-details-body">
+            <div className="user-details-row">
+              <span className="label">Username:</span>
+              {editingUserId === selectedUser._id ? (
+                <input type="text" name="username" value={editingData.username} onChange={handleEditingChange} />
+              ) : (
+                <span className="value">{selectedUser.username}</span>
+              )}
+            </div>
+            <div className="user-details-row">
+              <span className="label">Email:</span>
+              {editingUserId === selectedUser._id ? (
+                <input type="text" name="email" value={editingData.email} onChange={handleEditingChange} />
+              ) : (
+                <span className="value">{selectedUser.email}</span>
+              )}
+            </div>
+            <div className="user-details-row">
+              <span className="label">Role:</span>
+              {editingUserId === selectedUser._id ? (
+                <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                  <option value="learner">Learner</option>
+                  <option value="mentor">Mentor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              ) : (
+                <span className="value">{selectedUser.role}</span>
+              )}
+            </div>
+            <div className="user-details-row">
+              <span className="label">Phone:</span>
+              {editingUserId === selectedUser._id ? (
+                <input type="text" name="phoneNumber" value={editingData.phoneNumber} onChange={handleEditingChange} />
+              ) : (
+                <span className="value">{selectedUser.phoneNumber}</span>
+              )}
+            </div>
+            <div className="user-details-row">
+              <span className="label">Bio:</span>
+              {editingUserId === selectedUser._id ? (
+                <textarea name="bio" value={editingData.bio} onChange={handleEditingChange} />
+              ) : (
+                <span className="value">{selectedUser.bio}</span>
+              )}
+            </div>
+            <div className="user-details-row">
+              <span className="label">Location:</span>
+              {editingUserId === selectedUser._id ? (
+                <input type="text" name="location" value={editingData.location} onChange={handleEditingChange} />
+              ) : (
+                <span className="value">{selectedUser.location}</span>
+              )}
+            </div>
+            {selectedUser.profileImage && (
+              <div className="user-image-container">
+                <img
+                  src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                  alt={selectedUser.profileImage.filename}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const SkillManager = () => {
@@ -212,8 +418,8 @@ const SkillManager = () => {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div className="skill-manager">
+      <form onSubmit={handleSubmit} className="skill-form">
         <div>
           <label>Skill Name</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} required />
@@ -222,7 +428,9 @@ const SkillManager = () => {
           <label>Category</label>
           <select name="category" value={formData.category} onChange={handleChange} required>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
           </select>
         </div>
@@ -235,10 +443,10 @@ const SkillManager = () => {
           <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
         </div>
         <button type="submit">Add Skill</button>
-        {message && <p>{message}</p>}
+        {message && <p className="form-message">{message}</p>}
       </form>
       <h3>List of Skills</h3>
-      <table>
+      <table className="skill-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -263,7 +471,9 @@ const SkillManager = () => {
                 {editingSkillId === skill._id ? (
                   <select name="category" value={editingData.category} onChange={handleEditingChange}>
                     {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -293,8 +503,8 @@ const SkillManager = () => {
                   </>
                 ) : (
                   <>
-                    <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
                     <button onClick={() => startEditing(skill)}>Modify</button>
+                    <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
                   </>
                 )}
               </td>
@@ -309,7 +519,6 @@ const SkillManager = () => {
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
-
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
@@ -321,7 +530,6 @@ const AdminDashboard = () => {
       return newMode;
     });
   };
-
   const renderSection = () => {
     switch (activeSection) {
       case "statistics":
@@ -392,31 +600,14 @@ const AdminDashboard = () => {
         return (
           <div className="section-content">
             <h2>Users</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dummyUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>{user.role}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <UserManager />
           </div>
         );
       case "courses":
         return (
           <div className="section-content">
             <h2>Courses</h2>
-            <table>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Title</th>
@@ -438,7 +629,7 @@ const AdminDashboard = () => {
         return (
           <div className="section-content">
             <h2>Jobs</h2>
-            <table>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Title</th>
@@ -462,7 +653,7 @@ const AdminDashboard = () => {
         return (
           <div className="section-content">
             <h2>Groups</h2>
-            <table>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -484,7 +675,7 @@ const AdminDashboard = () => {
         return (
           <div className="section-content">
             <h2>Events</h2>
-            <table>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -513,7 +704,6 @@ const AdminDashboard = () => {
         return <div>Select a section from the sidebar.</div>;
     }
   };
-
   return (
     <>
       <button className="admin-darkmode-toggle" onClick={toggleDarkMode}>
@@ -532,9 +722,7 @@ const AdminDashboard = () => {
             <li className={activeSection === "addSkill" ? "active" : ""} onClick={() => setActiveSection("addSkill")}>➕ Add Skill</li>
           </ul>
         </aside>
-        <main className="dashboard-content">
-          {renderSection()}
-        </main>
+        <main className="dashboard-content">{renderSection()}</main>
       </section>
     </>
   );

@@ -1,5 +1,5 @@
 const express = require("express");
-const { signup } = require("../Controllers/UserController");
+const { signup,getUserById,getAllUsers,updateUser,deleteUser } = require("../Controllers/UserController");
 const User = require("../models/User");
 const multer = require("multer");
 
@@ -18,5 +18,9 @@ router.get("/all", async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+router.get("/:id", getUserById);
+router.put("/:id", updateUser);
+router.delete("/:id", deleteUser);
 
 module.exports = router;
