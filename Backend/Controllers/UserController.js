@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
@@ -17,7 +18,6 @@ conn.once("open", () => {
   gfs = new GridFSBucket(conn.db, { bucketName: "profileImages" });
 });
 
-// Helper function to upload a file to GridFS
 const uploadFileToGridFS = (file) => {
   return new Promise((resolve, reject) => {
     const uploadStream = gfs.openUploadStream(file.originalname, {
@@ -32,7 +32,6 @@ const uploadFileToGridFS = (file) => {
 
 const signup = async (req, res) => {
   const { username, email, phoneNumber, password, confirmPassword, role, bio, location } = req.body;
-  // Extract files from req.files
   const profileImage = req.files && req.files.profileImage ? req.files.profileImage[0] : null;
   const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage[0] : null;
 
@@ -63,7 +62,6 @@ const signup = async (req, res) => {
       };
     }
 
-    // If role is mentor, process certificate image and set role to learner by default.
     if (role === "mentor" && certificateImage) {
       const certFileId = await uploadFileToGridFS(certificateImage);
       certificateImageData = {
@@ -74,7 +72,7 @@ const signup = async (req, res) => {
       };
     }
 
-    // If user selected mentor, set default role as learner until admin approval.
+    // For mentor signups, assign role "learner" until admin approval.
     const finalRole = role === "mentor" ? "learner" : role;
 
     const newUser = new User({
@@ -87,10 +85,19 @@ const signup = async (req, res) => {
       bio,
       location,
       profileImage: profileImageData,
-      certificateImage: certificateImageData, // New certificate field
+      certificateImage: certificateImageData,
     });
 
     await newUser.save();
+
+    // Create a welcome notification for the new user
+    const newNotification = new Notification({
+      userId: newUser._id,
+      type: "ACCOUNT_UPDATE",
+      message: "Welcome to SkillMind! Your account has been created successfully.",
+    });
+    await newNotification.save();
+
     return res.status(201).json({ message: "User registered successfully!" });
   } catch (err) {
     console.error(err);
