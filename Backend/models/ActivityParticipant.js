@@ -9,4 +9,11 @@ const activityParticipantSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+activityParticipantSchema.pre('validate', function(next) {
+  if (!this.participantId) {
+    this.participantId = this._id.toString();
+  }
+  next();
+});
+
 module.exports = mongoose.model('ActivityParticipant', activityParticipantSchema);

@@ -1,4 +1,4 @@
-// models/User.js
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -6,7 +6,7 @@ const profileImageSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
+  fileId: { type: Schema.Types.ObjectId } 
 }, { _id: false });
 
 const linkedAccountsSchema = new Schema({
@@ -26,6 +26,13 @@ const userSchema = new Schema({
   profileImage: profileImageSchema,
   linkedAccounts: linkedAccountsSchema,
   createdAt: { type: Date, default: Date.now }
+});
+
+userSchema.pre('validate', function(next) {
+  if (!this.userId) {
+    this.userId = this._id.toString();
+  }
+  next();
 });
 
 module.exports = mongoose.model('User', userSchema);

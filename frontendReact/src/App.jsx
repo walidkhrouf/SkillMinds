@@ -12,6 +12,7 @@ import "./App.css";
 import Signin from "./components/User/Signin";
 import Signup from "./components/User/Signup";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
+import UserProfile from "./components/User/UserProfile.jsx";
 
 const AppContent = () => {
   const { pathname } = useLocation();
@@ -31,6 +32,7 @@ const AppContent = () => {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/profile" element={<UserProfile />} />
       </Routes>
       {!hideLayout && <Footer />}
     </>

@@ -12,4 +12,12 @@ const paymentSchema = new Schema({
   transactionDate: { type: Date, default: Date.now }
 });
 
+paymentSchema.pre('validate', function(next) {
+  if (!this.paymentId) {
+    this.paymentId = this._id.toString();
+  }
+  next();
+});
+
+
 module.exports = mongoose.model('Payment', paymentSchema);

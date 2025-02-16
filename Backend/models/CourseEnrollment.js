@@ -10,5 +10,11 @@ const courseEnrollmentSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   completedAt: Date
 });
+courseEnrollmentSchema.pre('validate', function(next) {
+  if (!this.enrollmentId) {
+    this.enrollmentId = this._id.toString();
+  }
+  next();
+});
 
 module.exports = mongoose.model('CourseEnrollment', courseEnrollmentSchema);

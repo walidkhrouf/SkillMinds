@@ -12,5 +12,11 @@ const activitySchema = new Schema({
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now }
 });
+activitySchema.pre('validate', function(next) {
+  if (!this.activityId) {
+    this.activityId = this._id.toString();
+  }
+  next();
+});
 
 module.exports = mongoose.model('Activity', activitySchema);

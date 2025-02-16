@@ -1,4 +1,3 @@
-// src/components/Signup.jsx
 import { NavLink } from "react-router-dom";
 import "./Signup.css";
 

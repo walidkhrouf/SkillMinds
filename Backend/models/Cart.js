@@ -15,4 +15,11 @@ const cartSchema = new Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+
+cartSchema.pre('validate', function(next) {
+  if (!this.cartId) {
+    this.cartId = this._id.toString();
+  }
+  next();
+});
 module.exports = mongoose.model('Cart', cartSchema);

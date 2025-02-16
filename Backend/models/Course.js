@@ -5,7 +5,7 @@ const fileSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId } // Reference to the GridFS file
+  fileId: { type: Schema.Types.ObjectId } 
 }, { _id: false });
 
 const courseSchema = new Schema({
@@ -15,8 +15,14 @@ const courseSchema = new Schema({
   skillId: { type: Schema.Types.ObjectId, ref: "Skill", required: true },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   price: { type: Number, default: 0 },
-  file: fileSchema,  // Stores file metadata along with GridFS reference
+  file: fileSchema,  
   createdAt: { type: Date, default: Date.now }
+});
+courseSchema.pre('validate', function(next) {
+  if (!this.courseId) {
+    this.courseId = this._id.toString();
+  }
+  next();
 });
 
 module.exports = mongoose.model('Course', courseSchema);

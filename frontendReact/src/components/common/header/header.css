@@ -32,7 +32,7 @@
   Header Styling
 ========================================*/
 header {
-  background-color: var(--header-bg);
+  background-color: rgb(78 49 6)  ;
   margin: 0 30px;
   border-radius: 4px;
   overflow: hidden;
@@ -43,7 +43,6 @@ header {
   align-items: center;
 }
 header:hover {
-  background-color: var(--header-bg-hover);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 .header-nav {
@@ -94,12 +93,10 @@ header:hover {
 .nav-links li a:hover,
 .nav-links li a.active {
   color: var(--accent-color);
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.1);
+
 }
 
-/*========================================
-  Register Button (Desktop)
-========================================*/
 .start {
   display: flex;
   align-items: center;
@@ -117,7 +114,7 @@ header:hover {
   margin: 0;
 }
 
-/* Override styles when on auth pages */
+
 .auth-header {
   background-color: var(--primary-color) !important;
 }
@@ -132,7 +129,6 @@ header:hover {
   transform: translateY(-3px);
 }
 .certificate-btn:hover {
-  /* In light mode, change to a creative accent rather than white */
   background-color: var(--accent-color);
   transform: translateY(-3px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -140,9 +136,6 @@ header:hover {
 
 }
 
-/*========================================
-  Header Actions (Includes Dark Mode)
-========================================*/
 .header-actions {
   display: flex;
   align-items: center;
@@ -150,9 +143,7 @@ header:hover {
   height: var(--header-height);
 }
 
-/*========================================
-  Dark Mode Toggle Button
-========================================*/
+
 .darkmode-toggle {
   background: var(--light-bg);
   color: var(--primary-color);
@@ -179,9 +170,7 @@ header:hover {
   transform: scale(1.1);
 }
 
-/*========================================
-  Hamburger Toggle (Mobile Scroll Down Button)
-========================================*/
+
 .toggle {
   display: none;
   background: none;
@@ -196,9 +185,8 @@ header:hover {
   transform: rotate(90deg);
 }
 
-/*========================================
-  Mobile Layout & Responsive Adjustments
-========================================*/
+
+
 @media screen and (max-width: 920px) {
   header {
     margin: 0;
@@ -214,7 +202,7 @@ header:hover {
     display: none;
   }
   
-  /* Creative off-canvas scroll down menu */
+
   .nav-links {
     position: fixed;
     top: 0;
@@ -242,7 +230,7 @@ header:hover {
   .nav-links li {
     margin: 20px 0;
   }
-  /* Optional: Stylish hover for nav items */
+  
   .nav-links li a:hover {
     text-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
@@ -279,16 +267,13 @@ header:hover {
   }
 }
 
-/* Hide the mobile-only register button on desktop */
+
 @media screen and (min-width: 908px) {
   .mobile-certificate {
     display: none;
   }
 }
 
-/*========================================
-  Animations
-========================================*/
 @keyframes fadeInDown {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -311,9 +296,7 @@ header:hover {
   100% { background-position: 0% 50%; }
 }
 
-/*========================================
-  Global Dark Mode Styles
-========================================*/
+
 body.dark-mode {
   background-color: var(--dark-bg);
   color: #e0e0e0;

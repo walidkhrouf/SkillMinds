@@ -8,4 +8,11 @@ const tutorialLikeSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+tutorialLikeSchema.pre('validate', function(next) {
+  if (!this.likeId) {
+    this.likeId = this._id.toString();
+  }
+  next();
+});
+
 module.exports = mongoose.model('TutorialLike', tutorialLikeSchema);

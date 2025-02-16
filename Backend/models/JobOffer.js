@@ -14,5 +14,12 @@ const jobOfferSchema = new Schema({
   status: { type: String, enum: ["open", "closed"], default: "open" },
   createdAt: { type: Date, default: Date.now }
 });
+jobOfferSchema.pre('validate', function(next) {
+  if (!this.jobId) {
+    this.jobId = this._id.toString();
+  }
+  next();
+});
+
 
 module.exports = mongoose.model('JobOffer', jobOfferSchema);

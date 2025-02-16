@@ -7,5 +7,10 @@ const groupPostLikeSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now }
 });
-
+groupPostLikeSchema.pre('validate', function(next) {
+  if (!this.likeId) {
+    this.likeId = this._id.toString();
+  }
+  next();
+});
 module.exports = mongoose.model('GroupPostLike', groupPostLikeSchema);

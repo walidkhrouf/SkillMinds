@@ -10,5 +10,11 @@ const groupSchema = new Schema({
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now }
 });
+groupSchema.pre('validate', function(next) {
+  if (!this.groupId) {
+    this.groupId = this._id.toString();
+  }
+  next();
+});
 
 module.exports = mongoose.model('Group', groupSchema);

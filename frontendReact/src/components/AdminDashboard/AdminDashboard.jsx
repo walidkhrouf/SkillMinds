@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   PieChart,
@@ -59,8 +59,251 @@ const statsData = {
   },
   skills: {
     total: 45,
-    trending: ["React", "Node.js", "AI Fundamentals", "Cybersecurity"],
+    trending: ["Design", "Development", "Full Stack", "Cybersecurity"],
   },
+};
+
+const SkillManager = () => {
+  const [categories, setCategories] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    description: "",
+    tags: "",
+  });
+  const [message, setMessage] = useState("");
+  const [editingSkillId, setEditingSkillId] = useState(null);
+  const [editingData, setEditingData] = useState({
+    name: "",
+    category: "",
+    description: "",
+    tags: "",
+  });
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/skillCategories");
+        const data = await response.json();
+        setCategories(data);
+        if (data.length > 0) {
+          setFormData((prev) => ({ ...prev, category: data[0] }));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSkills() {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/skills");
+        if (response.ok) {
+          const data = await response.json();
+          setSkills(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchSkills();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { name, category, description, tags } = formData;
+    const tagsArray = tags.split(",").map((tag) => tag.trim()).filter((tag) => tag);
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, category, description, tags: tagsArray }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("Skill added successfully!");
+        setSkills((prev) => [...prev, data]);
+        setFormData({
+          name: "",
+          category: categories.length > 0 ? categories[0] : "",
+          description: "",
+          tags: "",
+        });
+      } else {
+        setMessage(data.message || "Error adding skill.");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage("Error adding skill.");
+    }
+  };
+
+  const handleDeleteSkill = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this skill?")) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/skills/${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSkills((prev) => prev.filter((skill) => skill._id !== id));
+        alert("Skill deleted successfully");
+      } else {
+        alert(data.message || "Error deleting skill");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting skill");
+    }
+  };
+
+  const startEditing = (skill) => {
+    setEditingSkillId(skill._id);
+    setEditingData({
+      name: skill.name,
+      category: skill.category,
+      description: skill.description,
+      tags: Array.isArray(skill.tags) ? skill.tags.join(", ") : "",
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingSkillId(null);
+    setEditingData({ name: "", category: "", description: "", tags: "" });
+  };
+
+  const handleEditingChange = (e) => {
+    setEditingData({ ...editingData, [e.target.name]: e.target.value });
+  };
+
+  const saveEditedSkill = async (skillId) => {
+    const tagsArray = editingData.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag);
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editingData.name,
+          category: editingData.category,
+          description: editingData.description,
+          tags: tagsArray,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSkills((prev) => prev.map((s) => (s._id === data._id ? data : s)));
+        setEditingSkillId(null);
+        setEditingData({ name: "", category: "", description: "", tags: "" });
+        alert("Skill updated successfully");
+      } else {
+        alert(data.message || "Error updating skill");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error updating skill");
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Skill Name</label>
+          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Category</label>
+          <select name="category" value={formData.category} onChange={handleChange} required>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Description</label>
+          <textarea name="description" value={formData.description} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Tags</label>
+          <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
+        </div>
+        <button type="submit">Add Skill</button>
+        {message && <p>{message}</p>}
+      </form>
+      <h3>List of Skills</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Tags</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {skills.map((skill) => (
+            <tr key={skill._id}>
+              <td>
+                {editingSkillId === skill._id ? (
+                  <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
+                ) : (
+                  skill.name
+                )}
+              </td>
+              <td>
+                {editingSkillId === skill._id ? (
+                  <select name="category" value={editingData.category} onChange={handleEditingChange}>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                ) : (
+                  skill.category
+                )}
+              </td>
+              <td>
+                {editingSkillId === skill._id ? (
+                  <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
+                ) : (
+                  skill.description
+                )}
+              </td>
+              <td>
+                {editingSkillId === skill._id ? (
+                  <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
+                ) : (
+                  Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
+                )}
+              </td>
+              <td>{new Date(skill.createdAt).toLocaleString()}</td>
+              <td>
+                {editingSkillId === skill._id ? (
+                  <>
+                    <button onClick={() => saveEditedSkill(skill._id)}>Save</button>
+                    <button onClick={cancelEditing}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
+                    <button onClick={() => startEditing(skill)}>Modify</button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 };
 
 const AdminDashboard = () => {
@@ -152,7 +395,6 @@ const AdminDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -161,7 +403,6 @@ const AdminDashboard = () => {
               <tbody>
                 {dummyUsers.map((user) => (
                   <tr key={user.id}>
-                    <td>{user.id}</td>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
                     <td>{user.role}</td>
@@ -178,7 +419,6 @@ const AdminDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Title</th>
                   <th>Description</th>
                 </tr>
@@ -186,7 +426,6 @@ const AdminDashboard = () => {
               <tbody>
                 {dummyCourses.map((course) => (
                   <tr key={course.id}>
-                    <td>{course.id}</td>
                     <td>{course.title}</td>
                     <td>{course.description}</td>
                   </tr>
@@ -202,7 +441,6 @@ const AdminDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Title</th>
                   <th>Company</th>
                   <th>Location</th>
@@ -211,7 +449,6 @@ const AdminDashboard = () => {
               <tbody>
                 {dummyJobs.map((job) => (
                   <tr key={job.id}>
-                    <td>{job.id}</td>
                     <td>{job.title}</td>
                     <td>{job.company}</td>
                     <td>{job.location}</td>
@@ -228,7 +465,6 @@ const AdminDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Name</th>
                   <th>Members</th>
                 </tr>
@@ -236,7 +472,6 @@ const AdminDashboard = () => {
               <tbody>
                 {dummyGroups.map((group) => (
                   <tr key={group.id}>
-                    <td>{group.id}</td>
                     <td>{group.name}</td>
                     <td>{group.members}</td>
                   </tr>
@@ -252,7 +487,6 @@ const AdminDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Name</th>
                   <th>Date</th>
                 </tr>
@@ -260,13 +494,19 @@ const AdminDashboard = () => {
               <tbody>
                 {dummyEvents.map((event) => (
                   <tr key={event.id}>
-                    <td>{event.id}</td>
                     <td>{event.name}</td>
                     <td>{event.date}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        );
+      case "addSkill":
+        return (
+          <div className="section-content">
+            <h2>Add New Skill</h2>
+            <SkillManager />
           </div>
         );
       default:
@@ -276,55 +516,25 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <button
-        className="admin-darkmode-toggle"
-        onClick={toggleDarkMode}
-      >
+      <button className="admin-darkmode-toggle" onClick={toggleDarkMode}>
         {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
       </button>
       <section className="admin-dashboard">
         <aside className="dashboard-sidebar">
           <h1 className="logo">SkillMinds Admin</h1>
           <ul>
-            <li
-              className={activeSection === "statistics" ? "active" : ""}
-              onClick={() => setActiveSection("statistics")}
-            >
-              📊 Statistics
-            </li>
-            <li
-              className={activeSection === "users" ? "active" : ""}
-              onClick={() => setActiveSection("users")}
-            >
-              👥 Users
-            </li>
-            <li
-              className={activeSection === "courses" ? "active" : ""}
-              onClick={() => setActiveSection("courses")}
-            >
-              📚 Courses
-            </li>
-            <li
-              className={activeSection === "jobs" ? "active" : ""}
-              onClick={() => setActiveSection("jobs")}
-            >
-              💼 Jobs
-            </li>
-            <li
-              className={activeSection === "groups" ? "active" : ""}
-              onClick={() => setActiveSection("groups")}
-            >
-              👥 Groups
-            </li>
-            <li
-              className={activeSection === "events" ? "active" : ""}
-              onClick={() => setActiveSection("events")}
-            >
-              🗓 Events
-            </li>
+            <li className={activeSection === "statistics" ? "active" : ""} onClick={() => setActiveSection("statistics")}>📊 Statistics</li>
+            <li className={activeSection === "users" ? "active" : ""} onClick={() => setActiveSection("users")}>👥 Users</li>
+            <li className={activeSection === "courses" ? "active" : ""} onClick={() => setActiveSection("courses")}>📚 Courses</li>
+            <li className={activeSection === "jobs" ? "active" : ""} onClick={() => setActiveSection("jobs")}>💼 Jobs</li>
+            <li className={activeSection === "groups" ? "active" : ""} onClick={() => setActiveSection("groups")}>👥 Groups</li>
+            <li className={activeSection === "events" ? "active" : ""} onClick={() => setActiveSection("events")}>🗓 Events</li>
+            <li className={activeSection === "addSkill" ? "active" : ""} onClick={() => setActiveSection("addSkill")}>➕ Add Skill</li>
           </ul>
         </aside>
-        <main className="dashboard-content">{renderSection()}</main>
+        <main className="dashboard-content">
+          {renderSection()}
+        </main>
       </section>
     </>
   );

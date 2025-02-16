@@ -13,22 +13,22 @@
   Global Dark Mode Styles
 ========================================*/
 body.dark-mode {
-  background-color: var(--dark-bg); /* #121212 */
-  color: #ffffff; /* Use pure white for general text */
+  background-color: var(--dark-bg); 
+  color: #ffffff; 
 }
 
 body.dark-mode a {
-  color: #ffffff; /* Ensure all links are white */
+  color: #ffffff; 
 }
 
 body.dark-mode a:hover,
 body.dark-mode a.active {
-  color: #ffcc00; /* Bright accent color for hovered/active links */
+  color: #ffcc00; 
 }
 
 body.dark-mode header {
-  background-color: #1f1f1f; /* Dark header background */
-  color: #ffffff; /* White text in header */
+  background-color: #1f1f1f; 
+  color: #ffffff; 
 }
 
 
@@ -45,11 +45,11 @@ body.dark-mode .nav-links li a.active {
 
 body.dark-mode .certificate-btn {
   background-color: #ff9800;
-  color: #121212; /* The button text remains dark for contrast on the bright button */
+  color: #121212; 
 }
 
 
-/* Global Reset & Base */
+
 * {
   padding: 0;
   margin: 0;
@@ -62,7 +62,7 @@ body {
   animation: fadeIn 1s ease-in-out;
 }
 
-/* Container & Utility Classes */
+
 .container {
   max-width: 85%;
   margin: auto;
@@ -83,7 +83,7 @@ body {
   padding: 80px 0;
 }
 
-/* Links & List */
+
 a {
   text-decoration: none;
   transition: color var(--transition-speed) ease;
@@ -95,7 +95,7 @@ li {
   list-style-type: none;
 }
 
-/* Icon Styles */
+
 .icon {
   width: 40px;
   height: 40px;
@@ -113,7 +113,7 @@ li {
   color: var(--secondary-color);
 }
 
-/* Button Styles */
+
 button {
   padding: 17px 30px;
   background-color: var(--secondary-color);
@@ -138,7 +138,7 @@ button:hover {
   color: var(--secondary-color);
 }
 
-/* Heading Section */
+
 #heading {
   text-align: center;
   padding: 40px 0;
@@ -156,13 +156,13 @@ button:hover {
   text-transform: capitalize;
 }
 
-/* Paragraph */
+
 p {
   line-height: 30px;
   font-size: 18px;
 }
 
-/* Back Section */
+
 .back {
   background-image: url("../public/images/back.webp");
   background-size: cover;
@@ -210,7 +210,7 @@ p {
   grid-gap: 10px;
 }
 
-/* Outline Button */
+
 .outline-btn {
   margin: 0;
   box-shadow: none;
@@ -224,13 +224,13 @@ p {
   color: var(--secondary-color);
 }
 
-/* Shadow Effect */
+
 .shadow {
   box-shadow: var(--box-shadow);
   background-color: var(--secondary-color);
 }
 
-/* Animations */
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -258,7 +258,7 @@ p {
   }
 }
 
-/* Responsive Adjustments */
+
 @media screen and (max-width: 1024px) {
   .container {
     max-width: 95%;
@@ -293,7 +293,7 @@ p {
     grid-gap: 20px;
   }
   .back {
-    background-attachment: scroll; /* Disable fixed background for mobile */
+    background-attachment: scroll; 
     padding-top: 40%;
     height: 80vh;
     padding-right: 15px;

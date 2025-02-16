@@ -19,4 +19,11 @@ const notificationSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+notificationSchema.pre('validate', function(next) {
+  if (!this.notificationId) {
+    this.notificationId = this._id.toString();
+  }
+  next();
+});
+
 module.exports = mongoose.model('Notification', notificationSchema);

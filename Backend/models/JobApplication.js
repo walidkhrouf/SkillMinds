@@ -17,4 +17,11 @@ const jobApplicationSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+jobOfferSchema.pre('validate', function(next) {
+  if (!this.jobId) {
+    this.jobId = this._id.toString();
+  }
+  next();
+});
+
 module.exports = mongoose.model('JobApplication', jobApplicationSchema);

@@ -9,4 +9,10 @@ const tutorialCommentSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+tutorialCommentSchema.pre('validate', function(next) {
+  if (!this.commentId) {
+    this.commentId = this._id.toString();
+  }
+  next();
+});
 module.exports = mongoose.model('TutorialComment', tutorialCommentSchema);

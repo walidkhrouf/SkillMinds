@@ -19,4 +19,11 @@ const skillVerificationSchema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+skillVerificationSchema.pre('validate', function(next) {
+  if (!this.verificationId) {
+    this.verificationId = this._id.toString();
+  }
+  next();
+});
+
 module.exports = mongoose.model('SkillVerification', skillVerificationSchema);
