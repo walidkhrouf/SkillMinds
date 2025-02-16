@@ -1,6 +1,7 @@
-// config/databaseConnection.js
 const mongoose = require('mongoose');
 require('dotenv').config();
+
+const models = require('../models'); 
 
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devminds_db';
 

@@ -12,6 +12,7 @@ const app = express();
 app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
+app.use('/api/users', require('./Routes/UserRoute'));
 
 app.use('/api/admin', adminRoutes);
 
@@ -21,4 +22,6 @@ app.listen(PORT, () => {
   console.log("******************************************");
   console.log(`Express server running on port ${PORT}`);
   console.log("******************************************");
+  console.log("User routes loaded");
+
 });

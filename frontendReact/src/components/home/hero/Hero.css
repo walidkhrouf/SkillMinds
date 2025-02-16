@@ -1,5 +1,5 @@
 .hero {
-    background-image: url("../../../../public/images/bg.webp");
+    background-image: url("/images/back.webp");
     background-size: cover;
     background-attachment: fixed;
     position: absolute;
@@ -30,13 +30,17 @@
   .margin {
     height: 40vh;
   }
-  .hero {
+  .hero{
     background-position: right;
-    /* Increase top padding on mobile for better spacing */
-    padding-top: 60%;
-    height: 80vh;
+    display: flex;
+   align-items: center; 
+   min-height: 70vh;
   }
   .hero .row {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    text-align: left;
+    max-width: 600px;
   }
 }
