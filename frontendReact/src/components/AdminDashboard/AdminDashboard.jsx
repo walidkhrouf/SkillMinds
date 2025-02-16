@@ -165,6 +165,28 @@ const UserManager = () => {
     }
   };
 
+  // Approve mentor: update role to 'mentor'
+  const approveMentor = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "mentor" }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsers(users.map(u => (u._id === data._id ? data : u)));
+        setSelectedUser(data);
+        alert("User role updated to mentor");
+      } else {
+        alert(data.message || "Error updating user role");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating user role");
+    }
+  };
+
   return (
     <div className="user-manager">
       <table className="user-table">
@@ -193,6 +215,9 @@ const UserManager = () => {
               <div className="user-actions">
                 <button onClick={() => startEditing(selectedUser)}>Modify</button>
                 <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
+                {selectedUser.certificateImage && selectedUser.role === "learner" && (
+                  <button onClick={() => approveMentor(selectedUser._id)}>Approve Mentor</button>
+                )}
               </div>
             ) : (
               <div className="user-actions">
@@ -259,6 +284,15 @@ const UserManager = () => {
                 <img
                   src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
                   alt={selectedUser.profileImage.filename}
+                />
+              </div>
+            )}
+            {selectedUser.certificateImage && (
+              <div className="user-certificate-container">
+                <h4>Certificate</h4>
+                <img
+                  src={`http://localhost:5000/api/files/${selectedUser.certificateImage.fileId}?t=${Date.now()}`}
+                  alt={selectedUser.certificateImage.filename}
                 />
               </div>
             )}
@@ -519,6 +553,7 @@ const SkillManager = () => {
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
+
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
@@ -530,6 +565,7 @@ const AdminDashboard = () => {
       return newMode;
     });
   };
+
   const renderSection = () => {
     switch (activeSection) {
       case "statistics":
@@ -704,6 +740,7 @@ const AdminDashboard = () => {
         return <div>Select a section from the sidebar.</div>;
     }
   };
+
   return (
     <>
       <button className="admin-darkmode-toggle" onClick={toggleDarkMode}>

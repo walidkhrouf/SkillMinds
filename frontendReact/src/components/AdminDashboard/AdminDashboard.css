@@ -193,6 +193,12 @@ body.dark-mode .user-table tr:hover {
   background: #444;
 }
 
+.user-certificate-container img{
+  width: 1000px;
+  height: 800px;
+  border-radius: 50px;
+}
+
 .user-details-card {
   margin-top: 20px;
   padding: 20px;

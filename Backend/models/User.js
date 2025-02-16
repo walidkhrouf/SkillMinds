@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -6,7 +5,14 @@ const profileImageSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId } 
+  fileId: { type: Schema.Types.ObjectId }
+}, { _id: false });
+
+const certificateImageSchema = new Schema({
+  filename: String,
+  contentType: String,
+  length: Number,
+  fileId: { type: Schema.Types.ObjectId }
 }, { _id: false });
 
 const linkedAccountsSchema = new Schema({
@@ -24,6 +30,7 @@ const userSchema = new Schema({
   bio: String,
   location: String,
   profileImage: profileImageSchema,
+  certificateImage: certificateImageSchema, // New certificate field
   linkedAccounts: linkedAccountsSchema,
   createdAt: { type: Date, default: Date.now }
 });

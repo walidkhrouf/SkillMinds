@@ -1,24 +1,18 @@
 const express = require("express");
-const { signup,getUserById,getAllUsers,updateUser,deleteUser } = require("../Controllers/UserController");
-const User = require("../models/User");
+const { signup, getUserById, getAllUsers, updateUser, deleteUser } = require("../Controllers/UserController");
 const multer = require("multer");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
 const router = express.Router();
 
-router.post("/signup", upload.single("profileImage"), signup);
-router.get("/all", async (req, res) => {
-    try {
-      const users = await User.find(); 
-      res.json(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+// Accept two file fields: profileImage and certificateImage
+router.post("/signup", upload.fields([
+  { name: "profileImage", maxCount: 1 },
+  { name: "certificateImage", maxCount: 1 }
+]), signup);
 
+router.get("/all", getAllUsers);
 router.get("/:id", getUserById);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);

@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
 
-// Initialize database connection
 mongoose.connect("mongodb://127.0.0.1:27017/devminds_db", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -14,16 +13,29 @@ mongoose.connect("mongodb://127.0.0.1:27017/devminds_db", {
 
 const conn = mongoose.connection;
 let gfs;
-
 conn.once("open", () => {
   gfs = new GridFSBucket(conn.db, { bucketName: "profileImages" });
 });
 
+// Helper function to upload a file to GridFS
+const uploadFileToGridFS = (file) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = gfs.openUploadStream(file.originalname, {
+      contentType: file.mimetype,
+    });
+    uploadStream.end(file.buffer, (error) => {
+      if (error) return reject(error);
+      resolve(uploadStream.id);
+    });
+  });
+};
+
 const signup = async (req, res) => {
   const { username, email, phoneNumber, password, confirmPassword, role, bio, location } = req.body;
-  const profileImage = req.file;
+  // Extract files from req.files
+  const profileImage = req.files && req.files.profileImage ? req.files.profileImage[0] : null;
+  const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage[0] : null;
 
-  
   if (!username || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -38,64 +50,51 @@ const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    let profileImageData = null;
+    let certificateImageData = null;
 
     if (profileImage) {
-      if (!gfs) {
-        return res.status(500).json({ message: "Database connection not ready" });
-      }
-
-      const uploadPromise = new Promise((resolve, reject) => {
-        const uploadStream = gfs.openUploadStream(profileImage.originalname, {
-          contentType: profileImage.mimetype
-        });
-
-        uploadStream.end(profileImage.buffer, (error) => {
-          if (error) return reject(error);
-          resolve(uploadStream.id);
-        });
-      });
-
-      const fileId = await uploadPromise;
-
-      const newUser = new User({
-        userId: new ObjectId(),
-        username,
-        email,
-        phoneNumber,
-        password: hashedPassword,
-        role,
-        bio,
-        location,
-        profileImage: {
-          filename: profileImage.originalname,
-          contentType: profileImage.mimetype,
-          fileId: fileId
-        }
-      });
-
-      await newUser.save();
-      return res.status(201).json({ message: "User registered successfully!" });
-    } else {
-      const newUser = new User({
-        userId: new ObjectId(),
-        username,
-        email,
-        phoneNumber,
-        password: hashedPassword,
-        role,
-        bio,
-        location
-      });
-
-      await newUser.save();
-      return res.status(201).json({ message: "User registered successfully!" });
+      const fileId = await uploadFileToGridFS(profileImage);
+      profileImageData = {
+        filename: profileImage.originalname,
+        contentType: profileImage.mimetype,
+        length: profileImage.size,
+        fileId: fileId,
+      };
     }
+
+    // If role is mentor, process certificate image and set role to learner by default.
+    if (role === "mentor" && certificateImage) {
+      const certFileId = await uploadFileToGridFS(certificateImage);
+      certificateImageData = {
+        filename: certificateImage.originalname,
+        contentType: certificateImage.mimetype,
+        length: certificateImage.size,
+        fileId: certFileId,
+      };
+    }
+
+    // If user selected mentor, set default role as learner until admin approval.
+    const finalRole = role === "mentor" ? "learner" : role;
+
+    const newUser = new User({
+      userId: new ObjectId(),
+      username,
+      email,
+      phoneNumber,
+      password: hashedPassword,
+      role: finalRole,
+      bio,
+      location,
+      profileImage: profileImageData,
+      certificateImage: certificateImageData, // New certificate field
+    });
+
+    await newUser.save();
+    return res.status(201).json({ message: "User registered successfully!" });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ 
-      message: "Internal server error",
-      error: err.message 
-    });
+    return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
@@ -105,31 +104,22 @@ const getAllUsers = async (req, res) => {
     res.json(users);
   } catch (err) {
     console.error("Error fetching users:", err);
-    res.status(500).json({ 
-      message: "Internal server error",
-      error: err.message 
-    });
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "User not found" });
-    }
     res.json(user);
   } catch (err) {
     console.error("Error fetching user:", err);
-    if (err instanceof mongoose.Error.CastError) {
-      return res.status(400).json({ message: "Invalid user ID format" });
-    }
-    res.status(500).json({ 
-      message: "Internal server error",
-      error: err.message 
-    });
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
 const updateUser = async (req, res) => {
   try {
     const updateFields = {
@@ -138,7 +128,7 @@ const updateUser = async (req, res) => {
       role: req.body.role,
       phoneNumber: req.body.phoneNumber,
       bio: req.body.bio,
-      location: req.body.location
+      location: req.body.location,
     };
     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateFields, { new: true });
     if (!updatedUser)
