@@ -10,7 +10,6 @@ const Signin = () => {
   const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => {
-    // Basic email validation regex
     const re = /\S+@\S+\.\S+/;
     return re.test(email);
   };
@@ -22,7 +21,6 @@ const Signin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
     if (!formData.email || !formData.password) {
       setError("Both email and password are required.");
       return;
@@ -35,10 +33,12 @@ const Signin = () => {
     try {
       const response = await axios.post("http://localhost:5000/api/users/signin", formData);
       if (response.data.user) {
-        // Store current user data in localStorage
         localStorage.setItem("currentUser", JSON.stringify(response.data.user));
-        setError("");
-        navigate("/");
+        if (!localStorage.getItem("hasChosenSkills")) {
+          navigate("/firstchoose");
+        } else {
+          navigate("/");
+        }
       } else {
         setError("Sign in failed. Please check your credentials.");
       }
@@ -92,7 +92,7 @@ const Signin = () => {
       </form>
       <div className="switch-auth">
         <p>
-          Dont have an account? <NavLink to="/signup">Sign Up</NavLink>
+          Don t have an account? <NavLink to="/signup">Sign Up</NavLink>
         </p>
       </div>
     </div>
