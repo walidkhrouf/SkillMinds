@@ -19,7 +19,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = express.Router();
 
-
+router.put("/:id", upload.single("profileImage"), updateUser);
 router.post("/signup", upload.fields([
   { name: "profileImage", maxCount: 1 },
   { name: "certificateImage", maxCount: 1 }

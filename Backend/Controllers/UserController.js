@@ -150,7 +150,7 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const updateFields = {
+    let updateFields = {
       username: req.body.username,
       email: req.body.email,
       role: req.body.role,
@@ -158,15 +158,38 @@ const updateUser = async (req, res) => {
       bio: req.body.bio,
       location: req.body.location,
     };
+
+    if (req.file) {
+      const profileImage = req.file;
+      const fileId = await uploadFileToGridFS(profileImage);
+      updateFields.profileImage = {
+        filename: profileImage.originalname,
+        contentType: profileImage.mimetype,
+        length: profileImage.size,
+        fileId: fileId,
+      };
+    } else if (req.files && req.files.profileImage) {
+      const profileImage = req.files.profileImage[0];
+      const fileId = await uploadFileToGridFS(profileImage);
+      updateFields.profileImage = {
+        filename: profileImage.originalname,
+        contentType: profileImage.mimetype,
+        length: profileImage.size,
+        fileId: fileId,
+      };
+    }
+
     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateFields, { new: true });
-    if (!updatedUser)
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
+    }
     res.json(updatedUser);
   } catch (err) {
     console.error("Error updating user:", err);
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
 
 const deleteUser = async (req, res) => {
   try {
@@ -215,7 +238,6 @@ const getUserSkills = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "Missing userId parameter" });
     }
-    // Find UserSkill records for the given userId and populate the skillId field (so we can get the skill name, etc.)
     const userSkills = await UserSkill.find({ userId: userId }).populate("skillId");
     res.json(userSkills);
   } catch (err) {
@@ -229,16 +251,13 @@ const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "No user found with that email address." });
     }
 
-    // Generate JWT token
     const token = jwt.sign({ id: user.id , email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Prepare email transporter
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
@@ -247,7 +266,6 @@ const forgotPassword = async (req, res) => {
       },
     });
 
-    // Prepare email options
     const mailOptions = {
       to: user.email,
       subject: 'Password Reset Request',
@@ -273,26 +291,26 @@ const forgotPassword = async (req, res) => {
 
 
 const resetPassword = async (req, res) => {
-  const { id, token } = req.params; // Extract id and token from the request parameters
-  const { password } = req.body; // Extract the new password from the request body
+  const { id, token } = req.params; 
+  const { password } = req.body; 
 
   try {
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Check if the user ID from the token matches the ID in the URL
+    
     if (decoded.id !== id) {
       return res.status(401).json({ message: "Unauthorized access." });
     }
 
-    // Find the user by ID
+    
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Update the user's password
-    user.password = await bcrypt.hash(password, 10);// Make sure to hash the password before saving
+    
+    user.password = await bcrypt.hash(password, 10);
     await user.save();
 
     res.status(200).json({ message: "Password reset successfully!" });
