@@ -156,6 +156,15 @@ const UserManager = () => {
         setUsers(users.filter(u => u._id !== userId));
         setSelectedUser(null);
         alert("User deleted successfully");
+        const currentUserStr = localStorage.getItem("currentUser");
+        if (currentUserStr) {
+          const currentUser = JSON.parse(currentUserStr);
+          if (currentUser._id === userId) {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("hasChosenSkills");
+         
+          }
+        }
       } else {
         alert(data.message || "Error deleting user");
       }
@@ -164,8 +173,8 @@ const UserManager = () => {
       alert("Error deleting user");
     }
   };
+  
 
-  // Approve mentor: update role to 'mentor'
   const approveMentor = async (userId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {

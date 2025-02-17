@@ -13,7 +13,7 @@ const SkillsList = () => {
   useEffect(() => {
     async function fetchSkills() {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/skills");
+        const res = await fetch("http://localhost:5000/api/users/skills");
         if (res.ok) {
           const data = await res.json();
           setAvailableSkills(data);
@@ -58,30 +58,25 @@ const SkillsList = () => {
     setLoading(true);
     try {
       for (let skill of wantsToLearn) {
-        await fetch("http://localhost:5000/api/userskills", {
+        await fetch("http://localhost:5000/api/users/userskills", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: currentUser._id,
-            skillId: skill._id,
-            skillType: "wantsToLearn",
+            skills: [{ skillId: skill._id, skillType: "wantsToLearn" }],
           }),
         });
       }
-      // For each skill the user claims to have (set unverified initially)
       for (let skill of hasSkills) {
-        await fetch("http://localhost:5000/api/userskills", {
+        await fetch("http://localhost:5000/api/users/userskills", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: currentUser._id,
-            skillId: skill._id,
-            skillType: "has",
-            verificationStatus: "unverified",
+            skills: [{ skillId: skill._id, skillType: "has" }],
           }),
         });
       }
-      // Mark that the user has chosen skills
       localStorage.setItem("hasChosenSkills", "true");
       navigate("/");
     } catch (err) {

@@ -30,7 +30,7 @@ const userSchema = new Schema({
   bio: String,
   location: String,
   profileImage: profileImageSchema,
-  certificateImage: certificateImageSchema, // New certificate field
+  certificateImage: certificateImageSchema, 
   linkedAccounts: linkedAccountsSchema,
   createdAt: { type: Date, default: Date.now }
 });

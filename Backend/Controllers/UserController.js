@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const UserSkill = require("../models/UserSkill");
 const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
@@ -73,7 +74,6 @@ const signup = async (req, res) => {
       };
     }
 
-    // For mentor signups, assign role "learner" until admin approval.
     const finalRole = role === "mentor" ? "learner" : role;
 
     const newUser = new User({
@@ -100,6 +100,24 @@ const signup = async (req, res) => {
     await newNotification.save();
 
     return res.status(201).json({ message: "User registered successfully!" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+const signin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid credentials" });
+
+    return res.json({ message: "Signin successful", user });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error", error: err.message });
@@ -160,21 +178,48 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const signin = async (req, res) => {
-  const { email, password } = req.body;
+const createUserSkills = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    const { userId, skills } = req.body;
     
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!userId || !Array.isArray(skills)) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
 
-    return res.json({ message: "Signin successful", user });
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const userSkills = skills.map(skill => ({
+      userId: new ObjectId(userId),
+      skillId: new ObjectId(skill.skillId),
+      skillType: skill.skillType,
+      verificationStatus: skill.skillType === "has" ? "unverified" : "pending"
+    }));
+
+    const createdSkills = await UserSkill.insertMany(userSkills);
+    
+    await User.findByIdAndUpdate(userId, { firstTimeLogin: false });
+
+    res.status(201).json({ message: "Skills saved successfully", userSkills: createdSkills });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    console.error("Error creating user skills:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-module.exports = { signup,signin, getAllUsers, getUserById, updateUser, deleteUser };
+
+const getUserSkills = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ message: "Missing userId parameter" });
+    }
+    // Find UserSkill records for the given userId and populate the skillId field (so we can get the skill name, etc.)
+    const userSkills = await UserSkill.find({ userId: userId }).populate("skillId");
+    res.json(userSkills);
+  } catch (err) {
+    console.error("Error fetching user skills:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+module.exports = { signup, signin, getAllUsers, getUserById, updateUser, deleteUser, createUserSkills,getUserSkills  };

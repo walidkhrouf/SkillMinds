@@ -33,7 +33,9 @@ const Signin = () => {
     try {
       const response = await axios.post("http://localhost:5000/api/users/signin", formData);
       if (response.data.user) {
+        // Save current user in localStorage
         localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+        // Check if the user has already chosen skills
         if (!localStorage.getItem("hasChosenSkills")) {
           navigate("/firstchoose");
         } else {
@@ -92,7 +94,7 @@ const Signin = () => {
       </form>
       <div className="switch-auth">
         <p>
-          Don t have an account? <NavLink to="/signup">Sign Up</NavLink>
+          Don’t have an account? <NavLink to="/signup">Sign Up</NavLink>
         </p>
       </div>
     </div>
