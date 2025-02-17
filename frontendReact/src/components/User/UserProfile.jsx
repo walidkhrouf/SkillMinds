@@ -13,7 +13,7 @@ const UserProfile = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Load user data and his "has" skills on mount
+
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUser");
     if (storedUser) {
@@ -32,7 +32,7 @@ const UserProfile = () => {
     }
   }, []);
 
-  // Fetch available skills for the dropdown
+ 
   useEffect(() => {
     fetch("http://localhost:5000/api/users/skills")
       .then((res) => res.json())
@@ -47,7 +47,6 @@ const UserProfile = () => {
 
   const toggleEditing = () => {
     if (editing) {
-      // Cancel editing: reset editedUser, newProfileImage and clear error
       setEditedUser(user);
       setNewProfileImage(null);
       setError("");
@@ -95,12 +94,11 @@ const UserProfile = () => {
   };
 
   const handleRemoveSkill = async (skillId) => {
-    // For simplicity, we'll remove it locally.
-    // (Backend deletion logic can be added similarly if needed.)
+   
     setUserSkills(userSkills.filter((us) => us._id !== skillId));
   };
 
-  // Validate required fields and formats
+ 
   const validateFields = () => {
     const { username, email, location, phoneNumber, bio } = editedUser;
     if (!username || username.trim() === "") return "Username cannot be empty.";

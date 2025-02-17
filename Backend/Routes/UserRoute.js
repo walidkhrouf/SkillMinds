@@ -57,7 +57,7 @@ router.get("/all", async (req, res) => {
 
 router.get("/:id", getUserById);
 
-
+router.put("/:id", upload.single("profileImage"), updateUser);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 
