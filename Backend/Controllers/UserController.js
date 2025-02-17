@@ -150,7 +150,7 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const updateFields = {
+    let updateFields = {
       username: req.body.username,
       email: req.body.email,
       role: req.body.role,
@@ -158,16 +158,37 @@ const updateUser = async (req, res) => {
       bio: req.body.bio,
       location: req.body.location,
     };
+
+    if (req.file) {
+      const profileImage = req.file;
+      const fileId = await uploadFileToGridFS(profileImage);
+      updateFields.profileImage = {
+        filename: profileImage.originalname,
+        contentType: profileImage.mimetype,
+        length: profileImage.size,
+        fileId: fileId,
+      };
+    } else if (req.files && req.files.profileImage) {
+      const profileImage = req.files.profileImage[0];
+      const fileId = await uploadFileToGridFS(profileImage);
+      updateFields.profileImage = {
+        filename: profileImage.originalname,
+        contentType: profileImage.mimetype,
+        length: profileImage.size,
+        fileId: fileId,
+      };
+    }
+
     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateFields, { new: true });
-    if (!updatedUser)
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
+    }
     res.json(updatedUser);
   } catch (err) {
     console.error("Error updating user:", err);
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-
 const deleteUser = async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
