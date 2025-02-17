@@ -7,18 +7,23 @@ const Signin = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Simple email validation
   const validateEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
     return re.test(email);
   };
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
+    setMessage("");
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -35,7 +40,7 @@ const Signin = () => {
       if (response.data.user) {
         // Save current user in localStorage
         localStorage.setItem("currentUser", JSON.stringify(response.data.user));
-        // Check if the user has already chosen skills
+        // If the user hasn't chosen skills yet, redirect to /firstchoose
         if (!localStorage.getItem("hasChosenSkills")) {
           navigate("/firstchoose");
         } else {
@@ -51,10 +56,26 @@ const Signin = () => {
     }
   };
 
+  // Handle forgot password (if you have an endpoint for it)
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:5000/api/users/forgot-password", { email: formData.email });
+      if (res.data.message) {
+        setMessage(res.data.message);
+        setError("");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred during forgot password.");
+      setMessage("");
+    }
+  };
+
   return (
     <div className="auth-container">
       <h2>Sign In</h2>
       {error && <p className="error">{error}</p>}
+      {message && <p className="success-message">{message}</p>}
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email">Email:</label>
@@ -63,6 +84,7 @@ const Signin = () => {
             id="email" 
             name="email" 
             placeholder="Enter your email" 
+            value={formData.email}
             onChange={handleChange} 
             required 
           />
@@ -74,6 +96,7 @@ const Signin = () => {
             id="password" 
             name="password" 
             placeholder="Enter your password" 
+            value={formData.password}
             onChange={handleChange} 
             required 
           />
@@ -84,7 +107,7 @@ const Signin = () => {
           </button>
         </div>
         <div className="forgot-password">
-          <NavLink to="/reset-password">Forgot Password?</NavLink>
+          <NavLink to="#" onClick={handleForgotPassword}>Forgot Password?</NavLink>
         </div>
         <div className="social-login">
           <p>Or connect with:</p>
@@ -94,7 +117,7 @@ const Signin = () => {
       </form>
       <div className="switch-auth">
         <p>
-          Don’t have an account? <NavLink to="/signup">Sign Up</NavLink>
+          Don t have an account? <NavLink to="/signup">Sign Up</NavLink>
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation , Link} from "react-router-dom";
 import Head from "./Head";
 import "./header.css";
 
@@ -25,11 +25,7 @@ const Header = () => {
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
+      document.body.classList.toggle("dark-mode", newMode);
       return newMode;
     });
   };
@@ -41,6 +37,11 @@ const Header = () => {
       <Head />
       <header className={headerClass}>
         <nav className="header-nav">
+          <Link to="/" className="logo">
+            <img src="/images/logo.png" alt="Online Education & Learning Logo" />
+          </Link>
+
+          {/* Navigation Links */}
           <ul
             className={menuOpen ? "nav-links active" : "nav-links"}
             onClick={closeMenu}

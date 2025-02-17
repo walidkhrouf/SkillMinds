@@ -4,6 +4,8 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const UserSkill = require("../models/UserSkill");
 const mongoose = require("mongoose");
+
+const nodemailer = require("nodemailer");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
 
@@ -222,4 +224,87 @@ const getUserSkills = async (req, res) => {
   }
 };
 
-module.exports = { signup, signin, getAllUsers, getUserById, updateUser, deleteUser, createUserSkills,getUserSkills  };
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "No user found with that email address." });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user.id , email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Prepare email transporter
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Prepare email options
+    const mailOptions = {
+      to: user.email,
+      subject: 'Password Reset Request',
+      text: `
+        You requested a password reset. Please click the link below to reset your password:
+        http://localhost:5173/reset-password/${user.id}/${token}
+        
+        If you did not request this, please ignore this email.
+      `,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    // Respond to the user
+    res.status(200).json({ message: "Password reset link has been sent to your email." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "An error occurred while processing your request.", error: err.message });
+  }
+};
+
+
+const resetPassword = async (req, res) => {
+  const { id, token } = req.params; // Extract id and token from the request parameters
+  const { password } = req.body; // Extract the new password from the request body
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if the user ID from the token matches the ID in the URL
+    if (decoded.id !== id) {
+      return res.status(401).json({ message: "Unauthorized access." });
+    }
+
+    // Find the user by ID
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Update the user's password
+    user.password = await bcrypt.hash(password, 10);// Make sure to hash the password before saving
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully!" });
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token." });
+    }
+    if (error.name === "TokenExpiredError") {
+      return res.status(403).json({ message: "Token has expired." });
+    }
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+module.exports = { signup, signin, getAllUsers, getUserById, updateUser, deleteUser, createUserSkills,getUserSkills, forgotPassword , resetPassword};

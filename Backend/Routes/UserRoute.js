@@ -7,8 +7,11 @@ const {
   updateUser, 
   deleteUser, 
   createUserSkills,
-  getUserSkills   
+  getUserSkills  
+  ,forgotPassword,resetPassword  
 } = require("../Controllers/UserController");
+
+const User = require("../models/User");
 const multer = require("multer");
 const Skill = require("../models/Skill");
 
@@ -39,6 +42,18 @@ router.get("/all", getAllUsers);
 
 router.get("/userskills", getUserSkills);
 
+router.post("/signup", upload.single("profileImage"), signup);
+router.post("/forgot-password", forgotPassword); 
+router.post("/reset-password/:id/:token", resetPassword);
+router.get("/all", async (req, res) => {
+    try {
+      const users = await User.find(); 
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
 router.get("/:id", getUserById);
 

@@ -13,7 +13,6 @@
   --transition-speed: 0.5s;
 }
 
-
 /*========================================
   Head Section
 ========================================*/
@@ -32,26 +31,32 @@
   Header Styling
 ========================================*/
 header {
-  background-color: rgb(78 49 6)  ;
-  margin: 0 30px;
-  border-radius: 4px;
+  background-color: rgb(78, 49, 6);
+  width: 100%; /* Ensure the header takes full width */
+  position: fixed; /* Fixed position */
+  top: 10px; /* Space from the top */
+  left: 0; /* Align to the left */
+  right: 0; /* Align to the right */
+  border-radius: 0; /* Remove border radius for full width */
   overflow: hidden;
   transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   min-height: var(--header-height);
   display: flex;
   align-items: center;
+  z-index: 1000; /* Ensure it appears above other elements */
 }
+
 header:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
+
 .header-nav {
-  width: 100%;
+  width: 100%; /* Ensure the nav takes full width */
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Keep content spaced */
   align-items: center;
-  position: relative;
-  padding: 0 20px;
+  padding: 0 20px; /* Add some padding */
 }
 
 /*========================================
@@ -94,7 +99,6 @@ header:hover {
 .nav-links li a.active {
   color: var(--accent-color);
   transform: translateY(-3px) scale(1.1);
-
 }
 
 .start {
@@ -114,7 +118,6 @@ header:hover {
   margin: 0;
 }
 
-
 .auth-header {
   background-color: var(--primary-color) !important;
 }
@@ -132,8 +135,7 @@ header:hover {
   background-color: var(--accent-color);
   transform: translateY(-3px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  color: var(--light-bg); 
-
+  color: var(--light-bg);
 }
 
 .header-actions {
@@ -142,7 +144,6 @@ header:hover {
   gap: 15px;
   height: var(--header-height);
 }
-
 
 .darkmode-toggle {
   background: var(--light-bg);
@@ -170,7 +171,6 @@ header:hover {
   transform: scale(1.1);
 }
 
-
 .toggle {
   display: none;
   background: none;
@@ -185,29 +185,27 @@ header:hover {
   transform: rotate(90deg);
 }
 
-
-
+/* Media Query for Mobile Responsiveness */
 @media screen and (max-width: 920px) {
   header {
-    margin: 0;
-    background-color: var(--primary-color);
-    padding: 0 10px;
+    width: 100vw; /* Full viewport width */
+    position: fixed; /* Fixed position */
+    top: 10px; /* Space from the top */
+    left: 0; /* Align to the left */
+    right: 0; /* Align to the right */
+    border-radius: 0; /* Remove border radius for full width */
+    min-height: var(--header-height);
   }
+
   .header-nav {
-    padding: 0 10px;
-    justify-content: space-between;
+    padding: 0 20px; /* Add some padding */
   }
-  
-  .start {
-    display: none;
-  }
-  
 
   .nav-links {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100%; /* Ensure full width for nav links */
     height: 100vh;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     background-size: 200% 200%;
@@ -222,30 +220,13 @@ header:hover {
     pointer-events: none;
     transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
   }
+
   .nav-links.active {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
   }
-  .nav-links li {
-    margin: 20px 0;
-  }
-  
-  .nav-links li a:hover {
-    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-  
-  .mobile-certificate {
-    display: block;
-    text-align: center;
-    margin-top: 10px;
-  }
-  .mobile-certificate .certificate-btn {
-    width: 100%;
-    padding: 12px 30px;
-    font-size: 16px;
-  }
-  
+
   .toggle {
     display: block;
     position: fixed;
@@ -253,7 +234,7 @@ header:hover {
     right: 10px;
     z-index: 25;
   }
-  
+
   .darkmode-toggle {
     position: fixed;
     top: 10px;
@@ -261,12 +242,8 @@ header:hover {
     padding: 6px;
     font-size: 18px;
     z-index: 25;
-    width: auto;
-    height: auto;
-    display: flex;
   }
 }
-
 
 @media screen and (min-width: 908px) {
   .mobile-certificate {
@@ -295,7 +272,6 @@ header:hover {
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
 
 body.dark-mode {
   background-color: var(--dark-bg);

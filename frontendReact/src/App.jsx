@@ -14,6 +14,7 @@ import Signup from "./components/User/Signup";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
+import ForgetPassword from "./components/User/ForgetPassword.jsx";
 
 const AppContent = () => {
   const { pathname } = useLocation();
@@ -32,6 +33,7 @@ const AppContent = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/firstchoose" element={<SkillsList />} />
