@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const mongoose = require("mongoose");
@@ -90,7 +91,7 @@ const signup = async (req, res) => {
 
     await newUser.save();
 
-    // Create a welcome notification for the new user
+    // Create a welcome notification
     const newNotification = new Notification({
       userId: newUser._id,
       type: "ACCOUNT_UPDATE",
