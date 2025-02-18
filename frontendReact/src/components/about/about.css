@@ -1,81 +1,167 @@
+/* -----------------------------
+   About Home Section
+------------------------------ */
 .aboutHome {
   height: auto;
+  padding: 2rem 0;
+  background-color: var(--background-color);
+  transition: background-color var(--transition-speed);
 }
-.aboutHome #heading {
-  text-align: left;
-  padding: 0;
+
+body.dark-mode .aboutHome {
+  background-color: var(--dark-bg);
 }
+
+.aboutHome .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.aboutHome .left,
+.aboutHome .right {
+  flex: 1;
+  padding: 1rem;
+}
+
 .aboutHome .left img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
+  border-radius: 0.5rem;
 }
+
 .aboutHome .right {
-  padding: 180px 50px;
+  padding: 3rem 2rem;
 }
+
 .aboutHome .items {
-  margin-top: 50px;
+  margin-top: 2rem;
 }
+
 .aboutHome .item {
-  background-color: #fff;
-  margin-top: 30px;
-  padding: 20px;
-  transition: 0.5s;
+  background-color: var(--secondary-color);
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.5s, color 0.5s;
+  display: flex;
+  align-items: center;
 }
-.aboutHome .img {
-  width: 200px;
+
+body.dark-mode .aboutHome .item {
+  background-color: var(--dark-surface);
+  color: var(--dark-text);
 }
-.aboutHome img {
+
+.aboutHome .item .img {
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.aboutHome .item .img img {
   width: 70px;
   height: 70px;
+  object-fit: cover;
+  border-radius: 50%;
 }
+
 .aboutHome .item h2 {
-  font-size: 20px;
-  margin-bottom: 15px;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
 }
+
 .aboutHome .item p {
   color: #999999;
+  font-size: 0.95rem;
 }
+
 .aboutHome .item:hover {
-  background-color: #a47f18;
-  color: #fff;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
   cursor: pointer;
-  box-shadow: 0 5px 25px -2px rgb(0 0 0 / 6%);
+  box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.06);
 }
+
 .aboutHome .item:hover p {
-  color: #fff;
+  color: var(--secondary-color);
 }
-/*----------awrapper------------*/
+
+/* -----------------------------
+   Awrapper Section
+------------------------------ */
 .awrapper {
   background-image: url("../../../public/images/awrapper.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
   height: 30vh;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  color: var(--secondary-color);
+  transition: background-color var(--transition-speed);
 }
+
+body.dark-mode .awrapper {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("../../../public/images/awrapper.webp");
+}
+
+.awrapper .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  text-align: center;
+}
+
 .awrapper .box {
-  padding: 70px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  flex-direction: row;
 }
-.awrapper img {
-  margin-right: 30px;
+
+.awrapper .box .img {
+  margin-right: 1rem;
 }
-.awrapper h1 {
-  font-size: 50px;
+
+.awrapper .box img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
 }
-.awrapper h3 {
-  font-size: 20px;
+
+.awrapper .box .text h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.awrapper .box .text h3 {
+  font-size: 1.25rem;
   font-weight: 500;
+  margin: 0.5rem 0 0;
 }
-/*----------awrapper------------*/
+
+/* -----------------------------
+   Responsive Adjustments
+------------------------------ */
 @media screen and (max-width: 768px) {
   .aboutHome .container {
     flex-direction: column-reverse;
+    text-align: center;
   }
-  .aboutHome .row {
-    width: 100%;
+  .aboutHome .right {
+    padding: 2rem 1rem;
   }
   .awrapper {
     height: 50vh;
+  }
+  .awrapper .box {
+    flex-direction: column;
+  }
+  .awrapper .box .img {
+    margin: 0 0 1rem;
   }
 }

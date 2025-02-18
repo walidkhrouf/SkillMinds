@@ -46,6 +46,7 @@ const SignupForm = () => {
       return;
     }
 
+
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (formData[key]) {
@@ -55,7 +56,6 @@ const SignupForm = () => {
     if (profileImage) {
       formDataToSend.append("profileImage", profileImage);
     }
-    // Append certificate image only if role is mentor
     if (formData.role === "mentor" && certificateImage) {
       formDataToSend.append("certificateImage", certificateImage);
     }
@@ -64,6 +64,7 @@ const SignupForm = () => {
       const response = await axios.post("http://localhost:5000/api/users/signup", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+    
       setSuccess(response.data.message);
       setError("");
       setTimeout(() => {
@@ -91,7 +92,8 @@ const SignupForm = () => {
         </div>
         <div className="form-group">
           <label htmlFor="phoneNumber">Phone Number:</label>
-          <input type="text" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" onChange={handleChange} />
+          <input type="text" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number"  pattern="\d{8,}"   title="Phone number must be at least 8 digits" 
+ onChange={handleChange} />
         </div>
         <div className="form-group">
           <label htmlFor="password">Password:</label>

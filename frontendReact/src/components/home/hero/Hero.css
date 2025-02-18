@@ -1,46 +1,124 @@
+/* Hero Section */
 .hero {
-    background-image: url("/images/back.webp");
-    background-size: cover;
-    background-attachment: fixed;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    width: 100%;
-    height: 100vh;
-    padding-top: 30%;
-    padding-right: 50px;
-    color: var(--secondary-color);
-    text-align: center;
-    animation: zoomIn 1sease;
+  position: relative;
+  background-image: url("/images/back.webp");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  width: 100%;
+  height: 100vh;
+  padding: 8rem 50px 0; /* Adequate top and side padding */
+  color: var(--secondary-color); /* Light text by default */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  animation: zoomIn 1s ease;
+  /* Adding a subtle overlay for readability */
+  background-blend-mode: overlay;
 }
 
-
-.hero #heading h3 {
-  color: #fff;
+/* Dark Mode Adjustments */
+body.dark-mode .hero {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+    url("/images/back.webp");
+  color: var(--secondary-color);
 }
 
-.hero #heading {
-  text-align: left;
-  margin: 0;
-  padding: 0;
+/* Heading and Paragraph adjustments */
+.hero .container {
+  z-index: 2;
+  position: relative;
+}
+.hero .row {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.hero p {
+  font-size: 1.125rem;
+  margin: 1.5rem 0 2.5rem;
+  line-height: 1.8;
 }
 
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 1rem 2rem;
+  border: none;
+  font-weight: 600;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.secondary-btn {
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.secondary-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Margin Element for Spacing */
+.margin {
+  margin-top: 40vh;
+}
+
+/* Animation Keyframes */
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Adjustments */
 @media screen and (max-width: 768px) {
-  .margin {
-    height: 40vh;
-  }
-  .hero{
+  .hero {
     background-position: right;
-    display: flex;
-   align-items: center; 
-   min-height: 70vh;
+    padding: 4rem 20px 0;
+    min-height: 70vh;
   }
+  
   .hero .row {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
     text-align: left;
-    max-width: 600px;
+  }
+  
+  .hero p {
+    font-size: 1rem;
+  }
+  
+  .margin {
+    margin-top: 30vh;
   }
 }

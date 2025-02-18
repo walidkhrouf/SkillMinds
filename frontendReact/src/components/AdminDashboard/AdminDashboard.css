@@ -1,20 +1,34 @@
+/*----------------------------------------
+  CSS Variables & Global Settings
+----------------------------------------*/
 :root {
-  --primary-color: #a47f18;
-  --secondary-color: #fff;
-  --accent-color: #a17540;
-  --background-color: #f8f8f8;
-  --text-color: #333;
+  /* Colors */
+  --primary-color: #a47f18;         /* Warm Gold */
+  --secondary-color: #fff;          /* White */
+  --accent-color: #e2a23f;          /* Accent (for dark mode & hover) */
+  --light-bg: #ffffff;              /* Light background */
+  --background-color: #f8f8f8;       /* Page background */
+  --text-color: #333333;            /* Dark text */
+  
+  /* Sidebar Colors */
   --sidebar-bg: #ffffff;
   --sidebar-text: #333333;
+  
+  /* Dark Mode Colors */
   --dark-background: #1d1d1d;
   --dark-content-bg: #2a2a2a;
   --dark-sidebar-bg: #2a2a2a;
   --dark-sidebar-text: #eeeeee;
+  
+  /* Misc */
   --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.1);
   --transition-speed: 0.5s;
   --font-family: "Roboto", sans-serif;
 }
 
+/*----------------------------------------
+  Global Styles
+----------------------------------------*/
 body {
   font-family: var(--font-family);
   background: var(--background-color);
@@ -28,6 +42,9 @@ body.dark-mode {
   color: #eee;
 }
 
+/*----------------------------------------
+  Admin Dashboard Layout
+----------------------------------------*/
 .admin-dashboard {
   display: flex;
   min-height: 100vh;
@@ -35,6 +52,9 @@ body.dark-mode {
   transition: background var(--transition-speed) ease;
 }
 
+/*----------------------------------------
+  Sidebar
+----------------------------------------*/
 .dashboard-sidebar {
   width: 280px;
   background: var(--sidebar-bg);
@@ -45,7 +65,7 @@ body.dark-mode {
 }
 
 .dashboard-sidebar .logo {
-  font-size: 2rem;
+  font-size: 2.4rem;
   font-weight: bold;
   color: var(--primary-color);
   text-align: center;
@@ -65,14 +85,15 @@ body.dark-mode {
   margin-bottom: 0.5rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: background var(--transition-speed) ease, transform var(--transition-speed) ease;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dashboard-sidebar ul li:hover,
 .dashboard-sidebar ul li.active {
-  background: var(--accent-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   color: var(--secondary-color);
   transform: translateX(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode .dashboard-sidebar {
@@ -81,7 +102,7 @@ body.dark-mode .dashboard-sidebar {
 }
 
 body.dark-mode .dashboard-sidebar .logo {
-  color: #e2a23f;
+  color: var(--accent-color);
 }
 
 body.dark-mode .dashboard-sidebar ul li {
@@ -90,16 +111,19 @@ body.dark-mode .dashboard-sidebar ul li {
 
 body.dark-mode .dashboard-sidebar ul li:hover,
 body.dark-mode .dashboard-sidebar ul li.active {
-  background: #e2a23f;
+  background: var(--accent-color);
   color: #1d1d1d;
 }
 
+/*----------------------------------------
+  Content Area
+----------------------------------------*/
 .dashboard-content {
   flex: 1;
   padding: 2rem;
   margin: 1.5rem;
   border-radius: 15px;
-  background: #ffffff;
+  background: var(--light-bg);
   box-shadow: var(--box-shadow);
   transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
 }
@@ -109,13 +133,16 @@ body.dark-mode .dashboard-content {
   color: #eee;
 }
 
+/*----------------------------------------
+  Section Content
+----------------------------------------*/
 .section-content {
   margin-bottom: 40px;
   animation: popIn 0.5s ease-out both;
 }
 
 .section-content h2 {
-  font-size: 1.75rem;
+  font-size: 1.9rem;
   margin-bottom: 20px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -126,15 +153,18 @@ body.dark-mode .dashboard-content {
 }
 
 body.dark-mode .section-content h2 {
-  color: #e2a23f;
-  border-color: #e2a23f;
+  color: var(--accent-color);
+  border-color: var(--accent-color);
 }
 
+/*----------------------------------------
+  Data Table Styles
+----------------------------------------*/
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  background: #ffffff;
+  background: var(--light-bg);
   transition: background var(--transition-speed) ease;
 }
 
@@ -156,14 +186,13 @@ body.dark-mode table {
 }
 
 body.dark-mode table th {
-  background: #e2a23f;
+  background: var(--accent-color);
   color: #1d1d1d;
 }
 
-.user-manager {
-  margin-top: 20px;
-}
-
+/*----------------------------------------
+  User Table
+----------------------------------------*/
 .user-table {
   width: 100%;
   border-collapse: collapse;
@@ -193,19 +222,17 @@ body.dark-mode .user-table tr:hover {
   background: #444;
 }
 
-.user-certificate-container img{
-  width: 1000px;
-  height: 800px;
-  border-radius: 50px;
-}
-
+/*----------------------------------------
+  User Details Card
+----------------------------------------*/
 .user-details-card {
   margin-top: 20px;
   padding: 20px;
-  background: #ffffff;
+  background: var(--light-bg);
   border: 1px solid #ddd;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: background var(--transition-speed) ease;
 }
 
 body.dark-mode .user-details-card {
@@ -229,11 +256,12 @@ body.dark-mode .user-details-card {
   color: var(--secondary-color);
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
 .user-actions button:hover {
   background: var(--accent-color);
+  transform: translateY(-2px);
 }
 
 .user-details-body {
@@ -269,11 +297,20 @@ body.dark-mode .user-details-card {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Certificate Image */
+.user-certificate-container img {
+  width: 300px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
 
+/*----------------------------------------
+  Skill Form
+----------------------------------------*/
 .skill-form {
   margin-bottom: 30px;
   padding: 20px;
-  background: #ffffff;
+  background: var(--light-bg);
   border: 1px solid #ddd;
   border-radius: 10px;
   transition: background var(--transition-speed) ease;
@@ -332,7 +369,9 @@ body.dark-mode .skill-form textarea {
   color: var(--accent-color);
 }
 
-
+/*----------------------------------------
+  Skill Table
+----------------------------------------*/
 .skill-table {
   width: 100%;
   border-collapse: collapse;
@@ -356,11 +395,13 @@ body.dark-mode .skill-table {
 }
 
 body.dark-mode .skill-table th {
-  background: #e2a23f;
+  background: var(--accent-color);
   color: #1d1d1d;
 }
 
-
+/*----------------------------------------
+  Admin Dark Mode Toggle
+----------------------------------------*/
 .admin-darkmode-toggle {
   position: fixed;
   top: 20px;
@@ -370,7 +411,12 @@ body.dark-mode .skill-table th {
   padding: 10px;
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.5s ease;
+  transition: background 0.5s ease, transform 0.3s;
+  z-index: 100;
+}
+
+.admin-darkmode-toggle:hover {
+  transform: scale(1.1);
 }
 
 body.dark-mode .admin-darkmode-toggle {
@@ -378,6 +424,30 @@ body.dark-mode .admin-darkmode-toggle {
   color: #eee;
 }
 
+/*----------------------------------------
+  Custom Button Styles
+----------------------------------------*/
+/* Modify/Delete buttons in user skills list */
+.skill-item button {
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: #d9534f; /* Bright red for delete */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.skill-item button:hover {
+  background: #c9302c;
+  transform: scale(1.05);
+}
+
+/*----------------------------------------
+  Animations
+----------------------------------------*/
 @keyframes popIn {
   0% {
     transform: scale(0.95);
@@ -389,6 +459,9 @@ body.dark-mode .admin-darkmode-toggle {
   }
 }
 
+/*----------------------------------------
+  Responsive Styles
+----------------------------------------*/
 @media screen and (max-width: 768px) {
   .admin-dashboard {
     flex-direction: column;

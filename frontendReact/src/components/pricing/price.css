@@ -1,47 +1,99 @@
+/*-----------------------------
+   Price Section
+------------------------------*/
 .price .items {
   padding: 40px;
   text-align: center;
 }
+
 .price h1 {
   font-size: 50px;
   margin: 20px 0;
   color: #a47f18;
 }
+
 .price h1 span {
   font-size: 20px;
   margin-right: 5px;
   color: #000;
 }
+
 .price p {
   color: grey;
   margin: 40px 0;
 }
-/*--------------faq-------------*/
+
+/* Dark Mode Overrides for Price Section */
+body.dark-mode .price h1 {
+  /* Keeping the primary color */
+  color: var(--primary-color);
+}
+
+body.dark-mode .price h1 span {
+  /* Using secondary color for contrast */
+  color: var(--secondary-color);
+}
+
+body.dark-mode .price p {
+  /* Light grey for dark background */
+  color: #ccc;
+}
+
+/*-----------------------------
+   FAQ Section
+------------------------------*/
 .faq .container {
   max-width: 70%;
   border-radius: 5px;
 }
+
 .faq .box {
   background-color: #fff;
   margin-bottom: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 .faq button {
-  padding: 0;
+  padding: 15px 20px;
   margin: 0;
   display: flex;
   justify-content: space-between;
   width: 100%;
-  padding: 15px 20px;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
 }
+
 .faq h2 {
   font-weight: 500;
 }
+
 .faq p {
   padding: 20px;
 }
+
 .faq .accordion:hover {
   background-color: #1eb2a6;
   color: #fff;
 }
 
-/*--------------faq-------------*/
+/* Dark Mode Overrides for FAQ Section */
+body.dark-mode .faq .box {
+  background-color: var(--dark-surface);
+  color: var(--dark-text);
+  border: 1px solid #444;
+}
+
+body.dark-mode .faq button {
+  color: var(--dark-text);
+}
+
+body.dark-mode .faq .accordion:hover {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+body.dark-mode .faq p {
+  color: var(--dark-text);
+}

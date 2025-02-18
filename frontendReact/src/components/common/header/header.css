@@ -1,6 +1,6 @@
-/*========================================
+/*----------------------------------------
   CSS Variables & Global Settings
-========================================*/
+----------------------------------------*/
 :root {
   --primary-color: #a47f18;
   --secondary-color: #159e8b;
@@ -8,15 +8,15 @@
   --header-bg: rgba(255, 255, 255, 0.2);
   --header-bg-hover: rgba(255, 255, 255, 0.3);
   --dark-bg: #121212;
+  --dark-surface: #2a2a2a;
   --light-bg: #fff;
   --header-height: 70px;
   --transition-speed: 0.5s;
 }
 
-/*========================================
+/*----------------------------------------
   Head Section
-========================================*/
-
+----------------------------------------*/
 .logo h1 {
   font-size: 35px;
   font-weight: 900;
@@ -27,24 +27,24 @@
   margin-left: 10px;
 }
 
-/*========================================
+/*----------------------------------------
   Header Styling
-========================================*/
+----------------------------------------*/
 header {
   background-color: rgb(78, 49, 6);
-  width: 100%; /* Ensure the header takes full width */
-  position: fixed; /* Fixed position */
-  top: 10px; /* Space from the top */
-  left: 0; /* Align to the left */
-  right: 0; /* Align to the right */
-  border-radius: 0; /* Remove border radius for full width */
+  width: 100%;
+  position: fixed;
+  top: 10px;
+  left: 0;
+  right: 0;
+  border-radius: 0;
   overflow: hidden;
   transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   min-height: var(--header-height);
   display: flex;
   align-items: center;
-  z-index: 1000; /* Ensure it appears above other elements */
+  z-index: 10000;
 }
 
 header:hover {
@@ -52,16 +52,16 @@ header:hover {
 }
 
 .header-nav {
-  width: 100%; /* Ensure the nav takes full width */
+  width: 100%;
   display: flex;
-  justify-content: space-between; /* Keep content spaced */
+  justify-content: space-between;
   align-items: center;
-  padding: 0 20px; /* Add some padding */
+  padding: 0 20px;
 }
 
-/*========================================
+/*----------------------------------------
   Navigation Links (Desktop)
-========================================*/
+----------------------------------------*/
 .nav-links {
   display: flex;
   list-style: none;
@@ -74,33 +74,44 @@ header:hover {
   position: relative;
 }
 .nav-links li a {
+  font-size: 1rem;
+  display: inline-block;
   color: var(--light-bg);
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.5s, transform 0.3s;
   padding: 0;
+  transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease, font-size 0.3s ease;
 }
+
+/* Enhanced hover effect: smoothly enlarge and lift */
+.nav-links li a:hover,
+.nav-links li a.active {
+  transform: translateY(-3px) scale(1.15);
+  color: var(--accent-color);
+  text-shadow: 0 2px 8px rgba(164, 127, 24, 0.7);
+}
+
+/* Underline Animation */
 .nav-links li a::after {
   content: "";
   display: block;
   width: 0%;
-  height: 2px;
-  background: var(--accent-color);
-  transition: width 0.3s;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   position: absolute;
   bottom: -5px;
   left: 0;
+  border-radius: 2px;
 }
 .nav-links li a:hover::after,
 .nav-links li a.active::after {
   width: 100%;
 }
-.nav-links li a:hover,
-.nav-links li a.active {
-  color: var(--accent-color);
-  transform: translateY(-3px) scale(1.1);
-}
 
+/*----------------------------------------
+  Header Actions (Desktop)
+----------------------------------------*/
 .start {
   display: flex;
   align-items: center;
@@ -117,34 +128,128 @@ header:hover {
   font-size: 16px;
   margin: 0;
 }
-
 .auth-header {
   background-color: var(--primary-color) !important;
 }
-
 .auth-header .nav-links li a {
   color: var(--secondary-color) !important;
 }
-
 .auth-header .nav-links li a:hover,
 .auth-header .nav-links li a.active {
   color: var(--accent-color) !important;
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.1);
 }
 .certificate-btn:hover {
   background-color: var(--accent-color);
   transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: var(--light-bg);
 }
 
+/*----------------------------------------
+  Notification Icon and Dropdown
+----------------------------------------*/
+.notification-container {
+  position: relative;
+  z-index: 2000;
+}
+.notification-icon {
+  position: relative;
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--light-bg);
+  transition: transform 0.3s;
+}
+.notification-icon:hover {
+  transform: scale(1.1);
+}
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.notification-dropdown {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 12000;
+  animation: fadeInDown 0.3s ease;
+}
+
+/* Custom Scrollbar for Notification Dropdown */
+.notification-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+.notification-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+.notification-dropdown::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.notification-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+.notification-item:hover {
+  background: #f9f9f9;
+}
+.notification-time {
+  display: block;
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 5px;
+}
+.no-notifications {
+  padding: 10px;
+  text-align: center;
+  color: #666;
+}
+
+/* Dark Mode Notification Overrides */
+body.dark-mode .notification-dropdown {
+  background: var(--dark-surface);
+  border: 1px solid #444;
+}
+body.dark-mode .notification-item {
+  border-bottom: 1px solid #555;
+  color: var(--dark-text);
+}
+body.dark-mode .notification-item.read {
+  background-color: var(--dark-surface);
+  color: var(--dark-text);
+}
+body.dark-mode .notification-item.unread {
+  background-color: #2a2a2a;
+  color: var(--dark-text);
+}
+body.dark-mode .notification-time {
+  color: #bbb;
+}
+
+/*----------------------------------------
+  Dark Mode and Toggle Button
+----------------------------------------*/
 .header-actions {
   display: flex;
   align-items: center;
   gap: 15px;
   height: var(--header-height);
 }
-
 .darkmode-toggle {
   background: var(--light-bg);
   color: var(--primary-color);
@@ -155,7 +260,7 @@ header:hover {
   font-size: 20px;
   cursor: pointer;
   transition: background 0.3s, transform 0.3s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -170,7 +275,6 @@ header:hover {
   color: var(--light-bg);
   transform: scale(1.1);
 }
-
 .toggle {
   display: none;
   background: none;
@@ -185,27 +289,31 @@ header:hover {
   transform: rotate(90deg);
 }
 
-/* Media Query for Mobile Responsiveness */
-@media screen and (max-width: 920px) {
+/*----------------------------------------
+  Media Query for Mobile Responsiveness
+----------------------------------------*/
+@media screen and (max-width: 1300px) {
   header {
-    width: 100vw; /* Full viewport width */
-    position: fixed; /* Fixed position */
-    top: 10px; /* Space from the top */
-    left: 0; /* Align to the left */
-    right: 0; /* Align to the right */
-    border-radius: 0; /* Remove border radius for full width */
+    width: 100vw;
+    position: fixed;
+    top: 10px;
+    left: 0;
+    right: 0;
+    border-radius: 0;
     min-height: var(--header-height);
   }
-
   .header-nav {
-    padding: 0 20px; /* Add some padding */
+    padding: 0 20px;
   }
-
+  /* Hide desktop certificate button on mobile */
+  .header-actions .certificate-btn {
+    display: none;
+  }
   .nav-links {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%; /* Ensure full width for nav links */
+    width: 100%;
     height: 100vh;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     background-size: 200% 200%;
@@ -220,13 +328,24 @@ header:hover {
     pointer-events: none;
     transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
   }
-
   .nav-links.active {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
   }
-
+  .nav-links li {
+    margin: 15px 0; /* More vertical spacing for clarity */
+  }
+  .nav-links li a {
+    font-size: 1.2rem; /* Bigger font size on mobile */
+    padding: 10px 20px;
+  }
+  /* Mobile certificate button appears only in the mobile menu */
+  .mobile-certificate {
+    display: block;
+    margin-top: 20px;
+    font-size: 1.2rem;
+  }
   .toggle {
     display: block;
     position: fixed;
@@ -234,7 +353,6 @@ header:hover {
     right: 10px;
     z-index: 25;
   }
-
   .darkmode-toggle {
     position: fixed;
     top: 10px;
@@ -245,14 +363,17 @@ header:hover {
   }
 }
 
-@media screen and (min-width: 908px) {
+@media screen and (min-width: 1068px) {
   .mobile-certificate {
     display: none;
   }
 }
 
+/*----------------------------------------
+  Keyframe Animations
+----------------------------------------*/
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20px); }
+  from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes slideIn {
@@ -273,6 +394,9 @@ header:hover {
   100% { background-position: 0% 50%; }
 }
 
+/*----------------------------------------
+  Global Dark Mode Overrides
+----------------------------------------*/
 body.dark-mode {
   background-color: var(--dark-bg);
   color: #e0e0e0;

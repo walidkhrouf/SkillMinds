@@ -7,11 +7,13 @@
   --transition-speed: 0.3s;
 }
 
+/* Global User Profile Styles */
 .user-profile {
   font-family: "Roboto", sans-serif;
   color: var(--text-color);
 }
 
+/* Profile Cover */
 .profile-cover {
   position: relative;
   height: 400px;
@@ -30,6 +32,7 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
+/* Profile Card */
 .container.profile-card {
   background-color: var(--secondary-color);
   box-shadow: var(--box-shadow);
@@ -42,6 +45,7 @@
   animation: fadeInUp 0.8s ease-in-out;
 }
 
+/* Profile Header */
 .profile-header {
   display: flex;
   flex-wrap: wrap;
@@ -99,6 +103,7 @@
   color: #666;
 }
 
+/* Profile Bio */
 .profile-bio {
   margin-bottom: 30px;
 }
@@ -114,6 +119,7 @@
   line-height: 1.6;
 }
 
+/* Profile Skills */
 .profile-skills {
   margin-top: 20px;
   margin-bottom: 30px;
@@ -139,7 +145,9 @@
   border-radius: 20px;
   margin: 5px;
   font-size: 1rem;
-  transition: opacity 0.3s, transform 0.3s;
+  transition: opacity var(--transition-speed), transform var(--transition-speed);
+  display: flex;
+  align-items: center;
 }
 
 .skill-item:hover {
@@ -147,6 +155,25 @@
   transform: translateY(-2px);
 }
 
+/* Remove Skill Button */
+.remove-skill-btn {
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 5px 12px;
+  margin-left: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed), transform var(--transition-speed);
+}
+
+.remove-skill-btn:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+/* Add Skill Section */
 .add-skill {
   margin-top: 10px;
   display: flex;
@@ -163,8 +190,18 @@
   padding: 5px 10px;
   font-size: 1rem;
   cursor: pointer;
+  background-color: var(--accent-color);
+  color: var(--secondary-color);
+  border: none;
+  border-radius: 4px;
+  transition: background-color var(--transition-speed);
 }
 
+.add-skill button:hover {
+  background-color: var(--primary-color);
+}
+
+/* Profile Details */
 .profile-details {
   margin-top: 40px;
 }
@@ -186,7 +223,7 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: var(--box-shadow);
-  transition: transform 0.3s;
+  transition: transform var(--transition-speed);
 }
 
 .detail-item:hover {
@@ -204,13 +241,15 @@
   color: #555;
 }
 
+/* Profile Actions */
 .profile-actions {
   margin-top: 30px;
   text-align: center;
 }
 
 .modify-btn,
-.logout-btn {
+.logout-btn,
+.notification-toggle-btn {
   padding: 10px 30px;
   background-color: var(--primary-color);
   color: var(--secondary-color);
@@ -218,16 +257,18 @@
   border-radius: 4px;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+  transition: background var(--transition-speed), transform var(--transition-speed);
   margin: 0 10px;
 }
 
 .modify-btn:hover,
-.logout-btn:hover {
+.logout-btn:hover,
+.notification-toggle-btn:hover {
   background-color: var(--accent-color);
   transform: scale(1.05);
 }
 
+/* Input and Textarea Styles */
 .profile-input {
   font-size: 1.1rem;
   padding: 5px 10px;
@@ -247,23 +288,46 @@
   border-radius: 4px;
 }
 
-.remove-skill-btn {
-  background-color: #e74c3c; /* Bold red */
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 5px 12px;
-  margin-left: 10px;
-  font-size: 0.9rem;
+/* Notification Styles */
+.profile-notifications {
+  position: absolute;
+  top: calc(100% + 20px);
+  right: 20px;
+  width: 300px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+}
+
+.notification-item {
+  padding: 10px;
+  margin: 5px 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background var(--transition-speed);
 }
 
-.remove-skill-btn:hover {
-  background-color: #c0392b;
-  transform: scale(1.05);
+.notification-item.unread {
+  background: #e3f2fd;
+  border-color: #90caf9;
 }
 
+.notification-item:hover {
+  background: #f1f1f1;
+}
+
+.notification-time {
+  display: block;
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -274,4 +338,3 @@
     transform: translateY(0);
   }
 }
-

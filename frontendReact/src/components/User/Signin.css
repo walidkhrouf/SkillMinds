@@ -111,6 +111,48 @@ body.dark-mode .auth-container .auth-btn {
   color: #fff;
 }
 
+
+.otp-form {
+  margin-top: 20px;
+}
+
+.otp-form .form-group {
+  margin-bottom: 15px;
+}
+
+.otp-form label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.otp-form input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: border 0.3s ease;
+}
+
+.otp-form input[type="text"]:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.otp-form .auth-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.otp-form .auth-btn:hover {
+  background-color: var(--accent-color);
+}
 .switch-auth {
   margin-top: 20px;
   text-align: center;

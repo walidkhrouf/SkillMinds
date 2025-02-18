@@ -1,168 +1,185 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
 
 :root {
-  --primary-color: #a47f18;
-  --secondary-color: #fff;
-  --background-color: #f8f8f8;
-  --text-color: #333;
+  /* Color Palette */
+  --primary-color: #a47f18;       /* Warm gold */
+  --secondary-color: #ffffff;     /* Pure white */
+  --background-color: #f8f8f8;      /* Light gray */
+  --dark-bg: #1d1d1d;             /* Dark background for dark mode */
+  --dark-surface: #2a2a2a;        /* Dark surface for cards, buttons etc. */
+  --text-color: #333333;          /* Dark gray for text */
+  --dark-text: #e0e0e0;           /* Light text for dark mode */
+  
+  /* Spacing (using rem units for scalability) */
+  --spacing-xs: 0.3125rem;   /* 5px */
+  --spacing-sm: 0.625rem;    /* 10px */
+  --spacing-md: 1rem;        /* 16px approx */
+  --spacing-lg: 2.5rem;      /* 40px */
+  --container-max-width: 85%;
+
+  /* Shadows & Transitions */
   --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.06);
   --transition-speed: 0.5s;
+  
+  /* Typography */
+  --font-family: "Roboto", sans-serif;
+  --base-font-size: 1rem;
 }
 
-/*========================================
-  Global Dark Mode Styles
-========================================*/
-body.dark-mode {
-  background-color: var(--dark-bg); 
-  color: #ffffff; 
-}
-
-body.dark-mode a {
-  color: #ffffff; 
-}
-
-body.dark-mode a:hover,
-body.dark-mode a.active {
-  color: #ffcc00; 
-}
-
-body.dark-mode header {
-  background-color: #1f1f1f; 
-  color: #ffffff; 
-}
-
-
-
-body.dark-mode .nav-links li a {
-  color: #ffffff;
-}
-
-body.dark-mode .nav-links li a:hover,
-body.dark-mode .nav-links li a.active {
-  color: #ffcc00;
-  transform: translateY(-3px);
-}
-
-body.dark-mode .certificate-btn {
-  background-color: #ff9800;
-  color: #121212; 
-}
-
-
-
-* {
-  padding: 0;
+/* Global Resets */
+*,
+*::before,
+*::after {
   margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
+
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-family);
+  font-size: var(--base-font-size);
   background-color: var(--background-color);
   color: var(--text-color);
+  line-height: 1.6;
+  transition: background var(--transition-speed), color var(--transition-speed);
   animation: fadeIn 1s ease-in-out;
 }
 
-
-.container {
-  max-width: 85%;
-  margin: auto;
-  padding: 0 15px;
+/* Dark Mode Base */
+body.dark-mode {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
 }
+
+/* Links */
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+  transition: color var(--transition-speed);
+}
+a:hover,
+a:focus {
+  color: #ffcc00;
+  outline: none;
+}
+
+/* Focus styles for accessibility */
+a:focus,
+button:focus {
+  outline: 2px dashed var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Containers */
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* Utility Classes */
 .flexSB {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.row {
-  width: 50%;
-}
 .flex {
   display: flex;
 }
+.row {
+  width: 50%;
+}
 .padding {
-  padding: 80px 0;
+  padding: var(--spacing-lg) 0;
 }
 
-
-a {
-  text-decoration: none;
-  transition: color var(--transition-speed) ease;
-}
-a:hover {
-  color: var(--primary-color);
-}
-li {
-  list-style-type: none;
-}
-
-
+/* Icon Buttons */
 .icon {
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
+  line-height: 2.5rem;
   border-radius: 50%;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.3);
   color: var(--primary-color);
-  transition: background-color var(--transition-speed),
-              color var(--transition-speed);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 .icon:hover {
   cursor: pointer;
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
-
-
-button {
-  padding: 17px 30px;
-  background-color: var(--secondary-color);
+/* Dark Mode Icon Adjustments */
+body.dark-mode .icon {
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--primary-color);
-  font-weight: 600;
-  border: none;
-  margin: 30px 10px 0 0;
-  border-radius: 3px;
-  cursor: pointer;
-  box-shadow: 0 24px 36px -11px rgba(0, 0, 0, 0.09);
-  transition: box-shadow var(--transition-speed), transform var(--transition-speed);
 }
-button i {
-  margin-left: 20px;
-}
-button:hover {
-  box-shadow: none;
-  transform: translateY(-3px);
-}
-.primary-btn {
+body.dark-mode .icon:hover {
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
 
+/* Buttons */
+button {
+  padding: 1rem 1.875rem;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  border: none;
+  margin: 1.875rem 0.625rem 0 0;
+  border-radius: 0.1875rem;
+  cursor: pointer;
+  box-shadow: 0 1.5rem 2.25rem -0.6875rem rgba(0, 0, 0, 0.09);
+  transition: box-shadow var(--transition-speed), transform var(--transition-speed), background-color var(--transition-speed);
+}
+button i {
+  margin-left: 1.25rem;
+}
+button:hover {
+  box-shadow: none;
+  transform: translateY(-0.1875rem);
+}
+/* Primary Button */
+.primary-btn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
+/* Dark Mode Button Adjustments */
+body.dark-mode button {
+  background-color: var(--dark-surface);
+  color: var(--dark-text);
+  box-shadow: none;
+}
+body.dark-mode button.primary-btn {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+}
 
+/* Headings */
 #heading {
   text-align: center;
-  padding: 40px 0;
+  padding: 2.5rem 0;
   animation: slideDown var(--transition-speed) ease both;
 }
 #heading h3 {
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0.0625rem;
   color: var(--primary-color);
   text-transform: uppercase;
 }
 #heading h1 {
-  font-size: 45px;
-  margin: 20px 0;
+  font-size: 2.8125rem;
+  margin: 1.25rem 0;
   text-transform: capitalize;
 }
 
-
+/* Paragraphs */
 p {
-  line-height: 30px;
-  font-size: 18px;
+  line-height: 1.875rem;
+  font-size: 1.125rem;
 }
 
-
+/* Background Section */
 .back {
   background-image: url("../public/images/back.webp");
   background-size: cover;
@@ -175,20 +192,25 @@ p {
   width: 100%;
   height: 100vh;
   padding-top: 30%;
-  padding-right: 50px;
+  padding-right: 3.125rem;
   color: var(--secondary-color);
   text-align: center;
   animation: zoomIn 1s ease;
 }
+body.dark-mode .back {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../public/images/back.webp");
+}
 .back h1 {
-  font-size: 100px;
+  font-size: 6.25rem;
   font-weight: 400;
 }
 .back h2 {
   font-weight: 500;
-  font-size: 17px;
+  font-size: 1.0625rem;
   text-transform: uppercase;
 }
+
+/* Spacing Utility */
 .margin {
   margin-top: 40.3%;
 }
@@ -197,56 +219,58 @@ p {
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 30px;
+  gap: 1.875rem;
 }
 .grid2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-gap: 30px;
+  gap: 1.875rem;
 }
 .grid3 {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-gap: 10px;
+  gap: 0.625rem;
 }
 
-
+/* Outline Button */
 .outline-btn {
   margin: 0;
   box-shadow: none;
-  border: 2px solid var(--primary-color);
+  border: 0.125rem solid var(--primary-color);
   width: 100%;
-  transition: background-color var(--transition-speed),
-              color var(--transition-speed);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 .outline-btn:hover {
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
 
-
+/* Shadow Utility (Cards, Containers, etc.) */
 .shadow {
   box-shadow: var(--box-shadow);
   background-color: var(--secondary-color);
+  transition: background-color var(--transition-speed);
+}
+body.dark-mode .shadow {
+  background-color: var(--dark-surface);
+  box-shadow: none;
 }
 
-
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-1.25rem);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 @keyframes zoomIn {
   from {
     transform: scale(0.95);
@@ -258,7 +282,7 @@ p {
   }
 }
 
-
+/* Responsive Design */
 @media screen and (max-width: 1024px) {
   .container {
     max-width: 95%;
@@ -277,10 +301,10 @@ p {
   }
   .back {
     padding-top: 20%;
-    padding-right: 30px;
+    padding-right: 1.875rem;
   }
   .back h1 {
-    font-size: 80px;
+    font-size: 5rem;
   }
 }
 
@@ -290,52 +314,52 @@ p {
   }
   .grid, .grid2, .grid3 {
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 20px;
+    gap: 1.25rem;
   }
   .back {
-    background-attachment: scroll; 
+    background-attachment: scroll;
     padding-top: 40%;
     height: 80vh;
-    padding-right: 15px;
+    padding-right: 0.9375rem;
   }
   .back h1 {
-    font-size: 60px;
+    font-size: 3.75rem;
   }
   #heading h1 {
-    font-size: 35px;
+    font-size: 2.1875rem;
   }
   #heading h3 {
-    font-size: 16px;
+    font-size: 1rem;
   }
   button {
-    padding: 15px 25px;
+    padding: 0.9375rem 1.5625rem;
   }
 }
 
 @media screen and (max-width: 480px) {
   .container {
-    padding: 0 5px;
+    padding: 0 var(--spacing-xs);
   }
   .grid, .grid2, .grid3 {
     grid-template-columns: 1fr;
-    grid-gap: 15px;
+    gap: 0.9375rem;
   }
   .back {
     padding-top: 50%;
     height: 70vh;
-    padding-right: 5px;
+    padding-right: 0.3125rem;
   }
   .back h1 {
-    font-size: 40px;
+    font-size: 2.5rem;
   }
   #heading h1 {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
   #heading h3 {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   button {
-    padding: 12px 20px;
-    font-size: 14px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
   }
 }

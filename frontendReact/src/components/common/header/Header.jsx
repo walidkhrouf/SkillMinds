@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation , Link} from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import Head from "./Head";
 import "./header.css";
 
@@ -7,30 +7,108 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const notifRef = useRef(null);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
+  // Load current user and fetch notifications if available
   useEffect(() => {
     const userStr = localStorage.getItem("currentUser");
     if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
+      const userObj = JSON.parse(userStr);
+      setCurrentUser(userObj);
+      fetchNotifications(userObj._id);
     } else {
       setCurrentUser(null);
     }
-  }, [location]); // Update on route change
+  }, [location]);
+
+  const fetchNotifications = (userId) => {
+    fetch(`http://localhost:5000/api/notifications?userId=${userId}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setNotifications(data))
+      .catch((err) => console.error("Error fetching notifications:", err));
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/notifications/${notificationId}/markRead`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const updatedNotif = await res.json();
+        setNotifications((prevNotifs) =>
+          prevNotifs.map((notif) =>
+            notif._id === updatedNotif._id ? updatedNotif : notif
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    if (!currentUser) return;
+    try {
+      const unreadNotifications = notifications.filter(n => !n.isRead);
+      for (let notif of unreadNotifications) {
+        await markNotificationAsRead(notif._id);
+      }
+      fetchNotifications(currentUser._id);
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
+  };
+
+  const toggleNotifications = () => {
+    const newState = !showNotifications;
+    setShowNotifications(newState);
+    if (newState && currentUser) {
+      markAllNotificationsAsRead();
+    }
+  };
+
+  // Close notifications dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleToggle = () => setMenuOpen((prev) => !prev);
   const closeMenu = () => setMenuOpen(false);
+  
 
+  useEffect(() => {
+    const storedDarkMode = sessionStorage.getItem("darkMode") === "true";
+    setDarkMode(storedDarkMode);
+    document.body.classList.toggle("dark-mode", storedDarkMode);
+  }, []);
+
+  // Example dark mode toggle function
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
       document.body.classList.toggle("dark-mode", newMode);
+      sessionStorage.setItem("darkMode", newMode);
       return newMode;
     });
   };
 
-  const headerClass = `${(location.pathname === "/signin" || location.pathname === "/signup") ? "auth-header" : ""} ${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
+  const headerClass = `${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <>
@@ -38,14 +116,11 @@ const Header = () => {
       <header className={headerClass}>
         <nav className="header-nav">
           <Link to="/" className="logo">
-            <img src="/images/logo.png" alt="Online Education & Learning Logo" />
+            <img src="/images/logo.png" alt="Logo" />
           </Link>
 
-          {/* Navigation Links */}
-          <ul
-            className={menuOpen ? "nav-links active" : "nav-links"}
-            onClick={closeMenu}
-          >
+          {/* Navigation Links (common for desktop and mobile) */}
+          <ul className={menuOpen ? "nav-links active" : "nav-links"} onClick={closeMenu}>
             <li>
               <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
                 Home
@@ -63,7 +138,7 @@ const Header = () => {
             </li>
             <li>
               <NavLink to="/team" className={({ isActive }) => (isActive ? "active" : "")}>
-                Team
+                Mentors
               </NavLink>
             </li>
             <li>
@@ -73,7 +148,7 @@ const Header = () => {
             </li>
             <li>
               <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")}>
-                Journal
+                Groups
               </NavLink>
             </li>
             <li>
@@ -81,6 +156,19 @@ const Header = () => {
                 Contact
               </NavLink>
             </li>
+            <li>
+              <a to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                Events
+              </a>
+            </li>
+            <li>
+              <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                Recruitement
+              </NavLink>
+            </li>
+          
+            
+            {/* Mobile-only: Certificate button */}
             <li className="mobile-certificate">
               {currentUser ? (
                 <button onClick={() => navigate("/profile")} className="certificate-btn">
@@ -94,6 +182,7 @@ const Header = () => {
             </li>
           </ul>
 
+          {/* Desktop Header Actions */}
           <div className="header-actions">
             <div className="start">
               {currentUser ? (
@@ -106,11 +195,42 @@ const Header = () => {
                 </NavLink>
               )}
             </div>
+            {currentUser && (
+              <div className="notification-container" ref={notifRef}>
+                <div className="notification-icon" onClick={toggleNotifications}>
+                  <i className="fas fa-bell"></i>
+                  {unreadCount > 0 && (
+                    <span className="notification-badge">{unreadCount}</span>
+                  )}
+                </div>
+                {showNotifications && (
+                  <div className="notification-dropdown">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif._id}
+                          className={`notification-item ${notif.isRead ? "read" : "unread"}`}
+                          onClick={() => markNotificationAsRead(notif._id)}
+                        >
+                          <p>{notif.message}</p>
+                          <span className="notification-time">
+                            {new Date(notif.createdAt).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="no-notifications">No notifications</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <button className="darkmode-toggle" onClick={toggleDarkMode}>
               {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
             </button>
           </div>
 
+          {/* Mobile Menu Toggle */}
           <button className="toggle" onClick={handleToggle}>
             {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-bars"></i>}
           </button>

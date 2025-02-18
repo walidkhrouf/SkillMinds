@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart,
   PieChart,
@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import "./AdminDashboard.css";
 
+// Dummy data for demonstration
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
   { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
@@ -60,6 +61,7 @@ const statsData = {
 const UserManager = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [userSkills, setUserSkills] = useState([]);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingData, setEditingData] = useState({
     username: "",
@@ -69,6 +71,9 @@ const UserManager = () => {
     bio: "",
     location: "",
   });
+  // States for skills assignment:
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [assignedSkillIds, setAssignedSkillIds] = useState([]);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -88,6 +93,7 @@ const UserManager = () => {
   const handleRowClick = async (id) => {
     if (selectedUser && selectedUser._id === id) {
       setSelectedUser(null);
+      setUserSkills([]);
       setEditingUserId(null);
       return;
     }
@@ -97,13 +103,18 @@ const UserManager = () => {
         const data = await response.json();
         setSelectedUser(data);
         setEditingUserId(null);
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${id}`);
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          setUserSkills(skillsData);
+        }
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const startEditing = (user) => {
+  const startEditing = async (user) => {
     setEditingUserId(user._id);
     setEditingData({
       username: user.username,
@@ -113,6 +124,17 @@ const UserManager = () => {
       bio: user.bio || "",
       location: user.location || "",
     });
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/skills");
+      if (response.ok) {
+        const skillsData = await response.json();
+        setAvailableSkills(skillsData);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    const currentSkillIds = userSkills.map((item) => item.skillId._id);
+    setAssignedSkillIds(currentSkillIds);
   };
 
   const cancelEditing = () => {
@@ -121,6 +143,40 @@ const UserManager = () => {
 
   const handleEditingChange = (e) => {
     setEditingData({ ...editingData, [e.target.name]: e.target.value });
+  };
+
+  const handleSkillChange = (e) => {
+    const options = e.target.options;
+    const selected = [];
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selected.push(options[i].value);
+      }
+    }
+    setAssignedSkillIds(selected);
+  };
+
+  const updateUserSkills = async (userId, skillIds) => {
+    // Map each skill id to an object with a default skillType ("has")
+    const skillsPayload = skillIds.map((id) => ({ skillId: id, skillType: "has" }));
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/userskills`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, skills: skillsPayload }),
+      });
+      if (response.ok) {
+        return true;
+      } else {
+        const data = await response.json();
+        alert(data.message || "Error updating user skills");
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating user skills");
+      return false;
+    }
   };
 
   const saveEditedUser = async (userId) => {
@@ -132,16 +188,43 @@ const UserManager = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setUsers(users.map(u => (u._id === data._id ? data : u)));
+        setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
+        const skillsUpdated = await updateUserSkills(userId, assignedSkillIds);
+        if (skillsUpdated) {
+          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json();
+            setUserSkills(skillsData);
+          }
+          alert("User updated successfully");
+        }
         setEditingUserId(null);
-        alert("User updated successfully");
       } else {
         alert(data.message || "Error updating user");
       }
     } catch (err) {
       console.error(err);
       alert("Error updating user");
+    }
+  };
+
+  const handleDeleteSkill = async (skillId) => {
+    if (!window.confirm("Are you sure you want to delete this skill?")) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setUserSkills(userSkills.filter((s) => s._id !== skillId));
+        alert("Skill deleted successfully");
+      } else {
+        const data = await response.json();
+        alert(data.message || "Error deleting skill");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting skill");
     }
   };
 
@@ -153,18 +236,9 @@ const UserManager = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setUsers(users.filter(u => u._id !== userId));
+        setUsers(users.filter((u) => u._id !== userId));
         setSelectedUser(null);
         alert("User deleted successfully");
-        const currentUserStr = localStorage.getItem("currentUser");
-        if (currentUserStr) {
-          const currentUser = JSON.parse(currentUserStr);
-          if (currentUser._id === userId) {
-            localStorage.removeItem("currentUser");
-            localStorage.removeItem("hasChosenSkills");
-         
-          }
-        }
       } else {
         alert(data.message || "Error deleting user");
       }
@@ -173,7 +247,6 @@ const UserManager = () => {
       alert("Error deleting user");
     }
   };
-  
 
   const approveMentor = async (userId) => {
     try {
@@ -184,9 +257,22 @@ const UserManager = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setUsers(users.map(u => (u._id === data._id ? data : u)));
+        setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
-        alert("User role updated to mentor");
+        const notifRes = await fetch("http://localhost:5000/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: data._id,
+            type: "SKILL_VERIFICATION",
+            message: "Your mentor skills have been verified by the admin.",
+          }),
+        });
+        if (notifRes.ok) {
+          alert("User role updated to mentor and notification sent.");
+        } else {
+          alert("User role updated to mentor, but failed to send notification.");
+        }
       } else {
         alert(data.message || "Error updating user role");
       }
@@ -207,7 +293,7 @@ const UserManager = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {users.map((user) => (
             <tr key={user._id} onClick={() => handleRowClick(user._id)}>
               <td>{user.username}</td>
               <td>{user.email}</td>
@@ -288,6 +374,31 @@ const UserManager = () => {
                 <span className="value">{selectedUser.location}</span>
               )}
             </div>
+            <div className="user-details-row">
+              <span className="label">User Skills:</span>
+              {editingUserId === selectedUser._id ? (
+                <select multiple value={assignedSkillIds} onChange={handleSkillChange}>
+                  {availableSkills.map((skill) => (
+                    <option key={skill._id} value={skill._id}>
+                      {skill.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <ul className="user-skills-list">
+                  {userSkills.length > 0 ? (
+                    userSkills.map((us) => (
+                      <li key={us._id} className="skill-item">
+                        {us.skillId.name}
+                        <button onClick={() => handleDeleteSkill(us._id)}>Delete</button>
+                      </li>
+                    ))
+                  ) : (
+                    <span className="value">No skills assigned</span>
+                  )}
+                </ul>
+              )}
+            </div>
             {selectedUser.profileImage && (
               <div className="user-image-container">
                 <img
@@ -308,6 +419,9 @@ const UserManager = () => {
           </div>
         </div>
       )}
+      <div className="user-manager">
+        {/* Additional admin features if needed */}
+      </div>
     </div>
   );
 };
@@ -445,6 +559,8 @@ const SkillManager = () => {
           tags: tagsArray,
         }),
       });
+
+      
       const data = await response.json();
       if (response.ok) {
         setSkills((prev) => prev.map((s) => (s._id === data._id ? data : s)));
@@ -563,17 +679,27 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
-      return newMode;
-    });
-  };
+useEffect(() => {
+  const storedDarkMode = localStorage.getItem("darkMode");
+  if (storedDarkMode === "true") {
+    setDarkMode(true);
+    document.body.classList.add("dark-mode");
+  }
+}, []);
+
+
+const toggleDarkMode = () => {
+  setDarkMode((prev) => {
+    const newMode = !prev;
+    if (newMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+    localStorage.setItem("darkMode", newMode);
+    return newMode;
+  });
+};
 
   const renderSection = () => {
     switch (activeSection) {
@@ -759,13 +885,48 @@ const AdminDashboard = () => {
         <aside className="dashboard-sidebar">
           <h1 className="logo">SkillMinds Admin</h1>
           <ul>
-            <li className={activeSection === "statistics" ? "active" : ""} onClick={() => setActiveSection("statistics")}>📊 Statistics</li>
-            <li className={activeSection === "users" ? "active" : ""} onClick={() => setActiveSection("users")}>👥 Users</li>
-            <li className={activeSection === "courses" ? "active" : ""} onClick={() => setActiveSection("courses")}>📚 Courses</li>
-            <li className={activeSection === "jobs" ? "active" : ""} onClick={() => setActiveSection("jobs")}>💼 Jobs</li>
-            <li className={activeSection === "groups" ? "active" : ""} onClick={() => setActiveSection("groups")}>👥 Groups</li>
-            <li className={activeSection === "events" ? "active" : ""} onClick={() => setActiveSection("events")}>🗓 Events</li>
-            <li className={activeSection === "addSkill" ? "active" : ""} onClick={() => setActiveSection("addSkill")}>➕ Add Skill</li>
+            <li
+              className={activeSection === "statistics" ? "active" : ""}
+              onClick={() => setActiveSection("statistics")}
+            >
+              📊 Statistics
+            </li>
+            <li
+              className={activeSection === "users" ? "active" : ""}
+              onClick={() => setActiveSection("users")}
+            >
+              👥 Users
+            </li>
+            <li
+              className={activeSection === "courses" ? "active" : ""}
+              onClick={() => setActiveSection("courses")}
+            >
+              📚 Courses
+            </li>
+            <li
+              className={activeSection === "jobs" ? "active" : ""}
+              onClick={() => setActiveSection("jobs")}
+            >
+              💼 Jobs
+            </li>
+            <li
+              className={activeSection === "groups" ? "active" : ""}
+              onClick={() => setActiveSection("groups")}
+            >
+              👥 Groups
+            </li>
+            <li
+              className={activeSection === "events" ? "active" : ""}
+              onClick={() => setActiveSection("events")}
+            >
+              🗓 Events
+            </li>
+            <li
+              className={activeSection === "addSkill" ? "active" : ""}
+              onClick={() => setActiveSection("addSkill")}
+            >
+              ➕ Add Skill
+            </li>
           </ul>
         </aside>
         <main className="dashboard-content">{renderSection()}</main>

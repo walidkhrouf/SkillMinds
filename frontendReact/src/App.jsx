@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import Header from "./components/common/header/Header";
 import Home from "./components/home/Home";
 import About from "./components/about/About";
@@ -16,10 +17,26 @@ import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
 
+const AdminRoute = ({ children }) => {
+  const storedUser = localStorage.getItem("currentUser");
+  if (!storedUser) {
+    return <Navigate to="/signin" replace />;
+  }
+  const user = JSON.parse(storedUser);
+  if (user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
+AdminRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 const AppContent = () => {
   const { pathname } = useLocation();
   const hideLayout = pathname === "/admin";
-  
+
   return (
     <>
       {!hideLayout && <Header />}
@@ -34,7 +51,15 @@ const AppContent = () => {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        {/* Protect the /admin route */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/firstchoose" element={<SkillsList />} />
       </Routes>
