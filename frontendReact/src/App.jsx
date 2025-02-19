@@ -51,7 +51,7 @@ const AppContent = () => {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
-        {/* Protect the /admin route */}
+     
         <Route
           path="/admin"
           element={

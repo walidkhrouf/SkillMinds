@@ -1,34 +1,30 @@
-/*----------------------------------------
-  CSS Variables & Global Settings
-----------------------------------------*/
+
 :root {
-  /* Colors */
-  --primary-color: #a47f18;         /* Warm Gold */
-  --secondary-color: #fff;          /* White */
-  --accent-color: #e2a23f;          /* Accent (for dark mode & hover) */
-  --light-bg: #ffffff;              /* Light background */
-  --background-color: #f8f8f8;       /* Page background */
-  --text-color: #333333;            /* Dark text */
+ 
+  --primary-color: #a47f18;         
+  --secondary-color: #fff;         
+  --accent-color: #e2a23f;          
+  --light-bg: #ffffff;            
+  --background-color: #f8f8f8;      
+  --text-color: #333333;          
   
-  /* Sidebar Colors */
+
   --sidebar-bg: #ffffff;
   --sidebar-text: #333333;
   
-  /* Dark Mode Colors */
+
   --dark-background: #1d1d1d;
   --dark-content-bg: #2a2a2a;
   --dark-sidebar-bg: #2a2a2a;
   --dark-sidebar-text: #eeeeee;
   
-  /* Misc */
+  
   --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.1);
   --transition-speed: 0.5s;
   --font-family: "Roboto", sans-serif;
 }
 
-/*----------------------------------------
-  Global Styles
-----------------------------------------*/
+
 body {
   font-family: var(--font-family);
   background: var(--background-color);
@@ -42,9 +38,7 @@ body.dark-mode {
   color: #eee;
 }
 
-/*----------------------------------------
-  Admin Dashboard Layout
-----------------------------------------*/
+
 .admin-dashboard {
   display: flex;
   min-height: 100vh;
@@ -52,9 +46,7 @@ body.dark-mode {
   transition: background var(--transition-speed) ease;
 }
 
-/*----------------------------------------
-  Sidebar
-----------------------------------------*/
+
 .dashboard-sidebar {
   width: 280px;
   background: var(--sidebar-bg);
@@ -115,9 +107,7 @@ body.dark-mode .dashboard-sidebar ul li.active {
   color: #1d1d1d;
 }
 
-/*----------------------------------------
-  Content Area
-----------------------------------------*/
+
 .dashboard-content {
   flex: 1;
   padding: 2rem;
@@ -133,9 +123,7 @@ body.dark-mode .dashboard-content {
   color: #eee;
 }
 
-/*----------------------------------------
-  Section Content
-----------------------------------------*/
+
 .section-content {
   margin-bottom: 40px;
   animation: popIn 0.5s ease-out both;
@@ -157,9 +145,7 @@ body.dark-mode .section-content h2 {
   border-color: var(--accent-color);
 }
 
-/*----------------------------------------
-  Data Table Styles
-----------------------------------------*/
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -190,9 +176,7 @@ body.dark-mode table th {
   color: #1d1d1d;
 }
 
-/*----------------------------------------
-  User Table
-----------------------------------------*/
+
 .user-table {
   width: 100%;
   border-collapse: collapse;
@@ -222,9 +206,7 @@ body.dark-mode .user-table tr:hover {
   background: #444;
 }
 
-/*----------------------------------------
-  User Details Card
-----------------------------------------*/
+
 .user-details-card {
   margin-top: 20px;
   padding: 20px;
@@ -297,16 +279,14 @@ body.dark-mode .user-details-card {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Certificate Image */
+
 .user-certificate-container img {
   width: 300px;
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-/*----------------------------------------
-  Skill Form
-----------------------------------------*/
+
 .skill-form {
   margin-bottom: 30px;
   padding: 20px;
@@ -369,9 +349,7 @@ body.dark-mode .skill-form textarea {
   color: var(--accent-color);
 }
 
-/*----------------------------------------
-  Skill Table
-----------------------------------------*/
+
 .skill-table {
   width: 100%;
   border-collapse: collapse;
@@ -399,9 +377,7 @@ body.dark-mode .skill-table th {
   color: #1d1d1d;
 }
 
-/*----------------------------------------
-  Admin Dark Mode Toggle
-----------------------------------------*/
+
 .admin-darkmode-toggle {
   position: fixed;
   top: 20px;
@@ -424,14 +400,11 @@ body.dark-mode .admin-darkmode-toggle {
   color: #eee;
 }
 
-/*----------------------------------------
-  Custom Button Styles
-----------------------------------------*/
-/* Modify/Delete buttons in user skills list */
+
 .skill-item button {
   margin-left: 8px;
   padding: 4px 8px;
-  background: #d9534f; /* Bright red for delete */
+  background: #d9534f; 
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -445,9 +418,7 @@ body.dark-mode .admin-darkmode-toggle {
   transform: scale(1.05);
 }
 
-/*----------------------------------------
-  Animations
-----------------------------------------*/
+
 @keyframes popIn {
   0% {
     transform: scale(0.95);
@@ -459,9 +430,7 @@ body.dark-mode .admin-darkmode-toggle {
   }
 }
 
-/*----------------------------------------
-  Responsive Styles
-----------------------------------------*/
+
 @media screen and (max-width: 768px) {
   .admin-dashboard {
     flex-direction: column;

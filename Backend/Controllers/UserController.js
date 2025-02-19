@@ -1,4 +1,3 @@
-// UserController.js
 const otpStore = {};
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -38,25 +37,25 @@ const uploadFileToGridFS = (file) => {
 const signup = async (req, res) => {
   const { username, email, phoneNumber, password, confirmPassword, role, bio, location } = req.body;
   const profileImage = req.files && req.files.profileImage ? req.files.profileImage[0] : null;
-  const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage[0] : null;
-
+  const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage : [];
+  
   if (!username || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ message: "All fields are required" });
   }
   if (password !== confirmPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
-
+  
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-
+  
     const hashedPassword = await bcrypt.hash(password, 10);
     let profileImageData = null;
-    let certificateImageData = null;
-
+    let certificateImageData = [];
+  
     if (profileImage) {
       const fileId = await uploadFileToGridFS(profileImage);
       profileImageData = {
@@ -66,20 +65,21 @@ const signup = async (req, res) => {
         fileId,
       };
     }
-
-    if (role === "mentor" && certificateImage) {
-      const certFileId = await uploadFileToGridFS(certificateImage);
-      certificateImageData = {
-        filename: certificateImage.originalname,
-        contentType: certificateImage.mimetype,
-        length: certificateImage.size,
-        fileId: certFileId,
-      };
+  
+    if (role === "mentor" && certificateImage.length > 0) {
+      for (const file of certificateImage) {
+        const certFileId = await uploadFileToGridFS(file);
+        certificateImageData.push({
+          filename: file.originalname,
+          contentType: file.mimetype,
+          length: file.size,
+          fileId: certFileId,
+        });
+      }
     }
-
-    // For mentor signups, assign role "learner" until admin approval.
-    const finalRole = role === "mentor" ? "learner" : role;
-
+  
+    const finalRole = role === "mentor" ? "unverified mentor" : role;
+  
     const newUser = new User({
       userId: new ObjectId(),
       username,
@@ -92,26 +92,40 @@ const signup = async (req, res) => {
       profileImage: profileImageData,
       certificateImage: certificateImageData,
     });
-
+  
     await newUser.save();
-
-    // Create a welcome (or account update) notification for the new user
+  
     const accountUpdateNotification = new Notification({
       userId: newUser._id,
       type: "ACCOUNT_UPDATE",
       message: "Your account has been created successfully.",
     });
     await accountUpdateNotification.save();
-
-    // Do not return the hashed password to the client
+  
     newUser.password = undefined;
-
+  
     return res.status(201).json({ message: "User registered successfully!", user: newUser });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+const updateUserSkillById = async (req, res) => {
+  try {
+    const { id } = req.params; 
+    const update = req.body; 
+    const updatedSkill = await UserSkill.findByIdAndUpdate(id, update, { new: true });
+    if (!updatedSkill) {
+      return res.status(404).json({ message: "Skill not found." });
+    }
+    res.status(200).json(updatedSkill);
+  } catch (err) {
+    console.error("Error updating user skill:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
 
 const signin = async (req, res) => {
   const { email, password } = req.body;
@@ -124,20 +138,16 @@ const signin = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
     
-    // Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    // Store the OTP along with a timestamp (valid for 10 minutes)
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    // Configure nodemailer with your EMAIL_USER and EMAIL_PASS
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: process.env.EMAIL_USER, // using your friend's email as set in your .env file
-        pass: process.env.EMAIL_PASS, // the app password for that email
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS, 
       },
-      // (Optional) If you run into certificate errors, you can add:
-      // tls: { rejectUnauthorized: false }
+
     });
 
     const mailOptions = {
@@ -149,7 +159,7 @@ const signin = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    // Instead of signing in immediately, respond that OTP has been sent.
+    
     return res.json({ 
       message: "OTP sent to your email. Please verify to complete sign in.", 
       userId: user._id 
@@ -171,7 +181,7 @@ const verifyOTP = async (req, res) => {
     return res.status(400).json({ message: "No OTP request found for this email." });
   }
 
-  // Check if the OTP has expired (10 minutes expiry)
+
   const now = Date.now();
   if (now - record.createdAt > 10 * 60 * 1000) {
     delete otpStore[email];
@@ -182,10 +192,10 @@ const verifyOTP = async (req, res) => {
     return res.status(401).json({ message: "Invalid OTP." });
   }
 
-  // OTP is correct; clear it from the store
+  
   delete otpStore[email];
 
-  // Generate JWT token now since OTP is verified
+  
   const user = await User.findOne({ email });
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
   user.password = undefined;
@@ -205,9 +215,16 @@ const getAllUsers = async (req, res) => {
 
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+
+    const user = await User.findById(req.params.id).lean();
     if (!user)
       return res.status(404).json({ message: "User not found" });
+    
+
+    if (!Array.isArray(user.certificateImage)) {
+      user.certificateImage = user.certificateImage ? [user.certificateImage] : [];
+    }
+    
     res.json(user);
   } catch (err) {
     console.error("Error fetching user:", err);
@@ -226,7 +243,7 @@ const updateUser = async (req, res) => {
       location: req.body.location,
     };
 
-    // Handle new profile image (if provided)
+
     if (req.file) {
       const profileImage = req.file;
       const fileId = await uploadFileToGridFS(profileImage);
@@ -251,7 +268,7 @@ const updateUser = async (req, res) => {
     if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
 
-    // Create a notification for the account update
+    
     const updateNotification = new Notification({
       userId: updatedUser._id,
       type: "ACCOUNT_UPDATE",
@@ -320,31 +337,35 @@ const createUserSkills = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-
 const updateUserSkills = async (req, res) => {
   try {
     const { userId, skills } = req.body;
+
+    const extraPayload = req.body.extraPayload || {};
+
     if (!userId || !Array.isArray(skills)) {
       return res.status(400).json({ message: "Invalid input. Please provide userId and an array of skills." });
     }
     
-    // Check if the user exists
+  
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
     
-    // Remove existing skills for this user
+
     await UserSkill.deleteMany({ userId: userId });
     
-    // Prepare new skills to insert.
-    // Each element should have: { skillId, skillType }
+
     const userSkills = skills.map(skill => ({
       userId: new ObjectId(userId),
       skillId: new ObjectId(skill.skillId),
       skillType: skill.skillType,
-      // Set verificationStatus based on skillType:
-      verificationStatus: skill.skillType === "has" ? "unverified" : "pending",
+      verificationStatus: extraPayload.verificationStatus 
+        ? extraPayload.verificationStatus 
+        : (skill.verificationStatus 
+            ? skill.verificationStatus 
+            : (skill.skillType === "has" ? "unverified" : "pending"))
     }));
     
     const createdSkills = await UserSkill.insertMany(userSkills);
@@ -358,6 +379,9 @@ const updateUserSkills = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+
+
 
 
 
@@ -414,6 +438,31 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const finishSkillSelection = async (req, res) => {
+  try {
+    const { userId, selectedSkills } = req.body;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const userSkills = selectedSkills.map(skill => ({
+      userId: new ObjectId(userId),
+      skillId: new ObjectId(skill.skillId),
+      skillType: skill.skillType,  
+      verificationStatus: user.role === "mentor" ? "pending" : "unverified"
+    }));
+    await UserSkill.insertMany(userSkills);
+    
+    await User.findByIdAndUpdate(userId, { hasChosenSkills: true });
+    
+    res.status(200).json({ message: "Skill selection complete." });
+  } catch (err) {
+    console.error("Error finishing skill selection:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
 const resetPassword = async (req, res) => {
   const { id, token } = req.params;
   const { password } = req.body;
@@ -459,4 +508,6 @@ module.exports = {
   resetPassword,
   deleteUserSkill,
   updateUserSkills,
+  finishSkillSelection,
+  updateUserSkillById,
 };

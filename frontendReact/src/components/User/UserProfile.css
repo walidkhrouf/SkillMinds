@@ -7,13 +7,13 @@
   --transition-speed: 0.3s;
 }
 
-/* Global User Profile Styles */
+
 .user-profile {
   font-family: "Roboto", sans-serif;
   color: var(--text-color);
 }
 
-/* Profile Cover */
+
 .profile-cover {
   position: relative;
   height: 400px;
@@ -32,7 +32,7 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Profile Card */
+
 .container.profile-card {
   background-color: var(--secondary-color);
   box-shadow: var(--box-shadow);
@@ -45,7 +45,7 @@
   animation: fadeInUp 0.8s ease-in-out;
 }
 
-/* Profile Header */
+
 .profile-header {
   display: flex;
   flex-wrap: wrap;
@@ -103,7 +103,7 @@
   color: #666;
 }
 
-/* Profile Bio */
+
 .profile-bio {
   margin-bottom: 30px;
 }
@@ -119,7 +119,7 @@
   line-height: 1.6;
 }
 
-/* Profile Skills */
+
 .profile-skills {
   margin-top: 20px;
   margin-bottom: 30px;
@@ -155,7 +155,7 @@
   transform: translateY(-2px);
 }
 
-/* Remove Skill Button */
+
 .remove-skill-btn {
   background-color: #e74c3c;
   color: #fff;
@@ -173,7 +173,7 @@
   transform: scale(1.05);
 }
 
-/* Add Skill Section */
+
 .add-skill {
   margin-top: 10px;
   display: flex;
@@ -201,7 +201,7 @@
   background-color: var(--primary-color);
 }
 
-/* Profile Details */
+
 .profile-details {
   margin-top: 40px;
 }
@@ -241,7 +241,7 @@
   color: #555;
 }
 
-/* Profile Actions */
+
 .profile-actions {
   margin-top: 30px;
   text-align: center;
@@ -268,7 +268,7 @@
   transform: scale(1.05);
 }
 
-/* Input and Textarea Styles */
+
 .profile-input {
   font-size: 1.1rem;
   padding: 5px 10px;
@@ -288,7 +288,7 @@
   border-radius: 4px;
 }
 
-/* Notification Styles */
+
 .profile-notifications {
   position: absolute;
   top: calc(100% + 20px);
@@ -327,7 +327,7 @@
   margin-top: 5px;
 }
 
-/* Animations */
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

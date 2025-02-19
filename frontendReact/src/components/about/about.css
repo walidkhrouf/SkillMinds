@@ -1,6 +1,4 @@
-/* -----------------------------
-   About Home Section
------------------------------- */
+
 .aboutHome {
   height: auto;
   padding: 2rem 0;
@@ -88,9 +86,7 @@ body.dark-mode .aboutHome .item {
   color: var(--secondary-color);
 }
 
-/* -----------------------------
-   Awrapper Section
------------------------------- */
+
 .awrapper {
   background-image: url("../../../public/images/awrapper.webp");
   background-repeat: no-repeat;
@@ -144,9 +140,7 @@ body.dark-mode .awrapper {
   margin: 0.5rem 0 0;
 }
 
-/* -----------------------------
-   Responsive Adjustments
------------------------------- */
+
 @media screen and (max-width: 768px) {
   .aboutHome .container {
     flex-direction: column-reverse;

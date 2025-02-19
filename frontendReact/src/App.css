@@ -2,11 +2,11 @@
 
 :root {
   /* Color Palette */
-  --primary-color: #a47f18;       /* Warm gold */
-  --secondary-color: #ffffff;     /* Pure white */
-  --background-color: #f8f8f8;      /* Light gray */
-  --dark-bg: #1d1d1d;             /* Dark background for dark mode */
-  --dark-surface: #2a2a2a;        /* Dark surface for cards, buttons etc. */
+  --primary-color: #a47f18;       
+  --secondary-color: #ffffff;     
+  --background-color: #f8f8f8;      
+  --dark-bg: #1d1d1d;             
+  --dark-surface: #2a2a2a;        
   --text-color: #333333;          /* Dark gray for text */
   --dark-text: #e0e0e0;           /* Light text for dark mode */
   
@@ -157,6 +157,7 @@ body.dark-mode button.primary-btn {
 
 /* Headings */
 #heading {
+  font-size: 26px;
   text-align: center;
   padding: 2.5rem 0;
   animation: slideDown var(--transition-speed) ease both;
@@ -212,7 +213,7 @@ body.dark-mode .back {
 
 /* Spacing Utility */
 .margin {
-  margin-top: 40.3%;
+  margin-top: 3%;
 }
 
 /* Grid Layouts */

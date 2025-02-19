@@ -1,6 +1,4 @@
-/*----------------------------------------
-  Skills List Container
-----------------------------------------*/
+
 .skills-list-container {
   max-width: 1000px;
   margin: 40px auto;
@@ -17,9 +15,7 @@ body.dark-mode .skills-list-container {
   box-shadow: 0 4px 8px rgba(0,0,0,0.6);
 }
 
-/*----------------------------------------
-  Headings and Error
-----------------------------------------*/
+
 .skills-list-container h2 {
   text-align: center;
   margin-bottom: 20px;
@@ -32,9 +28,7 @@ body.dark-mode .skills-list-container {
   margin-bottom: 10px;
 }
 
-/*----------------------------------------
-  Skills Selection Layout
-----------------------------------------*/
+
 .skills-selection {
   display: flex;
   gap: 20px;
@@ -56,9 +50,7 @@ body.dark-mode .skills-section {
   border-color: #555;
 }
 
-/*----------------------------------------
-  Section Headings
-----------------------------------------*/
+
 .skills-section h3 {
   text-align: center;
   margin-bottom: 10px;
@@ -66,18 +58,14 @@ body.dark-mode .skills-section {
   color: inherit;
 }
 
-/*----------------------------------------
-  Skills Grid
-----------------------------------------*/
+
 .skills-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-/*----------------------------------------
-  Skill Card
-----------------------------------------*/
+
 .skill-card {
   background: var(--light-bg);
   border: 1px solid #ccc;
@@ -125,9 +113,7 @@ body.dark-mode .skill-card:hover {
   background: #555;
 }
 
-/*----------------------------------------
-  Selected Skills
-----------------------------------------*/
+
 .selected-skills {
   margin-top: 15px;
 }
@@ -182,9 +168,7 @@ body.dark-mode .selected-skill button:hover {
   background: #ff3b3b;
 }
 
-/*----------------------------------------
-  Next Button Container
-----------------------------------------*/
+
 .next-button-container {
   text-align: center;
   margin-top: 20px;

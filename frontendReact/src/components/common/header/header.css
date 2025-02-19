@@ -1,6 +1,4 @@
-/*----------------------------------------
-  CSS Variables & Global Settings
-----------------------------------------*/
+
 :root {
   --primary-color: #a47f18;
   --secondary-color: #159e8b;
@@ -14,9 +12,7 @@
   --transition-speed: 0.5s;
 }
 
-/*----------------------------------------
-  Head Section
-----------------------------------------*/
+
 .logo h1 {
   font-size: 35px;
   font-weight: 900;
@@ -27,9 +23,7 @@
   margin-left: 10px;
 }
 
-/*----------------------------------------
-  Header Styling
-----------------------------------------*/
+
 header {
   background-color: rgb(78, 49, 6);
   width: 100%;
@@ -59,9 +53,7 @@ header:hover {
   padding: 0 20px;
 }
 
-/*----------------------------------------
-  Navigation Links (Desktop)
-----------------------------------------*/
+
 .nav-links {
   display: flex;
   list-style: none;
@@ -83,7 +75,7 @@ header:hover {
   transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease, font-size 0.3s ease;
 }
 
-/* Enhanced hover effect: smoothly enlarge and lift */
+
 .nav-links li a:hover,
 .nav-links li a.active {
   transform: translateY(-3px) scale(1.15);
@@ -91,7 +83,7 @@ header:hover {
   text-shadow: 0 2px 8px rgba(164, 127, 24, 0.7);
 }
 
-/* Underline Animation */
+
 .nav-links li a::after {
   content: "";
   display: block;
@@ -109,9 +101,7 @@ header:hover {
   width: 100%;
 }
 
-/*----------------------------------------
-  Header Actions (Desktop)
-----------------------------------------*/
+
 .start {
   display: flex;
   align-items: center;
@@ -146,9 +136,7 @@ header:hover {
   color: var(--light-bg);
 }
 
-/*----------------------------------------
-  Notification Icon and Dropdown
-----------------------------------------*/
+
 .notification-container {
   position: relative;
   z-index: 2000;
@@ -188,7 +176,7 @@ header:hover {
   animation: fadeInDown 0.3s ease;
 }
 
-/* Custom Scrollbar for Notification Dropdown */
+
 .notification-dropdown::-webkit-scrollbar {
   width: 8px;
 }
@@ -220,7 +208,7 @@ header:hover {
   color: #666;
 }
 
-/* Dark Mode Notification Overrides */
+
 body.dark-mode .notification-dropdown {
   background: var(--dark-surface);
   border: 1px solid #444;
@@ -241,9 +229,7 @@ body.dark-mode .notification-time {
   color: #bbb;
 }
 
-/*----------------------------------------
-  Dark Mode and Toggle Button
-----------------------------------------*/
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -289,9 +275,7 @@ body.dark-mode .notification-time {
   transform: rotate(90deg);
 }
 
-/*----------------------------------------
-  Media Query for Mobile Responsiveness
-----------------------------------------*/
+
 @media screen and (max-width: 1300px) {
   header {
     width: 100vw;
@@ -305,7 +289,7 @@ body.dark-mode .notification-time {
   .header-nav {
     padding: 0 20px;
   }
-  /* Hide desktop certificate button on mobile */
+
   .header-actions .certificate-btn {
     display: none;
   }
@@ -334,13 +318,13 @@ body.dark-mode .notification-time {
     pointer-events: auto;
   }
   .nav-links li {
-    margin: 15px 0; /* More vertical spacing for clarity */
+    margin: 15px 0; 
   }
   .nav-links li a {
-    font-size: 1.2rem; /* Bigger font size on mobile */
+    font-size: 1.2rem; 
     padding: 10px 20px;
   }
-  /* Mobile certificate button appears only in the mobile menu */
+  
   .mobile-certificate {
     display: block;
     margin-top: 20px;
@@ -369,9 +353,7 @@ body.dark-mode .notification-time {
   }
 }
 
-/*----------------------------------------
-  Keyframe Animations
-----------------------------------------*/
+
 @keyframes fadeInDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -394,9 +376,7 @@ body.dark-mode .notification-time {
   100% { background-position: 0% 50%; }
 }
 
-/*----------------------------------------
-  Global Dark Mode Overrides
-----------------------------------------*/
+
 body.dark-mode {
   background-color: var(--dark-bg);
   color: #e0e0e0;

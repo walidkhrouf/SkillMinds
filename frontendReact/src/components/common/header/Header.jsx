@@ -16,7 +16,7 @@ const Header = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Load current user and fetch notifications if available
+ 
   useEffect(() => {
     const userStr = localStorage.getItem("currentUser");
     if (userStr) {
@@ -75,7 +75,7 @@ const Header = () => {
     }
   };
 
-  // Close notifications dropdown if clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
@@ -96,7 +96,7 @@ const Header = () => {
     document.body.classList.toggle("dark-mode", storedDarkMode);
   }, []);
 
-  // Example dark mode toggle function
+
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
@@ -162,13 +162,13 @@ const Header = () => {
               </a>
             </li>
             <li>
-              <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+              <a to="" className={({ isActive }) => (isActive ? "active" : "")}>
                 Recruitement
-              </NavLink>
+              </a>
             </li>
           
             
-            {/* Mobile-only: Certificate button */}
+           
             <li className="mobile-certificate">
               {currentUser ? (
                 <button onClick={() => navigate("/profile")} className="certificate-btn">
@@ -182,7 +182,7 @@ const Header = () => {
             </li>
           </ul>
 
-          {/* Desktop Header Actions */}
+       
           <div className="header-actions">
             <div className="start">
               {currentUser ? (

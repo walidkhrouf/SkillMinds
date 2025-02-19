@@ -1,4 +1,4 @@
-/* Hero Section */
+
 .hero {
   position: relative;
   background-image: url("/images/back.webp");
@@ -7,18 +7,16 @@
   background-position: center;
   width: 100%;
   height: 100vh;
-  padding: 8rem 50px 0; /* Adequate top and side padding */
-  color: var(--secondary-color); /* Light text by default */
+  padding: 8rem 50px 0; 
+  color: var(--secondary-color); 
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   animation: zoomIn 1s ease;
-  /* Adding a subtle overlay for readability */
   background-blend-mode: overlay;
 }
 
-/* Dark Mode Adjustments */
 body.dark-mode .hero {
   background-image: 
     linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
@@ -26,7 +24,6 @@ body.dark-mode .hero {
   color: var(--secondary-color);
 }
 
-/* Heading and Paragraph adjustments */
 .hero .container {
   z-index: 2;
   position: relative;
@@ -85,12 +82,11 @@ body.dark-mode .hero {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Margin Element for Spacing */
 .margin {
-  margin-top: 40vh;
+  margin-top: 30vh;
 }
 
-/* Animation Keyframes */
+
 @keyframes zoomIn {
   from {
     transform: scale(0.95);
@@ -102,7 +98,6 @@ body.dark-mode .hero {
   }
 }
 
-/* Responsive Adjustments */
 @media screen and (max-width: 768px) {
   .hero {
     background-position: right;

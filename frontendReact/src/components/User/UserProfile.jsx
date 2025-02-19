@@ -1,4 +1,4 @@
-import  { useState, useEffect,  } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserProfile.css";
 
@@ -11,9 +11,8 @@ const UserProfile = () => {
   const [editedUser, setEditedUser] = useState({});
   const [newProfileImage, setNewProfileImage] = useState(null);
   const [error, setError] = useState("");
-  const [notifications, setNotifications] = useState([]);
+  const [setNotifications] = useState([]);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUser");
@@ -26,7 +25,7 @@ const UserProfile = () => {
     }
   }, []);
 
-  // Fetch available skills for adding new skills
+
   useEffect(() => {
     fetch("http://localhost:5000/api/users/skills")
       .then((res) => res.json())
@@ -36,6 +35,7 @@ const UserProfile = () => {
       );
   }, []);
 
+ 
   const fetchUserSkills = (userId) => {
     fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`)
       .then((res) => res.json())
@@ -48,55 +48,6 @@ const UserProfile = () => {
       );
   };
 
-
- 
-const markNotificationAsRead = async (notificationId) => {
-  try {
-    const res = await fetch(`http://localhost:5000/api/notifications/${notificationId}/markRead`, {
-      method: "PUT",
-    });
-    if (res.ok) {
-      fetchNotifications(user._id);
-    }
-  } catch (error) {
-    console.error("Error marking notification as read:", error);
-  }
-};
-
-const handleRemoveSkill = async (skillId) => {
-  try {
-    const res = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      setUserSkills(prev => prev.filter(us => us._id !== skillId));
-      fetchNotifications(user._id);
-    } else {
-      console.error("Failed to delete skill.");
-    }
-  } catch (error) {
-    console.error("Error deleting skill:", error);
-  }
-};
-
-<div className="profile-notifications">
-  <h2>Notifications</h2>
-  {notifications.length === 0 ? (
-    <p>No notifications.</p>
-  ) : (
-    notifications.map((notification) => (
-      <div
-        key={notification._id}
-        className={`notification-item ${notification.isRead ? 'read' : 'unread'}`}
-        onClick={() => markNotificationAsRead(notification._id)}
-      >
-        <p>{notification.message}</p>
-        <small>{new Date(notification.createdAt).toLocaleString()}</small>
-      </div>
-    ))
-  )}
-</div>
-
   const fetchNotifications = (userId) => {
     fetch(`http://localhost:5000/api/notifications?userId=${userId}`)
       .then((res) => res.json())
@@ -105,9 +56,39 @@ const handleRemoveSkill = async (skillId) => {
         console.error("Error fetching notifications:", err)
       );
   };
+/*
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/notifications/${notificationId}/markRead`, {
+        method: "PUT",
+      });
+      if (res.ok) {
+        fetchNotifications(user._id);
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+*/
+  const handleRemoveSkill = async (skillId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setUserSkills((prev) => prev.filter((us) => us._id !== skillId));
+        fetchNotifications(user._id);
+      } else {
+        console.error("Failed to delete skill.");
+      }
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("jwtToken");
     navigate("/signin");
   };
 
@@ -148,6 +129,7 @@ const handleRemoveSkill = async (skillId) => {
       });
       if (res.ok) {
         const result = await res.json();
+       
         setUserSkills((prevSkills) => [...prevSkills, ...result.userSkills]);
         fetchNotifications(user._id);
       } else {
@@ -158,8 +140,6 @@ const handleRemoveSkill = async (skillId) => {
       setError("Error adding skill.");
     }
   };
-
-  
 
   const validateFields = () => {
     const { username, email, location, phoneNumber, bio } = editedUser;
@@ -211,7 +191,6 @@ const handleRemoveSkill = async (skillId) => {
         fetchUserSkills(updatedUser._id);
         fetchNotifications(updatedUser._id);
         window.location.reload();
-
       } else {
         setError("Failed to update profile.");
       }
@@ -326,7 +305,10 @@ const handleRemoveSkill = async (skillId) => {
             {userSkills.length > 0 ? (
               userSkills.map((us) => (
                 <li key={us._id} className="skill-item">
-                  {us.skillId.name}
+                  {us.skillId.name}{" "}
+                  <span className="verification-status">
+                    ({us.verificationStatus})
+                  </span>
                   {editing && (
                     <button
                       className="remove-skill-btn"

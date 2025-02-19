@@ -10,7 +10,7 @@ const {
   createUserSkills,
   updateUserSkills,
   getUserSkills  
-  ,forgotPassword,resetPassword  ,deleteUserSkill
+  ,forgotPassword,resetPassword  ,deleteUserSkill,finishSkillSelection,updateUserSkillById
 } = require("../Controllers/UserController");
 
 const User = require("../models/User");
@@ -22,14 +22,15 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 
+router.put("/userskills/:id", updateUserSkillById);
 
 router.put("/userskills", updateUserSkills);
-
+router.post("/finishSkills", finishSkillSelection);
 router.post("/verifyOTP", verifyOTP);
 router.put("/:id", upload.single("profileImage"), updateUser);
 router.post("/signup", upload.fields([
   { name: "profileImage", maxCount: 1 },
-  { name: "certificateImage", maxCount: 1 }
+  { name: "certificateImage", maxCount: 10 }
 ]), signup);
 
 

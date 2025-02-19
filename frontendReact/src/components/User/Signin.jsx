@@ -29,7 +29,7 @@ const Signin = () => {
     setError("");
   };
 
-  // Initial sign in: send credentials and trigger OTP sending
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -43,19 +43,21 @@ const Signin = () => {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/users/signin", formData);
-      // Check if the response has a userId (meaning OTP was sent)
+
       if (response.data.userId && !response.data.token) {
         setMessage(response.data.message || "OTP sent to your email.");
         setUserId(response.data.userId);
         setOtpSent(true);
       } else if (response.data.user && response.data.token) {
-        // For example, for admin where token is returned immediately
+
         localStorage.setItem("currentUser", JSON.stringify(response.data.user));
         localStorage.setItem("jwtToken", response.data.token);
         if (response.data.user.role === "admin") {
           navigate("/admin");
         } else {
-          if (!localStorage.getItem("hasChosenSkills")) {
+          const user = response.data.user;
+          const hasChosenSkills = user.hasChosenSkills;
+          if (hasChosenSkills == "false") {
             navigate("/firstchoose");
           } else {
             navigate("/");
@@ -71,7 +73,7 @@ const Signin = () => {
     }
   };
 
-  // OTP verification: send the OTP to the backend for validation
+
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (!otp) {
@@ -90,7 +92,9 @@ const Signin = () => {
         if (response.data.user.role === "admin") {
           navigate("/admin");
         } else {
-          if (!localStorage.getItem("hasChosenSkills")) {
+          const user = response.data.user;
+          const hasChosenSkills = user.hasChosenSkills;
+          if (hasChosenSkills == false) {
             navigate("/firstchoose");
           } else {
             navigate("/");
@@ -106,7 +110,7 @@ const Signin = () => {
     }
   };
 
-  // Handle forgot password remains unchanged
+ 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {

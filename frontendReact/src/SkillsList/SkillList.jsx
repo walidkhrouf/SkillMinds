@@ -57,27 +57,35 @@ const SkillsList = () => {
     const currentUser = JSON.parse(currentUserStr);
     setLoading(true);
     try {
-      for (let skill of wantsToLearn) {
-        await fetch("http://localhost:5000/api/users/userskills", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: currentUser._id,
-            skills: [{ skillId: skill._id, skillType: "wantsToLearn" }],
-          }),
-        });
+      const finishResponse = await fetch("http://localhost:5000/api/users/finishSkills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser._id,
+          selectedSkills: [
+            ...wantsToLearn.map((skill) => ({
+              skillId: skill._id,
+              skillType: "wantsToLearn"
+            })),
+            ...hasSkills.map((skill) => ({
+              skillId: skill._id,
+              skillType: "has"
+            }))
+          ]
+        }),
+      });
+      if (!finishResponse.ok) {
+        const finishData = await finishResponse.json();
+        setError(finishData.message || "Error finishing skill selection");
+        setLoading(false);
+        return;
       }
-      for (let skill of hasSkills) {
-        await fetch("http://localhost:5000/api/users/userskills", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: currentUser._id,
-            skills: [{ skillId: skill._id, skillType: "has" }],
-          }),
-        });
+      
+      const finishData = await finishResponse.json();
+    
+      if (finishData.user) {
+        localStorage.setItem("currentUser", JSON.stringify(finishData.user));
       }
-      localStorage.setItem("hasChosenSkills", "true");
       navigate("/");
     } catch (err) {
       console.error(err);
