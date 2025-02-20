@@ -1,25 +1,17 @@
 const otpStore = {};
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const UserSkill = require("../models/UserSkill");
-const mongoose = require("mongoose");
+const { mongoose } = require("../config/databaseConnection"); 
 const nodemailer = require("nodemailer");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/devminds_db", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.error("Error connecting to MongoDB", err));
-
-const conn = mongoose.connection;
 let gfs;
-conn.once("open", () => {
-  gfs = new GridFSBucket(conn.db, { bucketName: "profileImages" });
+mongoose.connection.once("open", () => {
+  gfs = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
 });
 
 const uploadFileToGridFS = (file) => {

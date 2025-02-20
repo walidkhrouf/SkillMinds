@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const models = require('../models'); 
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devminds_db';
+const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/devminds_db';
 
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
