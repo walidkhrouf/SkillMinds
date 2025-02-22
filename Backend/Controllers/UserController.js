@@ -8,7 +8,7 @@ const { mongoose } = require("../config/databaseConnection");
 const nodemailer = require("nodemailer");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
-
+const axios = require('axios');
 let gfs;
 mongoose.connection.once("open", () => {
   gfs = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
@@ -146,7 +146,52 @@ const signin = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Your OTP Code",
-      text: `Your OTP code is: ${otp}. It is valid for 10 minutes.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="text-align: center; padding: 20px; background-color: #007bff; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">SkillMinds</h1>
+          
+          </div>
+    
+          <!-- Body -->
+          <div style="padding: 20px;">
+            <h2 style="color: #333; font-size: 20px; margin-bottom: 15px;">Your OTP Code</h2>
+            <p style="color: #555; font-size: 16px; line-height: 1.5;">Your One-Time Password (OTP) code is:</p>
+            <div style="text-align: center; margin: 20px 0;">
+              <p style="font-size: 24px; font-weight: bold; color: #007bff; background-color: #f8f9fa; padding: 10px; border-radius: 5px; display: inline-block;">
+                ${otp}
+              </p>
+            </div>
+            <p style="color: #555; font-size: 14px; text-align: center;">This code is valid for <strong>10 minutes</strong>.</p>
+            <p style="color: #777; font-size: 12px; text-align: center;">If you did not request this OTP, please ignore this email.</p>
+          </div>
+    
+          <!-- Footer -->
+          <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
+  
+            <p style="color: #777; margin: 5px 0 0; font-size: 12px;">Contact us: <a href="mailto:skillminds@gmail.com" style="color: #007bff; text-decoration: none;">skillminds@gmail.com</a></p>
+          </div>
+        </div>
+      `,
+      text: `
+        ================================
+                Your OTP Code
+        ================================
+    
+        Your One-Time Password (OTP) code is:
+    
+        **${otp}**
+    
+        This code is valid for 10 minutes.
+    
+        If you did not request this OTP, please ignore this email.
+    
+        ================================
+        DevMinds - Your Development Partner
+        Contact us: skillminds@gmail.com
+        ================================
+      `,
     };
 
     await transporter.sendMail(mailOptions);
@@ -402,30 +447,55 @@ const forgotPassword = async (req, res) => {
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
+    // Create the reset link
+    const resetLink = `http://localhost:5173/reset-password/${user._id}/${token}`;
+
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL_USER, // Your Gmail address
+        pass: process.env.EMAIL_PASS, // Your Gmail app password
       },
     });
 
+    // Beautiful email template
     const mailOptions = {
       to: user.email,
       subject: "Password Reset Request",
-      text: `
-        You requested a password reset. Please click the link below to reset your password:
-        http://localhost:5173/reset-password/${user._id}/${token}
-        
-        If you did not request this, please ignore this email.
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <!-- Header -->
+          <div style="text-align: center; padding: 10px; background-color: #007bff; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">SkillMinds</h1>
+          </div>
+    
+          <!-- Body -->
+          <div style="padding: 15px;">
+            <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Password Reset Request</h2>
+            <p style="color: #555; font-size: 14px; line-height: 1.5;">You requested a password reset. Please click the button below to reset your password:</p>
+            <div style="text-align: center; margin: 15px 0;">
+              <a href="${resetLink}" style="display: inline-block; padding: 8px 16px; font-size: 14px; color: white; background-color: #007bff; text-decoration: none; border-radius: 4px;">
+                Reset Password
+              </a>
+            </div>
+            <p style="color: #555; font-size: 12px; text-align: center;">If you did not request this, please ignore this email.</p>
+          </div>
+    
+          <!-- Footer -->
+          <div style="text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
+            <p style="color: #777; margin: 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds@gmail.com</a></p>
+          </div>
+        </div>
       `,
+      text: `You requested a password reset. Please click the link below to reset your password:\n\n${resetLink}\n\nIf you did not request this, please ignore this email.`, // Plain text fallback
     };
 
+    // Send the email
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "Password reset link has been sent to your email." });
   } catch (err) {
-    console.error(err);
+    console.error("Error sending email:", err);
     res.status(500).json({ message: "An error occurred while processing your request.", error: err.message });
   }
 };
