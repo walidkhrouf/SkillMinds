@@ -9,20 +9,23 @@ const Header = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const notifRef = useRef(null);
+  const profileRef = useRef(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
- 
+  // Load current user from localStorage
   useEffect(() => {
     const userStr = localStorage.getItem("currentUser");
     if (userStr) {
       const userObj = JSON.parse(userStr);
       setCurrentUser(userObj);
-      fetchNotifications(userObj._id);
+      fetchNotifications(userObj._id); // Fetch notifications if user exists
     } else {
       setCurrentUser(null);
     }
@@ -57,7 +60,7 @@ const Header = () => {
   const markAllNotificationsAsRead = async () => {
     if (!currentUser) return;
     try {
-      const unreadNotifications = notifications.filter(n => !n.isRead);
+      const unreadNotifications = notifications.filter((n) => !n.isRead);
       for (let notif of unreadNotifications) {
         await markNotificationAsRead(notif._id);
       }
@@ -75,11 +78,13 @@ const Header = () => {
     }
   };
 
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -88,14 +93,12 @@ const Header = () => {
 
   const handleToggle = () => setMenuOpen((prev) => !prev);
   const closeMenu = () => setMenuOpen(false);
-  
 
   useEffect(() => {
     const storedDarkMode = sessionStorage.getItem("darkMode") === "true";
     setDarkMode(storedDarkMode);
     document.body.classList.toggle("dark-mode", storedDarkMode);
   }, []);
-
 
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
@@ -106,8 +109,15 @@ const Header = () => {
     });
   };
 
-  const headerClass = `${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("jwtToken");
+    setCurrentUser(null);
+    setShowProfileDropdown(false);
+    navigate("/");
+  };
 
+  const headerClass = `${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
@@ -119,7 +129,6 @@ const Header = () => {
             <img src="/images/logo.png" alt="Logo" />
           </Link>
 
-          {/* Navigation Links (common for desktop and mobile) */}
           <ul className={menuOpen ? "nav-links active" : "nav-links"} onClick={closeMenu}>
             <li>
               <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
@@ -157,41 +166,107 @@ const Header = () => {
               </NavLink>
             </li>
             <li>
-              <a to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+              <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
                 Events
               </a>
             </li>
             <li>
-              <a to="" className={({ isActive }) => (isActive ? "active" : "")}>
-                Recruitement
+              <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                Recruitment
               </a>
             </li>
-          
-            
-           
             <li className="mobile-certificate">
               {currentUser ? (
-                <button onClick={() => navigate("/profile")} className="certificate-btn">
-                  View Profile
-                </button>
+                <div
+                  className="profile-container"
+                  ref={profileRef}
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  <button onClick={() => navigate("/profile")} className="certificate-btn">
+                    View Profile
+                  </button>
+                  {showProfileDropdown && (
+                    <div className="profile-dropdown">
+                      <div className="profile-photo-container">
+                        <img
+                          src={
+                            currentUser.profileImage && currentUser.profileImage.fileId
+                              ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
+                              : "/images/avatar.png"
+                          }
+                          alt="Profile"
+                          className="profile-photo"
+                        />
+                      </div>
+                      <div className="profile-details">
+                        <div className="profile-item">
+                          <span className="label">Username:</span>
+                          <span className="value">{currentUser.username || "User"}</span>
+                        </div>
+                        <div className="profile-item">
+                          <span className="label">Email:</span>
+                          <span className="value">{currentUser.email || "N/A"}</span>
+                        </div>
+                      </div>
+                      <button className="logout-btn" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <NavLink to="/signin" className="certificate-btn">
-                  Signin/Signup
+                  Signin or Signup
                 </NavLink>
               )}
             </li>
           </ul>
 
-       
           <div className="header-actions">
             <div className="start">
               {currentUser ? (
-                <button onClick={() => navigate("/profile")} className="certificate-btn">
-                  View Profile
-                </button>
+                <div
+                  className="profile-container"
+                  ref={profileRef}
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  <button onClick={() => navigate("/profile")} className="certificate-btn">
+                    View Profile
+                  </button>
+                  {showProfileDropdown && (
+                    <div className="profile-dropdown">
+                      <div className="profile-photo-container">
+                        <img
+                          src={
+                            currentUser.profileImage && currentUser.profileImage.fileId
+                              ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
+                              : "/images/avatar.png"
+                          }
+                          alt="Profile"
+                          className="profile-photo"
+                        />
+                      </div>
+                      <div className="profile-details">
+                        <div className="profile-item">
+                          <span className="label">Username:</span>
+                          <span className="value">{currentUser.username || "User"}</span>
+                        </div>
+                        <div className="profile-item">
+                          <span className="label">Email:</span>
+                          <span className="value">{currentUser.email || "N/A"}</span>
+                        </div>
+                      </div>
+                      <button className="logout-btn" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <NavLink to="/signin" className="certificate-btn">
-                  Signin/Signup
+                  Signin or Signup
                 </NavLink>
               )}
             </div>
@@ -230,7 +305,6 @@ const Header = () => {
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button className="toggle" onClick={handleToggle}>
             {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-bars"></i>}
           </button>

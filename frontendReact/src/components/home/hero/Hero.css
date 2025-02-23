@@ -15,6 +15,7 @@
   text-align: center;
   animation: zoomIn 1s ease;
   background-blend-mode: overlay;
+  z-index: 1;
 }
 
 body.dark-mode .hero {

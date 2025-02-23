@@ -25,17 +25,13 @@ const UserProfile = () => {
     }
   }, []);
 
-
   useEffect(() => {
     fetch("http://localhost:5000/api/users/skills")
       .then((res) => res.json())
       .then((data) => setAvailableSkills(data))
-      .catch((err) =>
-        console.error("Error fetching available skills:", err)
-      );
+      .catch((err) => console.error("Error fetching available skills:", err));
   }, []);
 
- 
   const fetchUserSkills = (userId) => {
     fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`)
       .then((res) => res.json())
@@ -43,33 +39,16 @@ const UserProfile = () => {
         const hasSkills = data.filter((us) => us.skillType === "has");
         setUserSkills(hasSkills);
       })
-      .catch((err) =>
-        console.error("Error fetching user skills:", err)
-      );
+      .catch((err) => console.error("Error fetching user skills:", err));
   };
 
   const fetchNotifications = (userId) => {
     fetch(`http://localhost:5000/api/notifications?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => setNotifications(data))
-      .catch((err) =>
-        console.error("Error fetching notifications:", err)
-      );
+      .catch((err) => console.error("Error fetching notifications:", err));
   };
-/*
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/notifications/${notificationId}/markRead`, {
-        method: "PUT",
-      });
-      if (res.ok) {
-        fetchNotifications(user._id);
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
-*/
+
   const handleRemoveSkill = async (skillId) => {
     try {
       const res = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
@@ -89,7 +68,7 @@ const UserProfile = () => {
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("jwtToken");
-    navigate("/signin");
+    navigate("/");
   };
 
   const toggleEditing = () => {
@@ -129,7 +108,6 @@ const UserProfile = () => {
       });
       if (res.ok) {
         const result = await res.json();
-       
         setUserSkills((prevSkills) => [...prevSkills, ...result.userSkills]);
         fetchNotifications(user._id);
       } else {
@@ -162,7 +140,6 @@ const UserProfile = () => {
     try {
       let response;
       if (newProfileImage) {
-        // If a new profile image is chosen, use FormData
         const formData = new FormData();
         formData.append("username", editedUser.username);
         formData.append("email", editedUser.email);
@@ -368,7 +345,7 @@ const UserProfile = () => {
               Modify Profile
             </button>
           )}
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={handleLogout} className="profile-logout-btn">
             Logout
           </button>
         </div>

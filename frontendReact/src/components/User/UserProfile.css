@@ -7,12 +7,10 @@
   --transition-speed: 0.3s;
 }
 
-
 .user-profile {
   font-family: "Roboto", sans-serif;
   color: var(--text-color);
 }
-
 
 .profile-cover {
   position: relative;
@@ -32,7 +30,6 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-
 .container.profile-card {
   background-color: var(--secondary-color);
   box-shadow: var(--box-shadow);
@@ -44,7 +41,6 @@
   z-index: 2;
   animation: fadeInUp 0.8s ease-in-out;
 }
-
 
 .profile-header {
   display: flex;
@@ -103,7 +99,6 @@
   color: #666;
 }
 
-
 .profile-bio {
   margin-bottom: 30px;
 }
@@ -118,7 +113,6 @@
   font-size: 1.1rem;
   line-height: 1.6;
 }
-
 
 .profile-skills {
   margin-top: 20px;
@@ -155,7 +149,6 @@
   transform: translateY(-2px);
 }
 
-
 .remove-skill-btn {
   background-color: #e74c3c;
   color: #fff;
@@ -172,7 +165,6 @@
   background-color: #c0392b;
   transform: scale(1.05);
 }
-
 
 .add-skill {
   margin-top: 10px;
@@ -200,7 +192,6 @@
 .add-skill button:hover {
   background-color: var(--primary-color);
 }
-
 
 .profile-details {
   margin-top: 40px;
@@ -241,14 +232,13 @@
   color: #555;
 }
 
-
 .profile-actions {
   margin-top: 30px;
   text-align: center;
 }
 
 .modify-btn,
-.logout-btn,
+.profile-logout-btn,
 .notification-toggle-btn {
   padding: 10px 30px;
   background-color: var(--primary-color);
@@ -262,12 +252,11 @@
 }
 
 .modify-btn:hover,
-.logout-btn:hover,
+.profile-logout-btn:hover,
 .notification-toggle-btn:hover {
   background-color: var(--accent-color);
   transform: scale(1.05);
 }
-
 
 .profile-input {
   font-size: 1.1rem;
@@ -287,7 +276,6 @@
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-
 
 .profile-notifications {
   position: absolute;
@@ -326,7 +314,6 @@
   color: #999;
   margin-top: 5px;
 }
-
 
 @keyframes fadeInUp {
   from {

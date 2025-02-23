@@ -11,8 +11,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import Header from "../common/header/Header";
+import Footer from "../common/footer/Footer";
 import "./AdminDashboard.css";
-
 
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
@@ -60,7 +61,7 @@ const statsData = {
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null); // holds the expanded user details
   const [userSkills, setUserSkills] = useState([]);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingData, setEditingData] = useState({
@@ -71,7 +72,6 @@ const UserManager = () => {
     bio: "",
     location: "",
   });
-
   const [availableSkills, setAvailableSkills] = useState([]);
   const [assignedSkillIds, setAssignedSkillIds] = useState([]);
 
@@ -91,6 +91,7 @@ const UserManager = () => {
   }, []);
 
   const handleRowClick = async (id) => {
+    // If the same user is clicked again, collapse details.
     if (selectedUser && selectedUser._id === id) {
       setSelectedUser(null);
       setUserSkills([]);
@@ -188,7 +189,7 @@ const UserManager = () => {
       if (response.ok) {
         setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
-    
+
         const combinedPayload = [
           ...userSkills
             .filter((skill) => skill.skillType === "has")
@@ -231,7 +232,6 @@ const UserManager = () => {
         method: "DELETE",
       });
       if (response.ok) {
-     
         const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
@@ -268,7 +268,6 @@ const UserManager = () => {
     }
   };
 
-
   const verifyUserSkill = async (skillId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
@@ -277,7 +276,6 @@ const UserManager = () => {
         body: JSON.stringify({ verificationStatus: "verified" }),
       });
       if (response.ok) {
- 
         const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
@@ -296,7 +294,6 @@ const UserManager = () => {
 
   const approveMentor = async (userId) => {
     try {
-      
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -307,11 +304,10 @@ const UserManager = () => {
         setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
 
-     
-        const combinedPayload = userSkills.map(skill => ({
+        const combinedPayload = userSkills.map((skill) => ({
           skillId: skill.skillId?._id,
           skillType: skill.skillType,
-          verificationStatus: skill.skillType === "has" ? "verified" : (skill.verificationStatus || "pending")
+          verificationStatus: skill.skillType === "has" ? "verified" : (skill.verificationStatus || "pending"),
         }));
 
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
@@ -345,7 +341,6 @@ const UserManager = () => {
     }
   };
 
-
   const wantsToLearnSkills = userSkills.filter((s) => s.skillType === "wantsToLearn");
   const hasSkillsList = userSkills.filter((s) => s.skillType === "has");
 
@@ -361,151 +356,176 @@ const UserManager = () => {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user._id} onClick={() => handleRowClick(user._id)}>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-            </tr>
+            <React.Fragment key={user._id}>
+              <tr onClick={() => handleRowClick(user._id)}>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+              </tr>
+              {selectedUser && selectedUser._id === user._id && (
+                <tr className="expanded">
+                  <td colSpan="3">
+                    <div className="expanded-user-details">
+                      <div className="user-details-body">
+                        <div className="user-details-row">
+                          <span className="label">Username:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="username"
+                              value={editingData.username}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.username}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Email:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="email"
+                              value={editingData.email}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.email}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Role:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                              <option value="learner">Learner</option>
+                              <option value="unverified mentor">Unverified Mentor</option>
+                              <option value="mentor">Mentor</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          ) : (
+                            <span className="value">{selectedUser.role}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Phone:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="phoneNumber"
+                              value={editingData.phoneNumber}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Bio:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <textarea
+                              name="bio"
+                              value={editingData.bio}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.bio || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Location:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="location"
+                              value={editingData.location}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.location || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Wants to Learn:</span>
+                          <ul className="user-skills-list">
+                            {wantsToLearnSkills.length > 0 ? (
+                              wantsToLearnSkills.map((skill) => (
+                                <li key={skill._id} className="skill-item">
+                                  {skill.skillId ? skill.skillId.name : "Skill Deleted"}
+                                  <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
+                                </li>
+                              ))
+                            ) : (
+                              <span className="value">No skills added</span>
+                            )}
+                          </ul>
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Has:</span>
+                          <ul className="user-skills-list">
+                            {hasSkillsList.length > 0 ? (
+                              hasSkillsList.map((skill) => (
+                                <li key={skill._id} className="skill-item">
+                                  {skill.skillId ? skill.skillId.name : "Skill Deleted"}{" "}
+                                  <span className="verification-status">({skill.verificationStatus})</span>
+                                  <button onClick={() => verifyUserSkill(skill._id)}>Verify</button>
+                                  <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
+                                </li>
+                              ))
+                            ) : (
+                              <span className="value">No skills added</span>
+                            )}
+                          </ul>
+                        </div>
+                        {selectedUser.profileImage && (
+                          <div className="user-image-container">
+                            <img
+                              src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                              alt={selectedUser.profileImage.filename}
+                            />
+                          </div>
+                        )}
+                        {selectedUser.certificateImage &&
+                          Array.isArray(selectedUser.certificateImage) &&
+                          selectedUser.certificateImage.length > 0 && (
+                            <div className="user-certificate-container">
+                              <h4>
+                                Certificate{selectedUser.certificateImage.length > 1 ? "s" : ""}
+                              </h4>
+                              {selectedUser.certificateImage.map((cert, index) => (
+                                <img
+                                  key={index}
+                                  src={`http://localhost:5000/api/files/${cert.fileId}?t=${Date.now()}`}
+                                  alt={cert.filename}
+                                />
+                              ))}
+                            </div>
+                        )}
+                      </div>
+                      <div className="user-actions">
+                        {editingUserId !== selectedUser._id ? (
+                          <>
+                            <button onClick={() => startEditing(selectedUser)}>Modify</button>
+                            <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
+                            {selectedUser.role === "unverified mentor" && (
+                              <button onClick={() => approveMentor(selectedUser._id)}>Approve Mentor</button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => saveEditedUser(selectedUser._id)}>Save</button>
+                            <button onClick={cancelEditing}>Cancel</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
-      {selectedUser && (
-        <div className="user-details-card">
-          <div className="user-details-header">
-            <h3>User Details</h3>
-            {editingUserId !== selectedUser._id ? (
-              <div className="user-actions">
-                <button onClick={() => startEditing(selectedUser)}>Modify</button>
-                <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
-                {/* Show Approve Mentor button if role is "unverified mentor" */}
-                {selectedUser.role === "unverified mentor" && (
-                  <button onClick={() => approveMentor(selectedUser._id)}>Approve Mentor</button>
-                )}
-              </div>
-            ) : (
-              <div className="user-actions">
-                <button onClick={() => saveEditedUser(selectedUser._id)}>Save</button>
-                <button onClick={cancelEditing}>Cancel</button>
-              </div>
-            )}
-          </div>
-          <div className="user-details-body">
-            <div className="user-details-row">
-              <span className="label">Username:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="username" value={editingData.username} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.username}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Email:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="email" value={editingData.email} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.email}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Role:</span>
-              {editingUserId === selectedUser._id ? (
-                <select name="role" value={editingData.role} onChange={handleEditingChange}>
-                  <option value="learner">Learner</option>
-                  <option value="unverified mentor">Unverified Mentor</option>
-                  <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              ) : (
-                <span className="value">{selectedUser.role}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Phone:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="phoneNumber" value={editingData.phoneNumber} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.phoneNumber}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Bio:</span>
-              {editingUserId === selectedUser._id ? (
-                <textarea name="bio" value={editingData.bio} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.bio}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Location:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="location" value={editingData.location} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.location}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Wants to Learn:</span>
-              <ul className="user-skills-list">
-                {wantsToLearnSkills.length > 0 ? (
-                  wantsToLearnSkills.map((skill) => (
-                    <li key={skill._id} className="skill-item">
-                      {skill.skillId ? skill.skillId.name : "Skill Deleted"}
-                      <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
-                    </li>
-                  ))
-                ) : (
-                  <span className="value">No skills added</span>
-                )}
-              </ul>
-            </div>
-            <div className="user-details-row">
-              <span className="label">Has:</span>
-              <ul className="user-skills-list">
-                {hasSkillsList.length > 0 ? (
-                  hasSkillsList.map((skill) => (
-                    <li key={skill._id} className="skill-item">
-                      {skill.skillId ? skill.skillId.name : "Skill Deleted"}{" "}
-                      <span className="verification-status">({skill.verificationStatus})</span>
-                      <button onClick={() => verifyUserSkill(skill._id)}>Verify</button>
-                      <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
-                    </li>
-                  ))
-                ) : (
-                  <span className="value">No skills added</span>
-                )}
-              </ul>
-            </div>
-            {selectedUser.profileImage && (
-              <div className="user-image-container">
-                <img
-                  src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
-                  alt={selectedUser.profileImage.filename}
-                />
-              </div>
-            )}
-            {selectedUser.certificateImage &&
-              Array.isArray(selectedUser.certificateImage) &&
-              selectedUser.certificateImage.length > 0 && (
-                <div className="user-certificate-container">
-                  <h4>
-                    Certificate
-                    {selectedUser.certificateImage.length > 1 ? "s" : ""}
-                  </h4>
-                  {selectedUser.certificateImage.map((cert, index) => (
-                    <img
-                      key={index}
-                      src={`http://localhost:5000/api/files/${cert.fileId}?t=${Date.now()}`}
-                      alt={cert.filename}
-                    />
-                  ))}
-                </div>
-            )}
-          </div>
-        </div>
-      )}
-      <div className="user-manager">
-       
-      </div>
+      <div className="user-manager"></div>
     </div>
   );
 };
@@ -959,62 +979,60 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <button className="admin-darkmode-toggle" onClick={toggleDarkMode}>
-        {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
-      </button>
-      <button className="home-button" onClick={() => (window.location.href = "/")}>
-        Home
-      </button>
-      <section className="admin-dashboard">
-        <aside className="dashboard-sidebar">
-          <h1 className="logo">SkillMinds Admin</h1>
-          <ul>
-            <li
-              className={activeSection === "statistics" ? "active" : ""}
-              onClick={() => setActiveSection("statistics")}
-            >
-              📊 Statistics
-            </li>
-            <li
-              className={activeSection === "users" ? "active" : ""}
-              onClick={() => setActiveSection("users")}
-            >
-              👥 Users
-            </li>
-            <li
-              className={activeSection === "courses" ? "active" : ""}
-              onClick={() => setActiveSection("courses")}
-            >
-              📚 Courses
-            </li>
-            <li
-              className={activeSection === "jobs" ? "active" : ""}
-              onClick={() => setActiveSection("jobs")}
-            >
-              💼 Jobs
-            </li>
-            <li
-              className={activeSection === "groups" ? "active" : ""}
-              onClick={() => setActiveSection("groups")}
-            >
-              👥 Groups
-            </li>
-            <li
-              className={activeSection === "events" ? "active" : ""}
-              onClick={() => setActiveSection("events")}
-            >
-              🗓 Events
-            </li>
-            <li
-              className={activeSection === "addSkill" ? "active" : ""}
-              onClick={() => setActiveSection("addSkill")}
-            >
-              ➕ Add Skill
-            </li>
-          </ul>
-        </aside>
-        <main className="dashboard-content">{renderSection()}</main>
-      </section>
+      <Header />
+      <div className="admin-dashboard-container">
+        <section className="admin-dashboard">
+          <aside className="dashboard-sidebar">
+            <h1 className="logo">SkillMinds Admin</h1>
+            <ul>
+              <li
+                className={activeSection === "statistics" ? "active" : ""}
+                onClick={() => setActiveSection("statistics")}
+              >
+                📊 Statistics
+              </li>
+              <li
+                className={activeSection === "users" ? "active" : ""}
+                onClick={() => setActiveSection("users")}
+              >
+                👥 Users
+              </li>
+              <li
+                className={activeSection === "courses" ? "active" : ""}
+                onClick={() => setActiveSection("courses")}
+              >
+                📚 Courses
+              </li>
+              <li
+                className={activeSection === "jobs" ? "active" : ""}
+                onClick={() => setActiveSection("jobs")}
+              >
+                💼 Jobs
+              </li>
+              <li
+                className={activeSection === "groups" ? "active" : ""}
+                onClick={() => setActiveSection("groups")}
+              >
+                👥 Groups
+              </li>
+              <li
+                className={activeSection === "events" ? "active" : ""}
+                onClick={() => setActiveSection("events")}
+              >
+                🗓 Events
+              </li>
+              <li
+                className={activeSection === "addSkill" ? "active" : ""}
+                onClick={() => setActiveSection("addSkill")}
+              >
+                ➕ Add Skill
+              </li>
+            </ul>
+          </aside>
+          <main className="dashboard-content">{renderSection()}</main>
+        </section>
+      </div>
+      <Footer />
     </>
   );
 };
