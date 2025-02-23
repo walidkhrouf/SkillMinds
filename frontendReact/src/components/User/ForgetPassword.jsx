@@ -20,11 +20,11 @@ const ForgetPassword = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setLoading(true); 
+    setLoading(true);
   
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   
-    
+    // Validate password
     if (!passwordRegex.test(formData.password)) {
       setError("Password must be at least 8 characters long, contain an uppercase letter, a number, and a special character.");
       setLoading(false);
@@ -37,27 +37,31 @@ const ForgetPassword = () => {
       return;
     }
   
-   
-    axios.post(`http://localhost:5000/api/users/reset-password/${id}/${token}`, {
-      password: formData.password,
-    })
-    .then(res => {
-      if (res.data.message === "Password reset successfully!") {
-        setSuccess("Your password has been reset successfully!");
+    // Send the request to reset the password
+    axios
+      .post(`http://localhost:5000/api/users/reset-password/${id}/${token}`, {
+        password: formData.password,
+      })
+      .then((res) => {
+        if (res.data.message === "Password reset successfully!") {
+          setSuccess("Your password has been reset successfully!");
   
-        setTimeout(() => {
-          navigate("/signin");
-        }, 2000);
-      } else {
-        setError(res.data.message);
-      }
-    })
-    .catch(err => {
-        console.error('Reset password error:', err);
-      
-        
-        if (err.response) {
-         
+          // Redirect to the login page after 2 seconds
+          setTimeout(() => {
+            navigate("/signin");
+          }, 2000);
+        } else {
+          setError(res.data.message);
+        }
+      })
+      .catch((err) => {
+        console.error("Reset password error:", err);
+  
+        // Handle token expiration
+        if (err.response?.data?.expired) {
+          setError("The password reset link has expired. Please request a new one.");
+          navigate("/forgot-password"); // Redirect to the forgot password page
+        } else if (err.response) {
           setError(err.response.data.message || "Failed to reset password. Please try again later.");
         } else if (err.request) {
           setError("No response from server. Please check your network connection.");
@@ -65,9 +69,9 @@ const ForgetPassword = () => {
           setError("An error occurred: " + err.message);
         }
       })
-    .finally(() => {
-      setLoading(false); 
-    });
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (

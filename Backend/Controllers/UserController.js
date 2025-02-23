@@ -524,38 +524,48 @@ const finishSkillSelection = async (req, res) => {
   }
 };
 
-
 const resetPassword = async (req, res) => {
   const { id, token } = req.params;
   const { password } = req.body;
 
   try {
+    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if the token belongs to the correct user
     if (decoded.id !== id) {
       return res.status(401).json({ message: "Unauthorized access." });
     }
 
+    // Find the user
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
+    // Hash the new password and save it
     user.password = await bcrypt.hash(password, 10);
     await user.save();
 
+    // Respond with success
     res.status(200).json({ message: "Password reset successfully!" });
   } catch (error) {
+    // Handle JWT errors
     if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token." });
+      return res.status(401).json({ message: "Invalid token. Please request a new password reset link." });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(403).json({ message: "Token has expired." });
+      return res.status(403).json({ 
+        message: "Token has expired. Please request a new password reset link.",
+        expired: true, // Indicate that the token has expired
+      });
     }
+
+    // Log and handle other errors
     console.error("Error resetting password:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
-
 module.exports = {
   signup,
   signin,

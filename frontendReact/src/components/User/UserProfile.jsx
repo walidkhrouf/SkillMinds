@@ -193,10 +193,10 @@ const UserProfile = () => {
             <img
               src={
                 newProfileImage
-                  ? URL.createObjectURL(newProfileImage)
+                  ? URL.createObjectURL(newProfileImage) // Display newly selected image
                   : user.profileImage && user.profileImage.fileId
-                  ? `http://localhost:5000/api/files/${user.profileImage.fileId}?t=${Date.now()}`
-                  : "/images/avatar.png"
+                  ? `http://localhost:5000/api/files/${user.profileImage.fileId}?t=${Date.now()}` // Display existing profile image
+                  : "/images/avatar.png" // Display placeholder if no profile image
               }
               alt="Profile"
               className="profile-avatar"
