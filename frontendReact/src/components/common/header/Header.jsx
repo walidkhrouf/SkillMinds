@@ -15,27 +15,37 @@ const Header = () => {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Load current user from localStorage
+  // Load current user from localStorage and fetch notifications
   useEffect(() => {
     const userStr = localStorage.getItem("currentUser");
     if (userStr) {
       const userObj = JSON.parse(userStr);
       setCurrentUser(userObj);
-      fetchNotifications(userObj._id); // Fetch notifications if user exists
+      fetchNotifications(userObj._id);
     } else {
       setCurrentUser(null);
     }
   }, [location]);
 
+  // Poll notifications automatically every 5 seconds when a user exists
+  useEffect(() => {
+    if (!currentUser) return;
+    const intervalId = setInterval(() => {
+      fetchNotifications(currentUser._id);
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, [currentUser]);
+
   const fetchNotifications = (userId) => {
     fetch(`http://localhost:5000/api/notifications?userId=${userId}`, { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setNotifications(data))
-      .catch((err) => console.error("Error fetching notifications:", err));
+        .then((res) => res.json())
+        .then((data) => setNotifications(data))
+        .catch((err) => console.error("Error fetching notifications:", err));
   };
 
   const markNotificationAsRead = async (notificationId) => {
@@ -47,9 +57,9 @@ const Header = () => {
       if (res.ok) {
         const updatedNotif = await res.json();
         setNotifications((prevNotifs) =>
-          prevNotifs.map((notif) =>
-            notif._id === updatedNotif._id ? updatedNotif : notif
-          )
+            prevNotifs.map((notif) =>
+                notif._id === updatedNotif._id ? updatedNotif : notif
+            )
         );
       }
     } catch (error) {
@@ -121,196 +131,203 @@ const Header = () => {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <>
-      <Head />
-      <header className={headerClass}>
-        <nav className="header-nav">
-          <Link to="/" className="logo">
-            <img src="/images/logo.png" alt="Logo" />
-          </Link>
+      <>
+        <Head />
+        <header className={headerClass}>
+          <nav className="header-nav">
+            <Link to="/" className="logo">
+              <img src="/images/logo.png" alt="Logo" />
+            </Link>
 
-          <ul className={menuOpen ? "nav-links active" : "nav-links"} onClick={closeMenu}>
-            <li>
-              <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/courses" className={({ isActive }) => (isActive ? "active" : "")}>
-                All Courses
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
-                About
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/team" className={({ isActive }) => (isActive ? "active" : "")}>
-                Mentors
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
-                Pricing
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")}>
-                Groups
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/contact" className={({ isActive }) => (isActive ? "active" : "")}>
-                Contact
-              </NavLink>
-            </li>
-            <li>
-              <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
-                Events
-              </a>
-            </li>
-            <li>
-              <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
-                Recruitment
-              </a>
-            </li>
-            <li className="mobile-certificate">
-              {currentUser ? (
-                <div
-                  className="profile-container"
-                  ref={profileRef}
-                  onMouseEnter={() => setShowProfileDropdown(true)}
-                  onMouseLeave={() => setShowProfileDropdown(false)}
-                >
-                  <button onClick={() => navigate("/profile")} className="certificate-btn">
-                    View Profile
-                  </button>
-                  {showProfileDropdown && (
-                    <div className="profile-dropdown">
-                      <div className="profile-photo-container">
-                        <img
-                          src={
-                            currentUser.profileImage && currentUser.profileImage.fileId
-                              ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
-                              : "/images/avatar.png"
-                          }
-                          alt="Profile"
-                          className="profile-photo"
-                        />
-                      </div>
-                      <div className="profile-details">
-                        <div className="profile-item">
-                          <span className="label">Username:</span>
-                          <span className="value">{currentUser.username || "User"}</span>
-                        </div>
-                        <div className="profile-item">
-                          <span className="label">Email:</span>
-                          <span className="value">{currentUser.email || "N/A"}</span>
-                        </div>
-                      </div>
-                      <button className="logout-btn" onClick={handleLogout}>
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <NavLink to="/signin" className="certificate-btn">
-                  Signin or Signup
+            <ul className={menuOpen ? "nav-links active" : "nav-links"} onClick={closeMenu}>
+              <li>
+                <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
+                  Home
                 </NavLink>
+              </li>
+              <li>
+                <NavLink to="/courses" className={({ isActive }) => (isActive ? "active" : "")}>
+                  All Courses
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
+                  About
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/team" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Mentors
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/pricing" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Pricing
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Groups
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/contact" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Contact
+                </NavLink>
+              </li>
+              {currentUser?.role === "admin" && (
+                  <li>
+                    <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
+                      Admin
+                    </NavLink>
+                  </li>
               )}
-            </li>
-          </ul>
+              <li>
+                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Events
+                </a>
+              </li>
+              <li>
+                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Recruitment
+                </a>
+              </li>
+              <li className="mobile-certificate">
+                {currentUser ? (
+                    <div
+                        className="profile-container"
+                        ref={profileRef}
+                        onMouseEnter={() => setShowProfileDropdown(true)}
+                        onMouseLeave={() => setShowProfileDropdown(false)}
+                    >
+                      <button onClick={() => navigate("/profile")} className="certificate-btn">
+                        View Profile
+                      </button>
+                      {showProfileDropdown && (
+                          <div className="profile-dropdown">
+                            <div className="profile-photo-container">
+                              <img
+                                  src={
+                                    currentUser.profileImage && currentUser.profileImage.fileId
+                                        ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
+                                        : "/images/avatar.png"
+                                  }
+                                  alt="Profile"
+                                  className="profile-photo"
+                              />
+                            </div>
+                            <div className="profile-details">
+                              <div className="profile-item">
+                                <span className="label">Username:</span>
+                                <span className="value">{currentUser.username || "User"}</span>
+                              </div>
+                              <div className="profile-item">
+                                <span className="label">Email:</span>
+                                <span className="value">{currentUser.email || "N/A"}</span>
+                              </div>
+                            </div>
+                            <button className="logout-btn" onClick={handleLogout}>
+                              Logout
+                            </button>
+                          </div>
+                      )}
+                    </div>
+                ) : (
+                    <NavLink to="/signin" className="certificate-btn">
+                      Signin or Signup
+                    </NavLink>
+                )}
+              </li>
+            </ul>
 
-          <div className="header-actions">
-            <div className="start">
-              {currentUser ? (
-                <div
-                  className="profile-container"
-                  ref={profileRef}
-                  onMouseEnter={() => setShowProfileDropdown(true)}
-                  onMouseLeave={() => setShowProfileDropdown(false)}
-                >
-                  <button onClick={() => navigate("/profile")} className="certificate-btn">
-                    View Profile
-                  </button>
-                  {showProfileDropdown && (
-                    <div className="profile-dropdown">
-                      <div className="profile-photo-container">
-                        <img
-                          src={
-                            currentUser.profileImage && currentUser.profileImage.fileId
-                              ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
-                              : "/images/avatar.png"
-                          }
-                          alt="Profile"
-                          className="profile-photo"
-                        />
-                      </div>
-                      <div className="profile-details">
-                        <div className="profile-item">
-                          <span className="label">Username:</span>
-                          <span className="value">{currentUser.username || "User"}</span>
-                        </div>
-                        <div className="profile-item">
-                          <span className="label">Email:</span>
-                          <span className="value">{currentUser.email || "N/A"}</span>
-                        </div>
-                      </div>
-                      <button className="logout-btn" onClick={handleLogout}>
-                        Logout
+            <div className="header-actions">
+              <div className="start">
+                {currentUser ? (
+                    <div
+                        className="profile-container"
+                        ref={profileRef}
+                        onMouseEnter={() => setShowProfileDropdown(true)}
+                        onMouseLeave={() => setShowProfileDropdown(false)}
+                    >
+                      <button onClick={() => navigate("/profile")} className="certificate-btn">
+                        View Profile
                       </button>
+                      {showProfileDropdown && (
+                          <div className="profile-dropdown">
+                            <div className="profile-photo-container">
+                              <img
+                                  src={
+                                    currentUser.profileImage && currentUser.profileImage.fileId
+                                        ? `http://localhost:5000/api/files/${currentUser.profileImage.fileId}`
+                                        : "/images/avatar.png"
+                                  }
+                                  alt="Profile"
+                                  className="profile-photo"
+                              />
+                            </div>
+                            <div className="profile-details">
+                              <div className="profile-item">
+                                <span className="label">Username:</span>
+                                <span className="value">{currentUser.username || "User"}</span>
+                              </div>
+                              <div className="profile-item">
+                                <span className="label">Email:</span>
+                                <span className="value">{currentUser.email || "N/A"}</span>
+                              </div>
+                            </div>
+                            <button className="logout-btn" onClick={handleLogout}>
+                              Logout
+                            </button>
+                          </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ) : (
-                <NavLink to="/signin" className="certificate-btn">
-                  Signin or Signup
-                </NavLink>
-              )}
-            </div>
-            {currentUser && (
-              <div className="notification-container" ref={notifRef}>
-                <div className="notification-icon" onClick={toggleNotifications}>
-                  <i className="fas fa-bell"></i>
-                  {unreadCount > 0 && (
-                    <span className="notification-badge">{unreadCount}</span>
-                  )}
-                </div>
-                {showNotifications && (
-                  <div className="notification-dropdown">
-                    {notifications.length > 0 ? (
-                      notifications.map((notif) => (
-                        <div
-                          key={notif._id}
-                          className={`notification-item ${notif.isRead ? "read" : "unread"}`}
-                          onClick={() => markNotificationAsRead(notif._id)}
-                        >
-                          <p>{notif.message}</p>
-                          <span className="notification-time">
-                            {new Date(notif.createdAt).toLocaleTimeString()}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="no-notifications">No notifications</p>
-                    )}
-                  </div>
+                ) : (
+                    <NavLink to="/signin" className="certificate-btn">
+                      Signin or Signup
+                    </NavLink>
                 )}
               </div>
-            )}
-            <button className="darkmode-toggle" onClick={toggleDarkMode}>
-              {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
-            </button>
-          </div>
+              {currentUser && (
+                  <div className="notification-container" ref={notifRef}>
+                    <div className="notification-icon" onClick={toggleNotifications}>
+                      <i className="fas fa-bell"></i>
+                      {unreadCount > 0 && (
+                          <span className="notification-badge">{unreadCount}</span>
+                      )}
+                    </div>
+                    {showNotifications && (
+                        <div className="notification-dropdown">
+                          {notifications.length > 0 ? (
+                              notifications.map((notif) => (
+                                  <div
+                                      key={notif._id}
+                                      className={`notification-item ${notif.isRead ? "read" : "unread"}`}
+                                      onClick={() => markNotificationAsRead(notif._id)}
+                                  >
+                                    <p>{notif.message}</p>
+                                    <span className="notification-time">
+                            {new Date(notif.createdAt).toLocaleTimeString()}
+                          </span>
+                                  </div>
+                              ))
+                          ) : (
+                              <p className="no-notifications">No notifications</p>
+                          )}
+                        </div>
+                    )}
+                  </div>
+              )}
+              <button className="darkmode-toggle" onClick={toggleDarkMode}>
+                {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
+              </button>
+            </div>
 
-          <button className="toggle" onClick={handleToggle}>
-            {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-bars"></i>}
-          </button>
-        </nav>
-      </header>
-    </>
+            <button className="toggle" onClick={handleToggle}>
+              {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-bars"></i>}
+            </button>
+          </nav>
+        </header>
+      </>
   );
 };
 

@@ -4,15 +4,15 @@ const Schema = mongoose.Schema;
 const notificationSchema = new Schema({
   notificationId: { type: String, required: true, unique: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     enum: [
-      "ACCOUNT_UPDATE", "COURSE_ENROLLMENT", "COURSE_COMPLETION", 
-      "SKILL_VERIFICATION", "NEW_RECOMMENDATION", "GROUP_ACTIVITY", 
+      "ACCOUNT_UPDATE", "COURSE_ENROLLMENT", "COURSE_COMPLETION",
+      "SKILL_VERIFICATION", "NEW_RECOMMENDATION", "GROUP_ACTIVITY",
       "JOB_APPLICATION_STATUS", "TUTORIAL_INTERACTION", "EVENT_REMINDER",
-      "EVENT_CREATION_PAYMENT"
-    ], 
-    required: true 
+      "EVENT_CREATION_PAYMENT", "SKILL_REMOVAL"
+    ],
+    required: true
   },
   message: { type: String, required: true },
   isRead: { type: Boolean, default: false },

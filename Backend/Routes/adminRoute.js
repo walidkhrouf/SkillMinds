@@ -7,5 +7,6 @@ router.get('/skills', adminController.getAllSkills);
 router.get('/skillCategories', adminController.getSkillCategories);
 router.delete('/skills/:id', adminController.deleteSkill);
 router.put('/skills/:id', adminController.updateSkill);
+router.get('/skills/:id', adminController.getSkillById);
 
 module.exports = router;

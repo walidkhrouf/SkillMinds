@@ -2,28 +2,28 @@
 
 :root {
   /* Color Palette */
-  --primary-color: #a47f18;       
-  --secondary-color: #ffffff;     
-  --background-color: #f8f8f8;      
-  --dark-bg: #1d1d1d;             
-  --dark-surface: #2a2a2a;        
-  --text-color: #333333;          /* Dark gray for text */
-  --dark-text: #e0e0e0;           /* Light text for dark mode */
-  
+  --primary-color: #a47f18;
+  --secondary-color: #ffffff;
+  --background-color: #f8f8f8;
+  --dark-bg: #1d1d1d;
+  --dark-surface: #2a2a2a;
+  --text-color: #333333;
+  --dark-text: #e0e0e0;
+
   /* Spacing (using rem units for scalability) */
-  --spacing-xs: 0.3125rem;   /* 5px */
-  --spacing-sm: 0.625rem;    /* 10px */
-  --spacing-md: 1rem;        /* 16px approx */
-  --spacing-lg: 2.5rem;      /* 40px */
-  --container-max-width: 85%;
+  --spacing-xs: 0.3125rem; /* 5px */
+  --spacing-sm: 0.625rem; /* 10px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 2.5rem; /* 40px */
+  --container-max-width: 85rem; /* 1360px, slightly wider for modern screens */
 
   /* Shadows & Transitions */
-  --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.06);
+  --box-shadow: 0 0.3125rem 1.5625rem -0.125rem rgba(0, 0, 0, 0.06); /* Adjusted for rem */
   --transition-speed: 0.5s;
-  
+
   /* Typography */
   --font-family: "Roboto", sans-serif;
-  --base-font-size: 1rem;
+  --base-font-size: 1rem; /* 16px default */
 }
 
 /* Global Resets */
@@ -41,7 +41,7 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   line-height: 1.6;
-  transition: background var(--transition-speed), color var(--transition-speed);
+  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
   animation: fadeIn 1s ease-in-out;
 }
 
@@ -55,7 +55,7 @@ body.dark-mode {
 a {
   text-decoration: none;
   color: var(--primary-color);
-  transition: color var(--transition-speed);
+  transition: color var(--transition-speed) ease;
 }
 a:hover,
 a:focus {
@@ -66,8 +66,8 @@ a:focus {
 /* Focus styles for accessibility */
 a:focus,
 button:focus {
-  outline: 2px dashed var(--primary-color);
-  outline-offset: 2px;
+  outline: 0.125rem dashed var(--primary-color); /* 2px */
+  outline-offset: 0.125rem; /* 2px */
 }
 
 /* Containers */
@@ -102,14 +102,13 @@ button:focus {
   text-align: center;
   background-color: rgba(255, 255, 255, 0.3);
   color: var(--primary-color);
-  transition: background-color var(--transition-speed), color var(--transition-speed);
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 .icon:hover {
   cursor: pointer;
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
-/* Dark Mode Icon Adjustments */
 body.dark-mode .icon {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--primary-color);
@@ -129,8 +128,8 @@ button {
   margin: 1.875rem 0.625rem 0 0;
   border-radius: 0.1875rem;
   cursor: pointer;
-  box-shadow: 0 1.5rem 2.25rem -0.6875rem rgba(0, 0, 0, 0.09);
-  transition: box-shadow var(--transition-speed), transform var(--transition-speed), background-color var(--transition-speed);
+  box-shadow: 0 0.9375rem 1.40625rem -0.4375rem rgba(0, 0, 0, 0.09); /* Adjusted for rem */
+  transition: box-shadow var(--transition-speed) ease, transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
 }
 button i {
   margin-left: 1.25rem;
@@ -139,12 +138,10 @@ button:hover {
   box-shadow: none;
   transform: translateY(-0.1875rem);
 }
-/* Primary Button */
 .primary-btn {
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
-/* Dark Mode Button Adjustments */
 body.dark-mode button {
   background-color: var(--dark-surface);
   color: var(--dark-text);
@@ -157,13 +154,14 @@ body.dark-mode button.primary-btn {
 
 /* Headings */
 #heading {
-  font-size: 26px;
+  font-size: 1.625rem; /* 26px */
   text-align: center;
   padding: 2.5rem 0;
   animation: slideDown var(--transition-speed) ease both;
 }
 #heading h3 {
   font-weight: 600;
+  font-size: 1.125rem; /* 18px */
   letter-spacing: 0.0625rem;
   color: var(--primary-color);
   text-transform: uppercase;
@@ -239,18 +237,18 @@ body.dark-mode .back {
   box-shadow: none;
   border: 0.125rem solid var(--primary-color);
   width: 100%;
-  transition: background-color var(--transition-speed), color var(--transition-speed);
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 .outline-btn:hover {
   background-color: var(--primary-color);
   color: var(--secondary-color);
 }
 
-/* Shadow Utility (Cards, Containers, etc.) */
+/* Shadow Utility */
 .shadow {
   box-shadow: var(--box-shadow);
   background-color: var(--secondary-color);
-  transition: background-color var(--transition-speed);
+  transition: background-color var(--transition-speed) ease;
 }
 body.dark-mode .shadow {
   background-color: var(--dark-surface);
@@ -283,84 +281,189 @@ body.dark-mode .shadow {
   }
 }
 
-/* Responsive Design */
-@media screen and (max-width: 1024px) {
+/* -----------------------------
+   Responsive Design
+------------------------------ */
+/* Large Screens (min-width: 1200px) */
+@media screen and (min-width: 75rem) {
+  .container {
+    max-width: 85rem; /* Matches root variable */
+  }
+
+  .back h1 {
+    font-size: 7rem; /* Larger for wide screens */
+  }
+
+  #heading h1 {
+    font-size: 3.25rem; /* 52px */
+  }
+
+  button {
+    padding: 1.125rem 2rem; /* Slightly larger */
+  }
+}
+
+/* Tablets & Small Laptops (max-width: 1024px) */
+@media screen and (max-width: 64rem) {
   .container {
     max-width: 95%;
   }
+
   .row {
     width: 100%;
   }
+
   .grid {
     grid-template-columns: repeat(3, 1fr);
   }
+
   .grid2 {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .grid3 {
     grid-template-columns: repeat(4, 1fr);
   }
+
   .back {
     padding-top: 20%;
     padding-right: 1.875rem;
   }
+
   .back h1 {
     font-size: 5rem;
   }
 }
 
-@media screen and (max-width: 768px) {
+/* Mobile Devices (max-width: 768px) */
+@media screen and (max-width: 48rem) {
   .container {
     max-width: 98%;
   }
-  .grid, .grid2, .grid3 {
+
+  .grid,
+  .grid2,
+  .grid3 {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
   }
+
   .back {
-    background-attachment: scroll;
+    background-attachment: scroll; /* Better performance on mobile */
     padding-top: 40%;
     height: 80vh;
     padding-right: 0.9375rem;
   }
+
   .back h1 {
     font-size: 3.75rem;
   }
+
   #heading h1 {
     font-size: 2.1875rem;
   }
+
   #heading h3 {
     font-size: 1rem;
   }
+
   button {
     padding: 0.9375rem 1.5625rem;
   }
+
+  p {
+    font-size: 1rem; /* Slightly smaller for readability */
+  }
 }
 
-@media screen and (max-width: 480px) {
+/* Small Mobile Devices (max-width: 480px) */
+@media screen and (max-width: 30rem) {
   .container {
-    padding: 0 var(--spacing-xs);
+    padding: 0 var(--spacing-sm); /* 10px */
   }
-  .grid, .grid2, .grid3 {
-    grid-template-columns: 1fr;
+
+  .grid,
+  .grid2,
+  .grid3 {
+    grid-template-columns: 1fr; /* Single column */
     gap: 0.9375rem;
   }
+
   .back {
     padding-top: 50%;
     height: 70vh;
-    padding-right: 0.3125rem;
+    padding-right: 0.625rem; /* 10px */
   }
+
   .back h1 {
     font-size: 2.5rem;
   }
+
+  .back h2 {
+    font-size: 0.9375rem; /* 15px */
+  }
+
+  #heading {
+    padding: 1.875rem 0; /* 30px */
+  }
+
   #heading h1 {
     font-size: 1.75rem;
   }
+
   #heading h3 {
     font-size: 0.875rem;
   }
+
   button {
     padding: 0.75rem 1.25rem;
     font-size: 0.875rem;
+  }
+
+  p {
+    font-size: 0.9375rem; /* 15px */
+  }
+}
+
+/* Extra Small Devices (max-width: 360px) */
+@media screen and (max-width: 22.5rem) {
+  .container {
+    padding: 0 var(--spacing-xs); /* 5px */
+  }
+
+  .back {
+    padding-top: 60%; /* More space for tiny screens */
+    height: 60vh;
+    padding-right: 0.3125rem; /* 5px */
+  }
+
+  .back h1 {
+    font-size: 2rem; /* 32px */
+  }
+
+  .back h2 {
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  #heading {
+    padding: 1.5rem 0; /* 24px */
+  }
+
+  #heading h1 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  #heading h3 {
+    font-size: 0.75rem; /* 12px */
+  }
+
+  button {
+    padding: 0.625rem 1rem; /* 10px 16px */
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  p {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5rem; /* Adjusted for tighter spacing */
   }
 }

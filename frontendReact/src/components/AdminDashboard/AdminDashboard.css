@@ -14,7 +14,7 @@
   --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   --transition-speed: 0.4s;
   --font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-  --header-height: 70px; /* Matches header.css */
+  --header-height: 70px;
 }
 
 * {
@@ -37,7 +37,7 @@ body.dark-mode {
   color: var(--dark-sidebar-text);
 }
 
-/* Entire Page Layout */
+
 html,
 body {
   height: 100%;
@@ -49,7 +49,7 @@ body {
   min-height: 100vh;
 }
 
-/* Dashboard Container */
+
 .admin-dashboard-container {
   flex: 1;
   display: flex;
@@ -58,7 +58,7 @@ body {
   padding-top: var(--header-height);
 }
 
-/* Dashboard Layout */
+
 .admin-dashboard {
   display: flex;
   width: 100%;
@@ -68,7 +68,7 @@ body {
   transition: background var(--transition-speed) ease;
 }
 
-/* Sidebar - Not Fixed */
+
 .dashboard-sidebar {
   width: 300px;
   background: var(--sidebar-bg);
@@ -237,13 +237,13 @@ table tr:hover,
   transform: scale(1.01);
 }
 
-/* New Styles for Expandable User Details */
+
 .user-table tr {
-  cursor: pointer; /* Indicate clickable rows */
+  cursor: pointer;
 }
 
 .user-table .expanded-user-details {
-  display: none; /* Hidden by default */
+  display: none;
   background: var(--secondary-color);
   padding: 1.5rem;
   border-bottom: 2px solid var(--accent-color);
@@ -252,7 +252,7 @@ table tr:hover,
 }
 
 .user-table tr.expanded .expanded-user-details {
-  display: block; /* Show when expanded */
+  display: block;
 }
 
 .expanded-user-details .user-details-body {
@@ -277,7 +277,7 @@ table tr:hover,
   color: var(--text-color);
 }
 
-/* Dark Mode for Expanded Details */
+
 body.dark-mode .user-table .expanded-user-details {
   background: var(--dark-content-bg);
   border-bottom-color: var(--primary-color);
@@ -291,7 +291,7 @@ body.dark-mode .expanded-user-details .value {
   color: var(--dark-sidebar-text);
 }
 
-/* End of New Styles */
+
 
 body.dark-mode table,
 body.dark-mode .user-table,
@@ -315,12 +315,12 @@ body.dark-mode .data-table tr:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* User Manager */
+
 .user-manager {
   padding: 1rem 0;
 }
 
-/* User Details Card */
+
 .user-details-card {
   margin-top: 2rem;
   padding: 2rem;
@@ -334,7 +334,7 @@ body.dark-mode .user-details-card {
   background: var(--dark-content-bg);
 }
 
-/* User Details Layout */
+
 .user-details-header {
   display: flex;
   justify-content: space-between;
@@ -453,7 +453,7 @@ body.dark-mode .user-details-row textarea {
 
 .verification-status {
   font-size: 0.9rem;
-  color: #718096;
+  color: #000000;
 }
 
 /* Images */
@@ -469,6 +469,8 @@ body.dark-mode .user-details-row textarea {
 .user-certificate-container img:hover {
   transform: scale(1.05);
 }
+
+
 
 /* Skill Form */
 .skill-form {
@@ -541,10 +543,10 @@ body.dark-mode .skill-form label {
   font-weight: 500;
 }
 
-/* Dark Mode Toggle - Admin Specific */
+
 .admin-darkmode-toggle {
   position: fixed;
-  top: calc(var(--header-height) + 10px); /* Below header */
+  top: calc(var(--header-height) + 10px);
   right: 20px;
   width: 50px;
   height: 50px;
@@ -571,7 +573,7 @@ body.dark-mode .admin-darkmode-toggle {
   background: var(--accent-color);
 }
 
-/* Stats Grid */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -636,7 +638,7 @@ body.dark-mode .metric-value {
   color: var(--accent-color);
 }
 
-/* Trending List */
+
 .trending-list {
   list-style: none;
 }
@@ -658,7 +660,7 @@ body.dark-mode .metric-value {
   border-radius: 20px;
 }
 
-/* Animations */
+
 @keyframes slideInLeft {
   0% {
     transform: translateX(-100%);
@@ -785,7 +787,7 @@ body.dark-mode .metric-value {
   }
 }
 
-/* Media Queries */
+
 @media (max-width: 1024px) {
   .dashboard-sidebar {
     width: 250px;
@@ -823,4 +825,73 @@ body.dark-mode .metric-value {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
+}
+
+.message {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: var(--box-shadow);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.5s ease-out 4.5s;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.message.success {
+  background: var(--accent-color);
+  color: var(--dark-background);
+}
+
+.message.error {
+  background: #e53e3e;
+  color: var(--secondary-color);
+}
+
+.message.warning {
+  background: #f6ad55;
+  color: var(--dark-background);
+}
+
+body.dark-mode .message.success {
+  background: var(--accent-color);
+  color: var(--dark-background);
+}
+
+body.dark-mode .message.error {
+  background: #e53e3e;
+  color: var(--secondary-color);
+}
+
+body.dark-mode .message.warning {
+  background: #f6ad55;
+  color: var(--dark-background);
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+
+.user-actions button,
+.skill-form button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.user-actions button:hover,
+.skill-form button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }

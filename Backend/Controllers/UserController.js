@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const UserSkill = require("../models/UserSkill");
-const { mongoose } = require("../config/databaseConnection"); 
+const { mongoose } = require("../config/databaseConnection");
 const nodemailer = require("nodemailer");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
@@ -13,6 +13,9 @@ let gfs;
 mongoose.connection.once("open", () => {
   gfs = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
 });
+
+
+
 
 const uploadFileToGridFS = (file) => {
   return new Promise((resolve, reject) => {
@@ -27,51 +30,78 @@ const uploadFileToGridFS = (file) => {
 };
 
 const signup = async (req, res) => {
-  const { username, email, phoneNumber, password, confirmPassword, role, bio, location } = req.body;
-  const profileImage = req.files && req.files.profileImage ? req.files.profileImage[0] : null;
-  const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage : [];
-  
+  const { username, email, phoneNumber, password, confirmPassword, role, bio, location, mentorSkills } = req.body;
+
+  console.log("Signup Request Body:", req.body);
+  console.log("Signup Request Files:", req.files);
+
   if (!username || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ message: "All fields are required" });
   }
   if (password !== confirmPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
-  
+
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-  
+
     const hashedPassword = await bcrypt.hash(password, 10);
     let profileImageData = null;
     let certificateImageData = [];
-  
-    if (profileImage) {
-      const fileId = await uploadFileToGridFS(profileImage);
+    let mentorSkillEntries = [];
+
+
+    const profileImageFile = req.files.find(file => file.fieldname === "profileImage");
+    if (profileImageFile) {
+      console.log("Uploading Profile Image:", profileImageFile);
+      const fileId = await uploadFileToGridFS(profileImageFile);
       profileImageData = {
-        filename: profileImage.originalname,
-        contentType: profileImage.mimetype,
-        length: profileImage.size,
+        filename: profileImageFile.originalname,
+        contentType: profileImageFile.mimetype,
+        length: profileImageFile.size,
         fileId,
       };
+    } else {
+      console.log("No Profile Image Found");
     }
-  
-    if (role === "mentor" && certificateImage.length > 0) {
-      for (const file of certificateImage) {
-        const certFileId = await uploadFileToGridFS(file);
-        certificateImageData.push({
-          filename: file.originalname,
-          contentType: file.mimetype,
-          length: file.size,
-          fileId: certFileId,
-        });
-      }
+
+
+    const parsedMentorSkills = mentorSkills ? JSON.parse(mentorSkills) : [];
+    if (role === "mentor" && parsedMentorSkills.length > 0) {
+      certificateImageData = await Promise.all(
+          parsedMentorSkills.map(async (skillId) => {
+            const fieldName = `mentorCertificate_${skillId}`;
+            const certFile = req.files.find(file => file.fieldname === fieldName);
+            if (certFile) {
+              console.log(`Uploading Certificate for Skill ${skillId}:`, certFile);
+              const certFileId = await uploadFileToGridFS(certFile);
+              return {
+                filename: certFile.originalname,
+                contentType: certFile.mimetype,
+                length: certFile.size,
+                fileId: certFileId,
+              };
+            } else {
+              console.log(`No Certificate Found for Skill ${skillId}`);
+              return null;
+            }
+          })
+      ).then(results => results.filter(Boolean));
+
+      mentorSkillEntries = parsedMentorSkills.map(skillId => ({
+        userSkillId: Date.now().toString() + Math.random().toString(36).substring(2, 15),
+        userId: null,
+        skillId: new ObjectId(skillId),
+        skillType: "has",
+        verificationStatus: "unverified"
+      }));
     }
-  
+
     const finalRole = role === "mentor" ? "unverified mentor" : role;
-  
+
     const newUser = new User({
       userId: new ObjectId(),
       username,
@@ -84,29 +114,39 @@ const signup = async (req, res) => {
       profileImage: profileImageData,
       certificateImage: certificateImageData,
     });
-  
+
     await newUser.save();
-  
+
+    if (mentorSkillEntries.length > 0) {
+      mentorSkillEntries = mentorSkillEntries.map(entry => ({
+        ...entry,
+        userId: newUser._id
+      }));
+      await UserSkill.insertMany(mentorSkillEntries);
+    }
+
     const accountUpdateNotification = new Notification({
       userId: newUser._id,
       type: "ACCOUNT_UPDATE",
       message: "Your account has been created successfully.",
     });
     await accountUpdateNotification.save();
-  
+
     newUser.password = undefined;
-  
+
+    console.log("New User Saved:", newUser);
     return res.status(201).json({ message: "User registered successfully!", user: newUser });
   } catch (err) {
-    console.error(err);
+    console.error("Signup Error:", err);
     return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
+
 const updateUserSkillById = async (req, res) => {
   try {
-    const { id } = req.params; 
-    const update = req.body; 
+    const { id } = req.params;
+    const update = req.body;
     const updatedSkill = await UserSkill.findByIdAndUpdate(id, update, { new: true });
     if (!updatedSkill) {
       return res.status(404).json({ message: "Skill not found." });
@@ -125,19 +165,19 @@ const signin = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user)
       return res.status(404).json({ message: "User not found" });
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
-    
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, createdAt: Date.now() };
 
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS, 
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
 
     });
@@ -196,10 +236,10 @@ const signin = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    
-    return res.json({ 
-      message: "OTP sent to your email. Please verify to complete sign in.", 
-      userId: user._id 
+
+    return res.json({
+      message: "OTP sent to your email. Please verify to complete sign in.",
+      userId: user._id
     });
   } catch (err) {
     console.error(err);
@@ -229,10 +269,10 @@ const verifyOTP = async (req, res) => {
     return res.status(401).json({ message: "Invalid OTP." });
   }
 
-  
+
   delete otpStore[email];
 
-  
+
   const user = await User.findOne({ email });
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
   user.password = undefined;
@@ -250,18 +290,46 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const  getUserSkillsBySkillId = async (req, res) => {
+  const { skillId } = req.params;
+  try {
+    const userSkills = await UserSkill.find({ skillId: skillId });
+    if (!userSkills || userSkills.length === 0) {
+      return res.status(404).json({ message: "No user skills found for this skill" });
+    }
+    res.status(200).json(userSkills);
+  } catch (error) {
+    console.error("Error retrieving user skills by skillId:", error);
+    res.status(500).json({ message: "Error retrieving user skills", error: error.message });
+  }
+};
+
+
+const removeUserSkillsBySkillId = async (req, res) => {
+  try {
+    const { skillId } = req.params;
+    const result = await UserSkill.deleteMany({ skillId });
+    if (result.deletedCount === 0) {
+      return res.status(200).json({ message: "Aucune référence trouvée pour cette compétence" });
+    }
+    res.status(200).json({ message: `${result.deletedCount} références supprimées pour la compétence` });
+  } catch (error) {
+    console.error("Erreur lors de la suppression des références UserSkill:", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
 const getUserById = async (req, res) => {
   try {
 
     const user = await User.findById(req.params.id).lean();
     if (!user)
       return res.status(404).json({ message: "User not found" });
-    
+
 
     if (!Array.isArray(user.certificateImage)) {
       user.certificateImage = user.certificateImage ? [user.certificateImage] : [];
     }
-    
+
     res.json(user);
   } catch (err) {
     console.error("Error fetching user:", err);
@@ -305,7 +373,7 @@ const updateUser = async (req, res) => {
     if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
 
-    
+
     const updateNotification = new Notification({
       userId: updatedUser._id,
       type: "ACCOUNT_UPDATE",
@@ -365,7 +433,7 @@ const createUserSkills = async (req, res) => {
     }));
 
     const createdSkills = await UserSkill.insertMany(userSkills);
-    
+
     await User.findByIdAndUpdate(userId, { firstTimeLogin: false });
 
     res.status(201).json({ message: "Skills saved successfully", userSkills: createdSkills });
@@ -383,30 +451,30 @@ const updateUserSkills = async (req, res) => {
     if (!userId || !Array.isArray(skills)) {
       return res.status(400).json({ message: "Invalid input. Please provide userId and an array of skills." });
     }
-    
-  
+
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    
+
 
     await UserSkill.deleteMany({ userId: userId });
-    
+
 
     const userSkills = skills.map(skill => ({
       userId: new ObjectId(userId),
       skillId: new ObjectId(skill.skillId),
       skillType: skill.skillType,
-      verificationStatus: extraPayload.verificationStatus 
-        ? extraPayload.verificationStatus 
-        : (skill.verificationStatus 
-            ? skill.verificationStatus 
+      verificationStatus: extraPayload.verificationStatus
+        ? extraPayload.verificationStatus
+        : (skill.verificationStatus
+            ? skill.verificationStatus
             : (skill.skillType === "has" ? "unverified" : "pending"))
     }));
-    
+
     const createdSkills = await UserSkill.insertMany(userSkills);
-    
+
     res.status(200).json({
       message: "User skills updated successfully",
       userSkills: createdSkills
@@ -453,12 +521,12 @@ const forgotPassword = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: process.env.EMAIL_USER, // Your Gmail address
-        pass: process.env.EMAIL_PASS, // Your Gmail app password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Beautiful email template
+
     const mailOptions = {
       to: user.email,
       subject: "Password Reset Request",
@@ -510,13 +578,13 @@ const finishSkillSelection = async (req, res) => {
     const userSkills = selectedSkills.map(skill => ({
       userId: new ObjectId(userId),
       skillId: new ObjectId(skill.skillId),
-      skillType: skill.skillType,  
+      skillType: skill.skillType,
       verificationStatus: user.role === "mentor" ? "pending" : "unverified"
     }));
     await UserSkill.insertMany(userSkills);
-    
+
     await User.findByIdAndUpdate(userId, { hasChosenSkills: true });
-    
+
     res.status(200).json({ message: "Skill selection complete." });
   } catch (err) {
     console.error("Error finishing skill selection:", err);
@@ -537,36 +605,37 @@ const resetPassword = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized access." });
     }
 
-    // Find the user
+
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Hash the new password and save it
+
     user.password = await bcrypt.hash(password, 10);
     await user.save();
 
-    // Respond with success
+
     res.status(200).json({ message: "Password reset successfully!" });
   } catch (error) {
-    // Handle JWT errors
+
     if (error.name === "JsonWebTokenError") {
       return res.status(401).json({ message: "Invalid token. Please request a new password reset link." });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Token has expired. Please request a new password reset link.",
-        expired: true, // Indicate that the token has expired
+        expired: true,
       });
     }
 
-    // Log and handle other errors
+
     console.error("Error resetting password:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
 module.exports = {
+  getUserSkillsBySkillId,
   signup,
   signin,
   verifyOTP,
@@ -582,4 +651,6 @@ module.exports = {
   updateUserSkills,
   finishSkillSelection,
   updateUserSkillById,
+  removeUserSkillsBySkillId
+
 };

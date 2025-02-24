@@ -59,9 +59,23 @@ const statsData = {
   },
 };
 
+
+const Message = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+      <div className={`message ${type}`}>
+        {message}
+      </div>
+  );
+};
+
 const UserManager = () => {
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null); // holds the expanded user details
+  const [selectedUser, setSelectedUser] = useState(null);
   const [userSkills, setUserSkills] = useState([]);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingData, setEditingData] = useState({
@@ -74,6 +88,7 @@ const UserManager = () => {
   });
   const [availableSkills, setAvailableSkills] = useState([]);
   const [assignedSkillIds, setAssignedSkillIds] = useState([]);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -90,8 +105,12 @@ const UserManager = () => {
     fetchUsers();
   }, []);
 
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
   const handleRowClick = async (id) => {
-    // If the same user is clicked again, collapse details.
     if (selectedUser && selectedUser._id === id) {
       setSelectedUser(null);
       setUserSkills([]);
@@ -168,13 +187,48 @@ const UserManager = () => {
         return true;
       } else {
         const data = await response.json();
-        alert(data.message || "Error updating user skills");
+        showMessage(data.message || "Error updating user skills", "error");
         return false;
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user skills");
+      showMessage("Error updating user skills", "error");
       return false;
+    }
+  };
+
+  const verifyUserSkill = async (skillId) => {
+    try {
+      const skillObj = userSkills.find((s) => s._id === skillId);
+      const skillName = skillObj?.skillId?.name || "Skill";
+      const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verificationStatus: "verified" }),
+      });
+      if (response.ok) {
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          setUserSkills(skillsData);
+        }
+        await fetch("http://localhost:5000/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: selectedUser._id,
+            type: "SKILL_VERIFICATION",
+            message: `${skillName} is verified by the admin, check your profile`,
+          }),
+        });
+        showMessage("✅ Skill verified");
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error verifying skill", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage("Error verifying skill", "error");
     }
   };
 
@@ -192,19 +246,19 @@ const UserManager = () => {
 
         const combinedPayload = [
           ...userSkills
-            .filter((skill) => skill.skillType === "has")
-            .map((skill) => ({
-              skillId: skill.skillId?._id,
-              skillType: "has",
-              verificationStatus: "unverified",
-            })),
+              .filter((skill) => skill.skillType === "has")
+              .map((skill) => ({
+                skillId: skill.skillId?._id,
+                skillType: "has",
+                verificationStatus: "unverified",
+              })),
           ...userSkills
-            .filter((skill) => skill.skillType === "wantsToLearn")
-            .map((skill) => ({
-              skillId: skill.skillId?._id,
-              skillType: "wantsToLearn",
-              verificationStatus: skill.verificationStatus || "pending",
-            })),
+              .filter((skill) => skill.skillType === "wantsToLearn")
+              .map((skill) => ({
+                skillId: skill.skillId?._id,
+                skillType: "wantsToLearn",
+                verificationStatus: skill.verificationStatus || "pending",
+              })),
         ];
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
@@ -213,21 +267,24 @@ const UserManager = () => {
             const skillsData = await skillsResponse.json();
             setUserSkills(skillsData);
           }
-          alert("User updated successfully");
+          showMessage("✅ User updated");
         }
         setEditingUserId(null);
       } else {
-        alert(data.message || "Error updating user");
+        showMessage(data.message || "Error updating user", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user");
+      showMessage("Error updating user", "error");
     }
   };
 
   const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
+      const skillToDelete = userSkills.find((skill) => skill._id === skillId);
+      const skillName = skillToDelete?.skillId?.name || "Unknown Skill";
+
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
         method: "DELETE",
       });
@@ -236,15 +293,27 @@ const UserManager = () => {
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
           setUserSkills(skillsData);
+
+          if (skillToDelete && skillToDelete.skillType === "has") {
+            await fetch("http://localhost:5000/api/notifications", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: selectedUser._id,
+                type: "SKILL_REMOVAL",
+                message: `${skillName} was deleted from your skills by admin, check your profile`,
+              }),
+            });
+          }
         }
-        alert("Skill deleted successfully");
+        showMessage("🗑 Skill deleted successfully");
       } else {
         const data = await response.json();
-        alert(data.message || "Error deleting skill");
+        showMessage(data.message || "Error deleting skill", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting skill");
+      showMessage("Error deleting skill", "error");
     }
   };
 
@@ -258,37 +327,13 @@ const UserManager = () => {
       if (response.ok) {
         setUsers(users.filter((u) => u._id !== userId));
         setSelectedUser(null);
-        alert("User deleted successfully");
+        showMessage("User deleted successfully");
       } else {
-        alert(data.message || "Error deleting user");
+        showMessage(data.message || "Error deleting user", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting user");
-    }
-  };
-
-  const verifyUserSkill = async (skillId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verificationStatus: "verified" }),
-      });
-      if (response.ok) {
-        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
-        if (skillsResponse.ok) {
-          const skillsData = await skillsResponse.json();
-          setUserSkills(skillsData);
-        }
-        alert("Skill verified successfully");
-      } else {
-        const data = await response.json();
-        alert(data.message || "Error verifying skill");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error verifying skill");
+      showMessage("Error deleting user", "error");
     }
   };
 
@@ -323,21 +368,21 @@ const UserManager = () => {
             body: JSON.stringify({
               userId: data._id,
               type: "SKILL_VERIFICATION",
-              message: "Your mentor skills have been verified by the admin.",
+              message: "Your mentor skills have been verified by the admin, check your profile",
             }),
           });
           if (notifRes.ok) {
-            alert("User role updated to mentor and skills verified.");
+            showMessage("✅ User role updated to mentor and skills verified");
           } else {
-            alert("User role updated to mentor, but failed to send notification.");
+            showMessage("User role updated, but failed to send notification", "warning");
           }
         }
       } else {
-        alert(data.message || "Error updating user role");
+        showMessage(data.message || "Error updating user role", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user role");
+      showMessage("Error updating user role", "error");
     }
   };
 
@@ -345,188 +390,197 @@ const UserManager = () => {
   const hasSkillsList = userSkills.filter((s) => s.skillType === "has");
 
   return (
-    <div className="user-manager">
-      <table className="user-table">
-        <thead>
+      <div className="user-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        <table className="user-table">
+          <thead>
           <tr>
             <th>Username</th>
             <th>Email</th>
-            <th>Role</th>
+            <th>Role (👇 Click to expand)</th>
           </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <React.Fragment key={user._id}>
-              <tr onClick={() => handleRowClick(user._id)}>
-                <td>{user.username}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-              </tr>
-              {selectedUser && selectedUser._id === user._id && (
-                <tr className="expanded">
-                  <td colSpan="3">
-                    <div className="expanded-user-details">
-                      <div className="user-details-body">
-                        <div className="user-details-row">
-                          <span className="label">Username:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="username"
-                              value={editingData.username}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.username}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Email:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="email"
-                              value={editingData.email}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.email}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Role:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <select name="role" value={editingData.role} onChange={handleEditingChange}>
-                              <option value="learner">Learner</option>
-                              <option value="unverified mentor">Unverified Mentor</option>
-                              <option value="mentor">Mentor</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          ) : (
-                            <span className="value">{selectedUser.role}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Phone:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="phoneNumber"
-                              value={editingData.phoneNumber}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Bio:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <textarea
-                              name="bio"
-                              value={editingData.bio}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.bio || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Location:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="location"
-                              value={editingData.location}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.location || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Wants to Learn:</span>
-                          <ul className="user-skills-list">
-                            {wantsToLearnSkills.length > 0 ? (
-                              wantsToLearnSkills.map((skill) => (
-                                <li key={skill._id} className="skill-item">
-                                  {skill.skillId ? skill.skillId.name : "Skill Deleted"}
-                                  <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
-                                </li>
-                              ))
-                            ) : (
-                              <span className="value">No skills added</span>
-                            )}
-                          </ul>
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Has:</span>
-                          <ul className="user-skills-list">
-                            {hasSkillsList.length > 0 ? (
-                              hasSkillsList.map((skill) => (
-                                <li key={skill._id} className="skill-item">
-                                  {skill.skillId ? skill.skillId.name : "Skill Deleted"}{" "}
-                                  <span className="verification-status">({skill.verificationStatus})</span>
-                                  <button onClick={() => verifyUserSkill(skill._id)}>Verify</button>
-                                  <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
-                                </li>
-                              ))
-                            ) : (
-                              <span className="value">No skills added</span>
-                            )}
-                          </ul>
-                        </div>
-                        {selectedUser.profileImage && (
-                          <div className="user-image-container">
-                            <img
-                              src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
-                              alt={selectedUser.profileImage.filename}
-                            />
-                          </div>
-                        )}
-                        {selectedUser.certificateImage &&
-                          Array.isArray(selectedUser.certificateImage) &&
-                          selectedUser.certificateImage.length > 0 && (
-                            <div className="user-certificate-container">
-                              <h4>
-                                Certificate{selectedUser.certificateImage.length > 1 ? "s" : ""}
-                              </h4>
-                              {selectedUser.certificateImage.map((cert, index) => (
-                                <img
-                                  key={index}
-                                  src={`http://localhost:5000/api/files/${cert.fileId}?t=${Date.now()}`}
-                                  alt={cert.filename}
-                                />
-                              ))}
-                            </div>
-                        )}
-                      </div>
-                      <div className="user-actions">
-                        {editingUserId !== selectedUser._id ? (
-                          <>
-                            <button onClick={() => startEditing(selectedUser)}>Modify</button>
-                            <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
-                            {selectedUser.role === "unverified mentor" && (
-                              <button onClick={() => approveMentor(selectedUser._id)}>Approve Mentor</button>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => saveEditedUser(selectedUser._id)}>Save</button>
-                            <button onClick={cancelEditing}>Cancel</button>
-                          </>
-                        )}
-                      </div>
-                    </div>
+          </thead>
+          <tbody>
+          {users.map((userItem) => (
+              <React.Fragment key={userItem._id}>
+                <tr onClick={() => handleRowClick(userItem._id)}>
+                  <td>{userItem.username}</td>
+                  <td>{userItem.email}</td>
+                  <td>
+                    {userItem.role}{" "}
+                    {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
                   </td>
                 </tr>
-              )}
-            </React.Fragment>
+                {selectedUser && selectedUser._id === userItem._id && (
+                    <tr className="expanded">
+                      <td colSpan="3">
+                        <div className="expanded-user-details">
+                          <div className="user-details-body">
+                            <div className="user-details-row">
+                              <span className="label">Username:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="username"
+                                      value={editingData.username}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.username}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Email:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="email"
+                                      value={editingData.email}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.email}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Role:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                                    <option value="learner">Learner</option>
+                                    <option value="unverified mentor">Unverified Mentor</option>
+                                    <option value="mentor">Mentor</option>
+                                    <option value="admin">Admin</option>
+                                  </select>
+                              ) : (
+                                  <span className="value">{selectedUser.role}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Phone:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="phoneNumber"
+                                      value={editingData.phoneNumber}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Bio:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <textarea
+                                      name="bio"
+                                      value={editingData.bio}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.bio || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Location:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="location"
+                                      value={editingData.location}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.location || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Wants to Learn:</span>
+                              <ul className="user-skills-list">
+                                {wantsToLearnSkills.length > 0 ? (
+                                    wantsToLearnSkills.map((skill) => (
+                                        <li key={skill._id} className="skill-item">
+                                          {skill.skillId ? skill.skillId.name : "Skill no longer available"}
+                                          <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <span className="value">No skills added</span>
+                                )}
+                              </ul>
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Has:</span>
+                              <ul className="user-skills-list">
+                                {hasSkillsList.length > 0 ? (
+                                    hasSkillsList.map((skill) => (
+                                        <li key={skill._id} className="skill-item">
+                                          {skill.skillId ? skill.skillId.name : "Skill no longer available"}{" "}
+                                          <span className="verification-status">({skill.verificationStatus})</span>
+                                          {skill.verificationStatus !== "verified" && (
+                                              <button onClick={() => verifyUserSkill(skill._id)}>✅</button>
+                                          )}
+                                          <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <span className="value">No skills added</span>
+                                )}
+                              </ul>
+                            </div>
+                            {selectedUser.profileImage && (
+                                <div className="user-image-container">
+                                  <img
+                                      src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                                      alt={selectedUser.profileImage.filename}
+                                  />
+                                </div>
+                            )}
+                            {selectedUser.certificateImage &&
+                                Array.isArray(selectedUser.certificateImage) &&
+                                selectedUser.certificateImage.length > 0 && (
+                                    <div className="user-certificate-container">
+                                      <h4>Certificate{selectedUser.certificateImage.length > 1 ? "s" : ""}</h4>
+                                      {selectedUser.certificateImage.map((cert, index) => (
+                                          <img
+                                              key={index}
+                                              src={`http://localhost:5000/api/files/${cert.fileId}?t=${Date.now()}`}
+                                              alt={cert.filename}
+                                          />
+                                      ))}
+                                    </div>
+                                )}
+                          </div>
+                          <div className="user-actions">
+                            {editingUserId !== selectedUser._id ? (
+                                <>
+                                  <button onClick={() => startEditing(selectedUser)}>✏️</button>
+                                  <button onClick={() => deleteUser(selectedUser._id)}>🗑</button>
+                                  {selectedUser.role === "unverified mentor" && (
+                                      <button onClick={() => approveMentor(selectedUser._id)}>✅</button>
+                                  )}
+                                </>
+                            ) : (
+                                <>
+                                  <button onClick={() => saveEditedUser(selectedUser._id)}>💾</button>
+                                  <button onClick={cancelEditing}>❌</button>
+                                </>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                )}
+              </React.Fragment>
           ))}
-        </tbody>
-      </table>
-      <div className="user-manager"></div>
-    </div>
+          </tbody>
+        </table>
+      </div>
   );
 };
 
@@ -539,7 +593,7 @@ const SkillManager = () => {
     description: "",
     tags: "",
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [editingSkillId, setEditingSkillId] = useState(null);
   const [editingData, setEditingData] = useState({
     name: "",
@@ -558,7 +612,7 @@ const SkillManager = () => {
           setFormData((prev) => ({ ...prev, category: data[0] }));
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching skill categories:", err);
       }
     }
     fetchCategories();
@@ -571,13 +625,20 @@ const SkillManager = () => {
         if (response.ok) {
           const data = await response.json();
           setSkills(data);
+        } else {
+          console.error("Error fetching skills:", response.statusText);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching skills:", err);
       }
     }
     fetchSkills();
   }, []);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -595,7 +656,7 @@ const SkillManager = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setMessage("Skill added successfully!");
+        showMessage("Skill added successfully!");
         setSkills((prev) => [...prev, data]);
         setFormData({
           name: "",
@@ -604,30 +665,70 @@ const SkillManager = () => {
           tags: "",
         });
       } else {
-        setMessage(data.message || "Error adding skill.");
+        showMessage(data.message || "Error adding skill", "error");
       }
     } catch (error) {
-      console.error(error);
-      setMessage("Error adding skill.");
+      console.error("Error adding skill:", error);
+      showMessage("Error adding skill", "error");
     }
   };
 
-  const handleDeleteSkill = async (id) => {
+  const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/skills/${id}`, {
+      const skillData = skills.find((skill) => skill._id === skillId);
+      if (!skillData) throw new Error("Skill details not found in local state");
+      const skillName = skillData.name;
+
+      const usersWithSkillResponse = await fetch(
+          `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`
+      );
+      let usersWithSkill = [];
+      if (usersWithSkillResponse.ok) {
+        usersWithSkill = await usersWithSkillResponse.json();
+      } else if (usersWithSkillResponse.status === 404) {
+        console.log("No users found with this skill.");
+      } else {
+        console.warn("Error fetching users with skill:", usersWithSkillResponse.statusText);
+      }
+
+      const deleteSkillResponse = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-      if (response.ok) {
-        setSkills((prev) => prev.filter((skill) => skill._id !== id));
-        alert("Skill deleted successfully");
-      } else {
-        alert(data.message || "Error deleting skill");
+      if (!deleteSkillResponse.ok) {
+        const deleteData = await deleteSkillResponse.json();
+        throw new Error(deleteData.message || "Error deleting skill");
       }
+
+      const deleteUserSkillsResponse = await fetch(
+          `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
+          { method: "DELETE" }
+      );
+      if (!deleteUserSkillsResponse.ok) {
+        console.warn("Error deleting UserSkill references:", deleteUserSkillsResponse.statusText);
+      }
+
+      setSkills((prev) => prev.filter((skill) => skill._id !== skillId));
+
+      const usersWithHasSkill = usersWithSkill.filter((userSkill) => userSkill.skillType === "has");
+      if (usersWithHasSkill.length > 0) {
+        const notificationPromises = usersWithHasSkill.map((userSkill) =>
+            fetch("http://localhost:5000/api/notifications", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: userSkill.userId,
+                type: "SKILL_REMOVAL",
+                message: `${skillName} is no longer available, check your profile`,
+              }),
+            })
+        );
+        await Promise.all(notificationPromises);
+      }
+      showMessage("🗑 Skill deleted successfully");
     } catch (error) {
-      console.error(error);
-      alert("Error deleting skill");
+      console.error("Error deleting skill:", error);
+      showMessage("Error deleting skill: " + error.message, "error");
     }
   };
 
@@ -668,47 +769,53 @@ const SkillManager = () => {
         setSkills((prev) => prev.map((s) => (s._id === data._id ? data : s)));
         setEditingSkillId(null);
         setEditingData({ name: "", category: "", description: "", tags: "" });
-        alert("Skill updated successfully");
+        showMessage("💾 Skill updated successfully");
       } else {
-        alert(data.message || "Error updating skill");
+        showMessage(data.message || "Error updating skill", "error");
       }
     } catch (error) {
-      console.error(error);
-      alert("Error updating skill");
+      console.error("Error updating skill:", error);
+      showMessage("Error updating skill", "error");
     }
   };
 
   return (
-    <div className="skill-manager">
-      <form onSubmit={handleSubmit} className="skill-form">
-        <div>
-          <label>Skill Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Category</label>
-          <select name="category" value={formData.category} onChange={handleChange} required>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Description</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Tags</label>
-          <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
-        </div>
-        <button type="submit">Add Skill</button>
-        {message && <p className="form-message">{message}</p>}
-      </form>
-      <h3>List of Skills</h3>
-      <table className="skill-table">
-        <thead>
+      <div className="skill-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        <form onSubmit={handleSubmit} className="skill-form">
+          <div>
+            <label>Skill Name</label>
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+          </div>
+          <div>
+            <label>Category</label>
+            <select name="category" value={formData.category} onChange={handleChange} required>
+              {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>Description</label>
+            <textarea name="description" value={formData.description} onChange={handleChange} required />
+          </div>
+          <div>
+            <label>Tags</label>
+            <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
+          </div>
+          <button type="submit">➕ Add Skill</button>
+        </form>
+        <h3>Skill List</h3>
+        <table className="skill-table">
+          <thead>
           <tr>
             <th>Name</th>
             <th>Category</th>
@@ -717,63 +824,63 @@ const SkillManager = () => {
             <th>Created At</th>
             <th>Actions</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {skills.map((skill) => (
-            <tr key={skill._id}>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
-                ) : (
-                  skill.name
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <select name="category" value={editingData.category} onChange={handleEditingChange}>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  skill.category
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
-                ) : (
-                  skill.description
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
-                ) : (
-                  Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
-                )}
-              </td>
-              <td>{new Date(skill.createdAt).toLocaleString()}</td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <>
-                    <button onClick={() => saveEditedSkill(skill._id)}>Save</button>
-                    <button onClick={cancelEditing}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEditing(skill)}>Modify</button>
-                    <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
-                  </>
-                )}
-              </td>
-            </tr>
+              <tr key={skill._id}>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
+                  ) : (
+                      skill.name
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <select name="category" value={editingData.category} onChange={handleEditingChange}>
+                        {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                        ))}
+                      </select>
+                  ) : (
+                      skill.category
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
+                  ) : (
+                      skill.description
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
+                  ) : (
+                      Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
+                  )}
+                </td>
+                <td>{new Date(skill.createdAt).toLocaleString()}</td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <>
+                        <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
+                        <button onClick={cancelEditing}>❌</button>
+                      </>
+                  ) : (
+                      <>
+                        <button onClick={() => startEditing(skill)}>✏️</button>
+                        <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                      </>
+                  )}
+                </td>
+              </tr>
           ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
   );
 };
 
@@ -806,171 +913,171 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "statistics":
         return (
-          <div className="section-content">
-            <h2>Overview Statistics</h2>
-            <div className="stats-grid">
-              <div className="stats-card">
-                <h3>Users Overview</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={statsData.users.roles}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="role" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="var(--primary-color)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="stats-card">
-                <h3>Course Categories</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={statsData.courses.categories}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="var(--accent-color)"
-                      label
-                    />
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="stats-card metric-group">
-                <div className="metric-box">
-                  <h4>Total Users</h4>
-                  <p className="metric-value">{statsData.users.total}</p>
+            <div className="section-content">
+              <h2>Overview Statistics</h2>
+              <div className="stats-grid">
+                <div className="stats-card">
+                  <h3>Users Overview</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={statsData.users.roles}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="role" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="var(--primary-color)" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="metric-box">
-                  <h4>Total Courses</h4>
-                  <p className="metric-value">{statsData.courses.total}</p>
+                <div className="stats-card">
+                  <h3>Course Categories</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                          data={statsData.courses.categories}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="var(--accent-color)"
+                          label
+                      />
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="metric-box">
-                  <h4>Skills Available</h4>
-                  <p className="metric-value">{statsData.skills.total}</p>
+                <div className="stats-card metric-group">
+                  <div className="metric-box">
+                    <h4>Total Users</h4>
+                    <p className="metric-value">{statsData.users.total}</p>
+                  </div>
+                  <div className="metric-box">
+                    <h4>Total Courses</h4>
+                    <p className="metric-value">{statsData.courses.total}</p>
+                  </div>
+                  <div className="metric-box">
+                    <h4>Skills Available</h4>
+                    <p className="metric-value">{statsData.skills.total}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="stats-card">
-                <h3>Trending Skills</h3>
-                <ul className="trending-list">
-                  {statsData.skills.trending.map((skill, index) => (
-                    <li key={index} className="trending-item">
-                      <span className="trending-rank">#{index + 1}</span>
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
+                <div className="stats-card">
+                  <h3>Trending Skills</h3>
+                  <ul className="trending-list">
+                    {statsData.skills.trending.map((skill, index) => (
+                        <li key={index} className="trending-item">
+                          <span className="trending-rank">#{index + 1}</span>
+                          {skill}
+                        </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
         );
       case "users":
         return (
-          <div className="section-content">
-            <h2>Users</h2>
-            <UserManager />
-          </div>
+            <div className="section-content">
+              <h2>Users</h2>
+              <UserManager />
+            </div>
         );
       case "courses":
         return (
-          <div className="section-content">
-            <h2>Courses</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Courses</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Title</th>
                   <th>Description</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyCourses.map((course) => (
-                  <tr key={course.id}>
-                    <td>{course.title}</td>
-                    <td>{course.description}</td>
-                  </tr>
+                    <tr key={course.id}>
+                      <td>{course.title}</td>
+                      <td>{course.description}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "jobs":
         return (
-          <div className="section-content">
-            <h2>Jobs</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Jobs</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Title</th>
                   <th>Company</th>
                   <th>Location</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyJobs.map((job) => (
-                  <tr key={job.id}>
-                    <td>{job.title}</td>
-                    <td>{job.company}</td>
-                    <td>{job.location}</td>
-                  </tr>
+                    <tr key={job.id}>
+                      <td>{job.title}</td>
+                      <td>{job.company}</td>
+                      <td>{job.location}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "groups":
         return (
-          <div className="section-content">
-            <h2>Groups</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Groups</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Name</th>
                   <th>Members</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyGroups.map((group) => (
-                  <tr key={group.id}>
-                    <td>{group.name}</td>
-                    <td>{group.members}</td>
-                  </tr>
+                    <tr key={group.id}>
+                      <td>{group.name}</td>
+                      <td>{group.members}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "events":
         return (
-          <div className="section-content">
-            <h2>Events</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Events</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Name</th>
                   <th>Date</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td>{event.name}</td>
-                    <td>{event.date}</td>
-                  </tr>
+                    <tr key={event.id}>
+                      <td>{event.name}</td>
+                      <td>{event.date}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "addSkill":
         return (
-          <div className="section-content">
-            <h2>Add New Skill</h2>
-            <SkillManager />
-          </div>
+            <div className="section-content">
+              <h2>Add New Skill</h2>
+              <SkillManager />
+            </div>
         );
       default:
         return <div>Select a section from the sidebar.</div>;
@@ -978,62 +1085,62 @@ const AdminDashboard = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div className="admin-dashboard-container">
-        <section className="admin-dashboard">
-          <aside className="dashboard-sidebar">
-            <h1 className="logo">SkillMinds Admin</h1>
-            <ul>
-              <li
-                className={activeSection === "statistics" ? "active" : ""}
-                onClick={() => setActiveSection("statistics")}
-              >
-                📊 Statistics
-              </li>
-              <li
-                className={activeSection === "users" ? "active" : ""}
-                onClick={() => setActiveSection("users")}
-              >
-                👥 Users
-              </li>
-              <li
-                className={activeSection === "courses" ? "active" : ""}
-                onClick={() => setActiveSection("courses")}
-              >
-                📚 Courses
-              </li>
-              <li
-                className={activeSection === "jobs" ? "active" : ""}
-                onClick={() => setActiveSection("jobs")}
-              >
-                💼 Jobs
-              </li>
-              <li
-                className={activeSection === "groups" ? "active" : ""}
-                onClick={() => setActiveSection("groups")}
-              >
-                👥 Groups
-              </li>
-              <li
-                className={activeSection === "events" ? "active" : ""}
-                onClick={() => setActiveSection("events")}
-              >
-                🗓 Events
-              </li>
-              <li
-                className={activeSection === "addSkill" ? "active" : ""}
-                onClick={() => setActiveSection("addSkill")}
-              >
-                ➕ Add Skill
-              </li>
-            </ul>
-          </aside>
-          <main className="dashboard-content">{renderSection()}</main>
-        </section>
-      </div>
-      <Footer />
-    </>
+      <>
+        <Header />
+        <div className="admin-dashboard-container">
+          <section className="admin-dashboard">
+            <aside className="dashboard-sidebar">
+              <h1 className="logo">SkillMinds Admin</h1>
+              <ul>
+                <li
+                    className={activeSection === "statistics" ? "active" : ""}
+                    onClick={() => setActiveSection("statistics")}
+                >
+                  📊 Statistics
+                </li>
+                <li
+                    className={activeSection === "users" ? "active" : ""}
+                    onClick={() => setActiveSection("users")}
+                >
+                  👥 Users
+                </li>
+                <li
+                    className={activeSection === "courses" ? "active" : ""}
+                    onClick={() => setActiveSection("courses")}
+                >
+                  📚 Courses
+                </li>
+                <li
+                    className={activeSection === "jobs" ? "active" : ""}
+                    onClick={() => setActiveSection("jobs")}
+                >
+                  💼 Jobs
+                </li>
+                <li
+                    className={activeSection === "groups" ? "active" : ""}
+                    onClick={() => setActiveSection("groups")}
+                >
+                  👥 Groups
+                </li>
+                <li
+                    className={activeSection === "events" ? "active" : ""}
+                    onClick={() => setActiveSection("events")}
+                >
+                  🗓 Events
+                </li>
+                <li
+                    className={activeSection === "addSkill" ? "active" : ""}
+                    onClick={() => setActiveSection("addSkill")}
+                >
+                  ➕ Skills
+                </li>
+              </ul>
+            </aside>
+            <main className="dashboard-content">{renderSection()}</main>
+          </section>
+        </div>
+        <Footer />
+      </>
   );
 };
 

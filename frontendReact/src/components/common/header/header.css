@@ -158,7 +158,7 @@ header:hover {
 
 .profile-container:hover .profile-dropdown {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(-10px);
   visibility: visible;
 }
 
