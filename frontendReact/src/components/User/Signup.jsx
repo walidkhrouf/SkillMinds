@@ -302,15 +302,21 @@ const SignupForm = () => {
           </select>
         </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="profileImage">Profile Image:</label>
-                <div className="file-upload-container">
-                  <input type="file" id="profileImage" name="profileImage" accept="image/*" onChange={handleFileChange} />
-                  <label htmlFor="profileImage" className="custom-file-label">Choose File</label>
-                  <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
-                  <span className="image-indicator">[Images only]</span>
+                <div className="form-group">
+                  <label htmlFor="profileImage">Profile Image:</label>
+                  <div className="file-upload-container">
+                    <input
+                      type="file"
+                      id="profileImage"
+                      name="profileImage"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <label htmlFor="profileImage" className="file-upload-label">Choose File</label>
+                    <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
+                    <span className="image-indicator">[Images only]</span>
+                  </div>
                 </div>
-              </div>
               {formData.role === "mentor" && (
                 <div className="mentor-skills-section">
                   <h3>Select Your Mentor Skills:</h3>
@@ -326,26 +332,31 @@ const SignupForm = () => {
                     ))}
                   </div>
                   {mentorSkills.map((skillId) => {
-                    const skillObj = availableSkills.find((s) => s._id === skillId);
-                    return (
-                      <div key={skillId} className="mentor-certificate-input">
-                        <label>
-                          Upload certificate for {skillObj ? skillObj.name : skillId} (images only):
-                        </label>
-                        <input type="file" accept="image/*" onChange={(e) => handleMentorCertificateChange(e, skillId)} />
-                        <span className="file-name">
-                          {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
-                        </span>
-                      </div>
-                    );
-                  })}
+  const skillObj = availableSkills.find((s) => s._id === skillId);
+  return (
+    <div key={skillId} className="mentor-certificate-input">
+      <label htmlFor={`mentorCertificate_${skillId}`}>
+        Upload certificate for {skillObj ? skillObj.name : skillId} (images only)
+      </label>
+      <input
+        type="file"
+        id={`mentorCertificate_${skillId}`} // Ensure this ID is unique for each input
+        accept="image/*"
+        onChange={(e) => handleMentorCertificateChange(e, skillId)}
+      />
+      <span className="file-name">
+        {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
+      </span>
+    </div>
+  );
+})}
                 </div>
               )}
             </div>
 
-            <div className="form-navigation">
+             <div className="form-navigation">
               {step > 1 && (
-                <button type="button" className="auth-btn secondary" onClick={handleBack}>
+                <button type="button" className="back-btn" onClick={handleBack}>
                   Back
                 </button>
               )}

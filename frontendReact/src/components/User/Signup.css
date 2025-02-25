@@ -6,8 +6,8 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  min-height: 950px; /* Set min-height for consistency */
-  align-items: stretch; /* Make both sections have the same height */
+  min-height: 950px;
+  align-items: stretch;
 }
 
 .left-box, .right-box {
@@ -26,12 +26,12 @@
   background-image: url("/public/images/bgfinale.jpg");
   color: white;
   text-align: center;
-  min-height: 100%; /* Ensures the image box takes the full height of its parent */
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-size: cover; /* Cover the whole area */
-  background-position: center; /* Center the image */
+  background-size: cover;
+  background-position: center;
 }
 
 h1 {
@@ -39,11 +39,11 @@ h1 {
   font-size: 4em;
   color: rgb(78, 49, 6);
 }
+
 h2 {
   color: rgb(78, 49, 6);
-
 }
-/* Form styling */
+
 .auth-container {
   width: 100%;
   display: flex;
@@ -79,27 +79,101 @@ h2 {
   box-sizing: border-box;
 }
 
-.auth-btn {
-  background-color: #E9E1D5;
-  color: white;
+.auth-btn, .back-btn {
+  flex: 1;
+  margin: 0 5px;
   padding: 12px 20px;
-  border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
-  width: 100%;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.auth-btn {
+  background-color: #E9E1D5; 
+  color: white; 
 }
 
 .auth-btn:hover {
-  background-color: #a47f18;
+  background-color: #a47f18; 
 }
 
-/* Responsiveness */
+.back-btn {
+  background-color: white; 
+  color: #a47f18; 
+  border: 2px solid #a47f18; 
+}
+
+.back-btn:hover {
+  background-color: #a47f18; 
+  color: white; 
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.file-upload-container input[type="file"] {
+  display: none;
+}
+
+.file-upload-label {
+  background-color: #a47f18; 
+  color: white; 
+  padding: 12px 20px; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: background-color 0.3s; 
+  flex: 0 0 auto; 
+  min-width: 150px; 
+  text-align: center; 
+}
+
+.file-upload-label:hover {
+  background-color: #a47f18; 
+}
+
+.mentor-certificate-input input[type="file"] {
+  display: none; 
+}
+
+.mentor-certificate-input {
+  display: flex;
+  align-items: center;
+  margin-top: 10px; 
+}
+
+.mentor-certificate-input label {
+  background-color: #a47f18; 
+  color: white; 
+  padding: 12px 20px; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: background-color 0.3s; 
+}
+
+.mentor-certificate-input label:hover {
+  background-color:  #a47f18;
+}
+
+.file-name {
+  margin-left: 10px; 
+  color: #333; 
+  white-space: nowrap; 
+}
+
+.image-indicator {
+  margin-left: 10px; 
+  font-size: 12px; 
+  color: #888; 
+}
+
 @media (max-width: 1024px) {
   .signup-container {
     flex-direction: column;
-    min-height: auto; /* Adjust height to content */
+    min-height: auto; 
   }
   .left-box {
     border-right: none;
@@ -137,7 +211,6 @@ h2 {
   }
 }
 
-/* Progress indicator */
 .progress-indicator {
   display: flex;
   justify-content: center;
@@ -155,4 +228,10 @@ h2 {
 
 .progress-step.active {
   background-color: #a47f18;
+}
+
+.form-navigation {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between; 
 }

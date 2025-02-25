@@ -188,13 +188,13 @@ const signin = async (req, res) => {
       subject: "Your OTP Code",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
-          <!-- Header -->
+          
           <div style="text-align: center; padding: 20px; background-color: #007bff; border-radius: 10px 10px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 24px;">SkillMinds</h1>
           
           </div>
     
-          <!-- Body -->
+          
           <div style="padding: 20px;">
             <h2 style="color: #333; font-size: 20px; margin-bottom: 15px;">Your OTP Code</h2>
             <p style="color: #555; font-size: 16px; line-height: 1.5;">Your One-Time Password (OTP) code is:</p>
@@ -207,10 +207,10 @@ const signin = async (req, res) => {
             <p style="color: #777; font-size: 12px; text-align: center;">If you did not request this OTP, please ignore this email.</p>
           </div>
     
-          <!-- Footer -->
+          
           <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
   
-            <p style="color: #777; margin: 5px 0 0; font-size: 12px;">Contact us: <a href="mailto:skillminds@gmail.com" style="color: #007bff; text-decoration: none;">skillminds@gmail.com</a></p>
+            <p style="color: #777; margin: 5px 0 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds.team@gmail.com</a></p>
           </div>
         </div>
       `,
@@ -229,7 +229,7 @@ const signin = async (req, res) => {
     
         ================================
         DevMinds - Your Development Partner
-        Contact us: skillminds@gmail.com
+        Contact us: skillminds.team@gmail.com
         ================================
       `,
     };
@@ -551,7 +551,7 @@ const forgotPassword = async (req, res) => {
     
           <!-- Footer -->
           <div style="text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
-            <p style="color: #777; margin: 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds@gmail.com</a></p>
+            <p style="color: #777; margin: 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds.team@gmail.com</a></p>
           </div>
         </div>
       `,
