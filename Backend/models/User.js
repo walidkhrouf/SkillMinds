@@ -28,7 +28,7 @@ const userSchema = new Schema({
   certificateImage: { type: [certificateImageSchema], default: [] },
   linkedAccounts: {
     google: String,
-    facebook: String
+    linkedin: String
   },
   hasChosenSkills: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }

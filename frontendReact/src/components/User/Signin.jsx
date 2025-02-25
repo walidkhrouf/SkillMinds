@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import axios from "axios";
+import { GoogleLogin } from "react-google-login";
 import "./Signin.css";
 
 const Signin = () => {
@@ -121,6 +122,64 @@ const Signin = () => {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    const width = 600;
+    const height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+
+    const authWindow = window.open(
+      "http://localhost:5000/auth/google", 
+      "_blank", 
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'http://localhost:5000') return;
+      const { token } = event.data;
+      if (token) {
+        localStorage.setItem('jwtToken', token);
+        navigate('/');
+      }
+    });
+
+    const interval = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(interval);
+        window.location.reload();
+      }
+    }, 1000);
+  };
+
+  const handleLinkedInSignIn = () => {
+    const width = 600;
+    const height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+
+    const authWindow = window.open(
+      "http://localhost:5000/auth/linkedin", 
+      "_blank", 
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'http://localhost:5000') return;
+      const { token } = event.data;
+      if (token) {
+        localStorage.setItem('jwtToken', token);
+        navigate('/');
+      }
+    });
+
+    const interval = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(interval);
+        window.location.reload();
+      }
+    }, 1000);
+  };
+
   return (
     <div className="signup-container">
       <div className="left-box">
@@ -164,8 +223,8 @@ const Signin = () => {
               </div>
               <div className="social-login">
                 <p>Or connect with:</p>
-                <button type="button" className="social-btn facebook">Facebook</button>
-                <button type="button" className="social-btn google">Google</button>
+                <button type="button" className="social-btn linkedin" onClick={handleLinkedInSignIn}>LinkedIn</button>
+                <button type="button" className="social-btn google" onClick={handleGoogleSignIn}>Google</button>
               </div>
             </form>
           ) : (
