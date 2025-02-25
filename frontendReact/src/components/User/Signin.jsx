@@ -29,7 +29,6 @@ const Signin = () => {
     setError("");
   };
 
- 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -49,7 +48,6 @@ const Signin = () => {
         setUserId(response.data.userId);
         setOtpSent(true);
       } else if (response.data.user && response.data.token) {
-
         localStorage.setItem("currentUser", JSON.stringify(response.data.user));
         localStorage.setItem("jwtToken", response.data.token);
         if (response.data.user.role === "admin") {
@@ -57,7 +55,7 @@ const Signin = () => {
         } else {
           const user = response.data.user;
           const hasChosenSkills = user.hasChosenSkills;
-          if (hasChosenSkills == "false") {
+          if (hasChosenSkills === "false") {
             navigate("/firstchoose");
           } else {
             navigate("/");
@@ -72,7 +70,6 @@ const Signin = () => {
       setLoading(false);
     }
   };
-
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
@@ -94,7 +91,7 @@ const Signin = () => {
         } else {
           const user = response.data.user;
           const hasChosenSkills = user.hasChosenSkills;
-          if (hasChosenSkills == false) {
+          if (hasChosenSkills === false) {
             navigate("/firstchoose");
           } else {
             navigate("/");
@@ -110,7 +107,6 @@ const Signin = () => {
     }
   };
 
- 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {
@@ -126,75 +122,84 @@ const Signin = () => {
   };
 
   return (
-    <div className="auth-container">
-      <h2>Sign In</h2>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="success-message">{message}</p>}
-      {!otpSent ? (
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              placeholder="Enter your email" 
-              value={formData.email}
-              onChange={handleChange} 
-              required 
-            />
+    <div className="signup-container">
+      <div className="left-box">
+        <div className="auth-container">
+          <h2>Sign In</h2>
+          {error && <p className="error">{error}</p>}
+          {message && <p className="success-message">{message}</p>}
+          {!otpSent ? (
+            <form className="auth-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="email">Email:</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="password">Password:</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="auth-btn" disabled={loading}>
+                  {loading ? "Signing In..." : "Sign In"}
+                </button>
+              </div>
+              <div className="forgot-password">
+                <NavLink to="#" onClick={handleForgotPassword}>Forgot Password?</NavLink>
+              </div>
+              <div className="social-login">
+                <p>Or connect with:</p>
+                <button type="button" className="social-btn facebook">Facebook</button>
+                <button type="button" className="social-btn google">Google</button>
+              </div>
+            </form>
+          ) : (
+            <form className="auth-form" onSubmit={handleOtpSubmit}>
+              <div className="form-group">
+                <label htmlFor="otp">Enter OTP:</label>
+                <input
+                  type="text"
+                  id="otp"
+                  name="otp"
+                  placeholder="Enter the OTP sent to your email"
+                  value={otp}
+                  onChange={handleOtpChange}
+                  required
+                />
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="auth-btn" disabled={loading}>
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </button>
+              </div>
+            </form>
+          )}
+          <div className="switch-auth">
+            <p>
+              Don’t have an account? <NavLink to="/signup">Sign Up</NavLink>
+            </p>
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password:</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              placeholder="Enter your password" 
-              value={formData.password}
-              onChange={handleChange} 
-              required 
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="auth-btn" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
-            </button>
-          </div>
-          <div className="forgot-password">
-            <NavLink to="#" onClick={handleForgotPassword}>Forgot Password?</NavLink>
-          </div>
-          <div className="social-login">
-            <p>Or connect with:</p>
-            <button type="button" className="social-btn facebook">Facebook</button>
-            <button type="button" className="social-btn google">Google</button>
-          </div>
-        </form>
-      ) : (
-        <form className="auth-form" onSubmit={handleOtpSubmit}>
-          <div className="form-group">
-            <label htmlFor="otp">Enter OTP:</label>
-            <input 
-              type="text" 
-              id="otp" 
-              name="otp" 
-              placeholder="Enter the OTP sent to your email" 
-              value={otp}
-              onChange={handleOtpChange}
-              required
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="auth-btn" disabled={loading}>
-              {loading ? "Verifying..." : "Verify OTP"}
-            </button>
-          </div>
-        </form>
-      )}
-      <div className="switch-auth">
-        <p>
-          Don’t have an account? <NavLink to="/signup">Sign Up</NavLink>
-        </p>
+        </div>
+      </div>
+      <div className="right-box">
+        <div className="content">
+          <h1>Welcome to SkillMinds</h1>
+        </div>
       </div>
     </div>
   );

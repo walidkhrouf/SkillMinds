@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { getNames } from "country-list";
 import axios from "axios";
@@ -19,22 +19,18 @@ const SignupForm = () => {
     role: "learner",
     bio: "",
     location: "",
+    cityCode: "", // Ajout du code de la ville
+
   });
   const [profileImage, setProfileImage] = useState(null);
-  // For mentors, we now use these two states:
-  const [mentorSkills, setMentorSkills] = useState([]); // Array of selected mentor skill IDs
-  const [mentorCertificates, setMentorCertificates] = useState({}); // Mapping: skillId -> certificate file
+  const [mentorSkills, setMentorSkills] = useState([]);
+  const [mentorCertificates, setMentorCertificates] = useState({});
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  // Get countries (excluding Israel)
-  const countries = Object.entries(getNames()).filter(
-      ([, name]) => name !== "Israel"
-  );
-
-  // Fetch all available skills from the Skill collection.
-  // We use the same endpoint that is used in other parts of your app.
+  const countries = Object.entries(getNames()).filter(([, name]) => name !== "Israel");
   const [availableSkills, setAvailableSkills] = useState([]);
+  const [cities, setCities] = useState([]); // Liste des villes
+
   useEffect(() => {
     async function fetchSkills() {
       try {
@@ -59,11 +55,8 @@ const SignupForm = () => {
     return phoneInfo && phoneInfo.isValid();
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  // Handle profile image change; verify file is an image.
+
   const handleFileChange = (e) => {
     if (e.target.name === "profileImage") {
       const file = e.target.files[0];
@@ -78,8 +71,42 @@ const SignupForm = () => {
       }
     }
   };
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === "location") {
+      setFormData({
+        ...formData,
+        location: e.target.value,
+        cityCode: "", // Réinitialiser le code de la ville
+      });
+      setCities([]); // Réinitialiser la liste des villes
+    }
+  };
+  
 
-  // Handle mentor certificate file change for a given skill.
+  const handleCityChange = (e) => {
+    const selectedCity = e.target.value;
+    setFormData({ ...formData, cityCode: selectedCity }); // Stocker le code de la ville dans `cityCode`
+  };
+  // Charger les villes en fonction du pays sélectionné
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (formData.location) {
+        try {
+          const response = await axios.post("https://countriesnow.space/api/v0.1/countries/cities", {
+            country: formData.location,
+          });
+          setCities(response.data.data || []);
+        } catch (error) {
+          console.error("Error fetching cities:", error);
+          setCities([]);
+        }
+      }
+    };
+
+    fetchCities();
+  }, [formData.location]);
+
   const handleMentorCertificateChange = (e, skillId) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -93,7 +120,6 @@ const SignupForm = () => {
     }
   };
 
-  // Toggle mentor skill selection.
   const toggleMentorSkill = (skillId) => {
     if (mentorSkills.includes(skillId)) {
       setMentorSkills(mentorSkills.filter((id) => id !== skillId));
@@ -121,9 +147,7 @@ const SignupForm = () => {
     if (step === 2) {
       const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       if (!passwordRegex.test(formData.password)) {
-        setError(
-            "Password must be at least 8 characters long, contain an uppercase letter, a number, and a special character."
-        );
+        setError("Password must be at least 8 characters long, contain an uppercase letter, a number, and a special character.");
         return false;
       }
       if (formData.password !== formData.confirmPassword) {
@@ -173,29 +197,22 @@ const SignupForm = () => {
     });
     if (profileImage) formDataToSend.append("profileImage", profileImage);
     if (formData.role === "mentor" && mentorSkills.length > 0) {
-      // Append each certificate file with a key that includes its skill id.
       mentorSkills.forEach((skillId) => {
         const file = mentorCertificates[skillId];
         if (file) {
           formDataToSend.append(`mentorCertificate_${skillId}`, file);
         }
       });
-      // Also send the list of selected mentor skills so the backend can create proper relations.
       formDataToSend.append("mentorSkills", JSON.stringify(mentorSkills));
     }
 
     try {
-      const response = await axios.post(
-          "http://localhost:5000/api/users/signup",
-          formDataToSend,
-          { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const response = await axios.post("http://localhost:5000/api/users/signup", formDataToSend, { headers: { "Content-Type": "multipart/form-data" } });
       setSuccess(response.data.message);
       setError("");
       setTimeout(() => navigate("/signin"), 2000);
     } catch (err) {
-      const errorMessage =
-          err.response?.data?.message || "An error occurred during signup.";
+      const errorMessage = err.response?.data?.message || "An error occurred during signup.";
       setError(errorMessage);
       setSuccess("");
       if (errorMessage.toLowerCase().includes("already exists")) {
@@ -205,139 +222,159 @@ const SignupForm = () => {
   };
 
   return (
-      <div className="auth-container">
-        <h2>Sign Up</h2>
-        <div className="progress-indicator">
-          <div className={`progress-step ${step >= 1 ? "active" : ""}`}></div>
-          <div className={`progress-step ${step >= 2 ? "active" : ""}`}></div>
-          <div className={`progress-step ${step >= 3 ? "active" : ""}`}></div>
-        </div>
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {/* Step 1: Personal Information */}
-          <div className={`form-step ${step === 1 ? "active" : ""}`}>
-            <div className="form-group">
-              <label htmlFor="username">Username:</label>
-              <input type="text" id="username" name="username" placeholder="Enter your username" onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="email">Email:</label>
-              <input type="email" id="email" name="email" placeholder="Enter your email" onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="phoneNumber">Phone Number:</label>
-              <PhoneInput
+    <div className="signup-container">
+      <div className="left-box">
+       
+        <div className="auth-container">
+          <h2>Sign Up</h2>
+          <div className="progress-indicator">
+            <div className={`progress-step ${step >= 1 ? "active" : ""}`}></div>
+            <div className={`progress-step ${step >= 2 ? "active" : ""}`}></div>
+            <div className={`progress-step ${step >= 3 ? "active" : ""}`}></div>
+          </div>
+          {error && <p className="error">{error}</p>}
+          {success && <p className="success">{success}</p>}
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className={`form-step ${step === 1 ? "active" : ""}`}>
+              <div className="form-group">
+                <label htmlFor="username">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="phoneNumber"> 
+                  Phone Number:</label>
+                <PhoneInput
                   international
                   defaultCountry="TN"
                   value={formData.phoneNumber}
                   onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
                   placeholder="Enter your phone number"
-              />
-            </div>
-          </div>
-
-          {/* Step 2: Account Security */}
-          <div className={`form-step ${step === 2 ? "active" : ""}`}>
-            <div className="form-group">
-              <label htmlFor="password">Password:</label>
-              <input type="password" id="password" name="password" placeholder="Enter your password" onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password:</label>
-              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" onChange={handleChange} />
-            </div>
-          </div>
-
-          {/* Step 3: Additional Information */}
-          <div className={`form-step ${step === 3 ? "active" : ""}`}>
-            <div className="form-group">
-              <label htmlFor="role">Role:</label>
-              <select id="role" name="role" onChange={handleChange}>
-                <option value="learner">Learner</option>
-                <option value="mentor">Mentor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="bio">Bio:</label>
-              <textarea id="bio" name="bio" placeholder="Tell us about yourself" onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="location">Location:</label>
-              <select id="location" name="location" onChange={handleChange} value={formData.location}>
-                <option value="">Select your country</option>
-                {countries.map(([code, name]) => (
-                    <option key={code} value={name}>{name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="profileImage">Profile Image:</label>
-              <div className="file-upload-container">
-                <input type="file" id="profileImage" name="profileImage" accept="image/*" onChange={handleFileChange} />
-                <label htmlFor="profileImage" className="custom-file-label">Choose File</label>
-                <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
-                <span className="image-indicator">[Images only]</span>
+                />
               </div>
             </div>
-            {formData.role === "mentor" && (
+
+            <div className={`form-step ${step === 2 ? "active" : ""}`}>
+              <div className="form-group">
+                <label htmlFor="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" onChange={handleChange} />
+              </div>
+            </div>
+
+            <div className={`form-step ${step === 3 ? "active" : ""}`}>
+              <div className="form-group">
+                <label htmlFor="role">Role:</label>
+                <select id="role" name="role" onChange={handleChange}>
+                  <option value="learner">Learner</option>
+                  <option value="mentor">Mentor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="bio">Bio:</label>
+                <textarea id="bio" name="bio" placeholder="Tell us about yourself" onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="location">Location:</label>
+                <select id="location" name="location" onChange={handleChange} value={formData.location}>
+                  <option value="">Select your country</option>
+                  {countries.map(([code, name]) => (
+                    <option key={code} value={name}>{name}</option>
+                  ))}
+                </select>
+                
+              <div className="form-group">
+            <label htmlFor="city">City:</label>
+               <select id="city" name="cityCode" onChange={handleCityChange} required disabled={!formData.location}>
+                <option value="">Select your city</option>
+            {cities.map((city, index) => (
+              <option key={index} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+        </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="profileImage">Profile Image:</label>
+                <div className="file-upload-container">
+                  <input type="file" id="profileImage" name="profileImage" accept="image/*" onChange={handleFileChange} />
+                  <label htmlFor="profileImage" className="custom-file-label">Choose File</label>
+                  <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
+                  <span className="image-indicator">[Images only]</span>
+                </div>
+              </div>
+              {formData.role === "mentor" && (
                 <div className="mentor-skills-section">
                   <h3>Select Your Mentor Skills:</h3>
                   <div className="mentor-skills-pill-list">
                     {availableSkills.map((skill) => (
-                        <span
-                            key={skill._id}
-                            className={`mentor-skill-pill ${mentorSkills.includes(skill._id) ? "selected" : ""}`}
-                            onClick={() => toggleMentorSkill(skill._id)}
-                        >
-                    {skill.name}
-                  </span>
+                      <span
+                        key={skill._id}
+                        className={`mentor-skill-pill ${mentorSkills.includes(skill._id) ? "selected" : ""}`}
+                        onClick={() => toggleMentorSkill(skill._id)}
+                      >
+                        {skill.name}
+                      </span>
                     ))}
                   </div>
                   {mentorSkills.map((skillId) => {
                     const skillObj = availableSkills.find((s) => s._id === skillId);
                     return (
-                        <div key={skillId} className="mentor-certificate-input">
-                          <label>
-                            Upload certificate for {skillObj ? skillObj.name : skillId} (images only):
-                          </label>
-                          <input type="file" accept="image/*" onChange={(e) => handleMentorCertificateChange(e, skillId)} />
-                          <span className="file-name">
-                      {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
-                    </span>
-                        </div>
+                      <div key={skillId} className="mentor-certificate-input">
+                        <label>
+                          Upload certificate for {skillObj ? skillObj.name : skillId} (images only):
+                        </label>
+                        <input type="file" accept="image/*" onChange={(e) => handleMentorCertificateChange(e, skillId)} />
+                        <span className="file-name">
+                          {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
+                        </span>
+                      </div>
                     );
                   })}
                 </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Step Navigation */}
-          <div className="form-navigation">
-            {step > 1 && (
+            <div className="form-navigation">
+              {step > 1 && (
                 <button type="button" className="auth-btn secondary" onClick={handleBack}>
                   Back
                 </button>
-            )}
-            {step < 3 ? (
+              )}
+              {step < 3 ? (
                 <button type="button" className="auth-btn" onClick={handleNext}>
                   Next
                 </button>
-            ) : (
+              ) : (
                 <button type="submit" className="auth-btn">
                   Submit
                 </button>
-            )}
-          </div>
-        </form>
+              )}
+            </div>
+          </form>
 
-        <div className="switch-auth">
-          <p>
-            Already have an account? <NavLink to="/signin">Sign In</NavLink>
-          </p>
+          <div className="switch-auth">
+            <p>
+              Already have an account? <NavLink to="/signin">Sign In</NavLink>
+            </p>
+          </div>
         </div>
       </div>
+
+      <div className="right-box">
+        <div className="content">
+          <h1> Welcome to SkillMinds</h1>
+        </div>
+      </div>
+    </div>
   );
 };
 

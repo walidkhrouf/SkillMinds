@@ -8,6 +8,7 @@
 .testimonal .container {
   max-width: 75rem; /* 1200px equivalent */
   margin: 0 auto;
+  
 }
 
 .testimonal .grid2 {
@@ -186,6 +187,8 @@ body.dark-mode .testimonal .items.shadow {
 
   .testimonal .name h2 {
     font-size: 1rem;
+    color: #a47f18;
+
   }
 
   .testimonal .name span {

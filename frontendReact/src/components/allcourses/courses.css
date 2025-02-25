@@ -67,7 +67,8 @@ body.dark-mode .coursesCard .items {
   font-weight: 500;
   line-height: 2.8125rem; /* 45px */
   margin: 0 0 0.625rem; /* 10px */
-  color: var(--text-color);
+  color: rgb(78, 49, 6);
+
 }
 
 body.dark-mode .coursesCard .text h1 {
@@ -194,10 +195,13 @@ body.dark-mode .online .box {
   margin: 1.25rem 0 0.625rem; /* 20px 10px */
   line-height: 1.875rem; /* 30px */
   transition: color 0.3s ease;
+  color: rgb(78, 49, 6);
+
 }
 
 body.dark-mode .online h1 {
   color: #f0f0f0;
+
 }
 
 .online span {
