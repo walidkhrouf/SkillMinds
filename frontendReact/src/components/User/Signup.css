@@ -113,6 +113,7 @@ h2 {
   display: flex;
   align-items: center;
   margin-top: 10px;
+  gap: 10px;
 }
 
 .file-upload-container input[type="file"] {
@@ -125,49 +126,117 @@ h2 {
   padding: 12px 20px; 
   border-radius: 4px; 
   cursor: pointer; 
-  transition: background-color 0.3s; 
+  transition: background-color 0.3s, transform 0.3s; 
   flex: 0 0 auto; 
   min-width: 150px; 
   text-align: center; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .file-upload-label:hover {
-  background-color: #a47f18; 
-}
-
-.mentor-certificate-input input[type="file"] {
-  display: none; 
-}
-
-.mentor-certificate-input {
-  display: flex;
-  align-items: center;
-  margin-top: 10px; 
-}
-
-.mentor-certificate-input label {
-  background-color: #a47f18; 
-  color: white; 
-  padding: 12px 20px; 
-  border-radius: 4px; 
-  cursor: pointer; 
-  transition: background-color 0.3s; 
-}
-
-.mentor-certificate-input label:hover {
-  background-color:  #a47f18;
+  background-color: #8c6414; 
+  transform: scale(1.05);
 }
 
 .file-name {
   margin-left: 10px; 
   color: #333; 
   white-space: nowrap; 
+  font-size: 14px;
+  flex: 1;
 }
 
 .image-indicator {
   margin-left: 10px; 
   font-size: 12px; 
   color: #888; 
+}
+
+.mentor-skills-section {
+  margin-top: 20px;
+}
+
+.mentor-skills-section h3 {
+  color: #a47f18;
+  margin-bottom: 15px;
+}
+
+.mentor-skills-section h4 {
+  color: #a47f18;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.mentor-skills-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mentor-skill-pill {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border-radius: 20px; 
+  border: 2px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mentor-skill-pill:hover {
+  background-color: #e0e0e0;
+  border-color: #a47f18;
+}
+
+.mentor-skill-pill.selected {
+  background-color: #a47f18;
+  color: white;
+  border-color: #a47f18;
+  transform: scale(1.05); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mentor-skill-pill.selected:hover {
+  background-color: #8c6414; 
+}
+
+.mentor-certificates-grid {
+  margin-top: 20px;
+}
+
+.mentor-certificates-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.certificate-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.certificate-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.certificate-card h5 {
+  color: #a47f18;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 @media (max-width: 1024px) {
@@ -194,6 +263,20 @@ h2 {
   .auth-btn {
     font-size: 14px;
   }
+
+  .mentor-skill-pill {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  .mentor-certificates-list {
+    grid-template-columns: 1fr;
+  }
+
+  .certificate-card {
+    padding: 15px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -208,6 +291,30 @@ h2 {
 
   .right-box {
     padding: 20px;
+  }
+
+  .mentor-skills-pill-list {
+    gap: 8px;
+  }
+
+  .mentor-skill-pill {
+    padding: 6px 12px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+
+  .file-upload-label {
+    padding: 10px 16px;
+    min-width: 120px;
+    font-size: 14px;
+  }
+
+  .certificate-card {
+    padding: 10px;
+  }
+
+  .certificate-card h5 {
+    font-size: 14px;
   }
 }
 
@@ -234,4 +341,16 @@ h2 {
   margin-top: 20px;
   display: flex;
   justify-content: space-between; 
+}
+
+.error {
+  color: red;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.success {
+  color: green;
+  margin-bottom: 15px;
+  text-align: center;
 }

@@ -19,8 +19,7 @@ const SignupForm = () => {
     role: "learner",
     bio: "",
     location: "",
-    cityCode: "", // Ajout du code de la ville
-
+    cityCode: "", 
   });
   const [profileImage, setProfileImage] = useState(null);
   const [mentorSkills, setMentorSkills] = useState([]);
@@ -55,8 +54,6 @@ const SignupForm = () => {
     return phoneInfo && phoneInfo.isValid();
   };
 
-
-
   const handleFileChange = (e) => {
     if (e.target.name === "profileImage") {
       const file = e.target.files[0];
@@ -71,24 +68,19 @@ const SignupForm = () => {
       }
     }
   };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (e.target.name === "location") {
       setFormData({
         ...formData,
         location: e.target.value,
-        cityCode: "", // Réinitialiser le code de la ville
+        cityCode: "", 
       });
-      setCities([]); // Réinitialiser la liste des villes
+      setCities([]); 
     }
   };
-  
 
-  const handleCityChange = (e) => {
-    const selectedCity = e.target.value;
-    setFormData({ ...formData, cityCode: selectedCity }); // Stocker le code de la ville dans `cityCode`
-  };
-  // Charger les villes en fonction du pays sélectionné
   useEffect(() => {
     const fetchCities = async () => {
       if (formData.location) {
@@ -107,6 +99,11 @@ const SignupForm = () => {
     fetchCities();
   }, [formData.location]);
 
+  const handleCityChange = (e) => {
+    const selectedCity = e.target.value;
+    setFormData({ ...formData, cityCode: selectedCity }); 
+  };
+
   const handleMentorCertificateChange = (e, skillId) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -121,15 +118,15 @@ const SignupForm = () => {
   };
 
   const toggleMentorSkill = (skillId) => {
+    setMentorSkills((prev) =>
+      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]
+    );
     if (mentorSkills.includes(skillId)) {
-      setMentorSkills(mentorSkills.filter((id) => id !== skillId));
       setMentorCertificates((prev) => {
         const newCerts = { ...prev };
         delete newCerts[skillId];
         return newCerts;
       });
-    } else {
-      setMentorSkills([...mentorSkills, skillId]);
     }
   };
 
@@ -224,7 +221,6 @@ const SignupForm = () => {
   return (
     <div className="signup-container">
       <div className="left-box">
-       
         <div className="auth-container">
           <h2>Sign Up</h2>
           <div className="progress-indicator">
@@ -245,8 +241,7 @@ const SignupForm = () => {
                 <input type="email" id="email" name="email" placeholder="Enter your email" onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label htmlFor="phoneNumber"> 
-                  Phone Number:</label>
+                <label htmlFor="phoneNumber">Phone Number:</label>
                 <PhoneInput
                   international
                   defaultCountry="TN"
@@ -271,7 +266,7 @@ const SignupForm = () => {
             <div className={`form-step ${step === 3 ? "active" : ""}`}>
               <div className="form-group">
                 <label htmlFor="role">Role:</label>
-                <select id="role" name="role" onChange={handleChange}>
+                <select id="role" name="role" onChange={handleChange} value={formData.role}>
                   <option value="learner">Learner</option>
                   <option value="mentor">Mentor</option>
                   <option value="admin">Admin</option>
@@ -289,72 +284,82 @@ const SignupForm = () => {
                     <option key={code} value={name}>{name}</option>
                   ))}
                 </select>
-                
-              <div className="form-group">
-            <label htmlFor="city">City:</label>
-               <select id="city" name="cityCode" onChange={handleCityChange} required disabled={!formData.location}>
-                <option value="">Select your city</option>
-            {cities.map((city, index) => (
-              <option key={index} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
               </div>
-                <div className="form-group">
-                  <label htmlFor="profileImage">Profile Image:</label>
-                  <div className="file-upload-container">
-                    <input
-                      type="file"
-                      id="profileImage"
-                      name="profileImage"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                    />
-                    <label htmlFor="profileImage" className="file-upload-label">Choose File</label>
-                    <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
-                    <span className="image-indicator">[Images only]</span>
-                  </div>
+              <div className="form-group">
+                <label htmlFor="city">City:</label>
+                <select id="city" name="cityCode" onChange={handleCityChange} required disabled={!formData.location}>
+                  <option value="">Select your city</option>
+                  {cities.map((city, index) => (
+                    <option key={index} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="profileImage">Profile Image:</label>
+                <div className="file-upload-container">
+                  <input
+                    type="file"
+                    id="profileImage"
+                    name="profileImage"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <label htmlFor="profileImage" className="file-upload-label">Choose File</label>
+                  <span className="file-name">{profileImage ? profileImage.name : "No file chosen"}</span>
+                  <span className="image-indicator">[Images only]</span>
                 </div>
+              </div>
               {formData.role === "mentor" && (
                 <div className="mentor-skills-section">
                   <h3>Select Your Mentor Skills:</h3>
                   <div className="mentor-skills-pill-list">
                     {availableSkills.map((skill) => (
-                      <span
+                      <button
                         key={skill._id}
                         className={`mentor-skill-pill ${mentorSkills.includes(skill._id) ? "selected" : ""}`}
                         onClick={() => toggleMentorSkill(skill._id)}
+                        type="button"
                       >
                         {skill.name}
-                      </span>
+                      </button>
                     ))}
                   </div>
-                  {mentorSkills.map((skillId) => {
-  const skillObj = availableSkills.find((s) => s._id === skillId);
-  return (
-    <div key={skillId} className="mentor-certificate-input">
-      <label htmlFor={`mentorCertificate_${skillId}`}>
-        Upload certificate for {skillObj ? skillObj.name : skillId} (images only)
-      </label>
-      <input
-        type="file"
-        id={`mentorCertificate_${skillId}`} // Ensure this ID is unique for each input
-        accept="image/*"
-        onChange={(e) => handleMentorCertificateChange(e, skillId)}
-      />
-      <span className="file-name">
-        {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
-      </span>
-    </div>
-  );
-})}
+                  {mentorSkills.length > 0 && (
+                    <div className="mentor-certificates-grid">
+                      <h4>Your Certificates:</h4>
+                      <div className="mentor-certificates-list">
+                        {mentorSkills.map((skillId) => {
+                          const skillObj = availableSkills.find((s) => s._id === skillId);
+                          return (
+                            <div key={skillId} className="certificate-card">
+                              <h5>{skillObj ? skillObj.name : skillId}</h5>
+                              <div className="file-upload-container">
+                                <input
+                                  type="file"
+                                  id={`mentorCertificate_${skillId}`}
+                                  name={`mentorCertificate_${skillId}`}
+                                  accept="image/*"
+                                  onChange={(e) => handleMentorCertificateChange(e, skillId)}
+                                />
+                                <label htmlFor={`mentorCertificate_${skillId}`} className="file-upload-label">Upload Certificate</label>
+                                <span className="file-name">
+                                  {mentorCertificates[skillId] ? mentorCertificates[skillId].name : "No file chosen"}
+                                </span>
+                                <span className="image-indicator">[Images only]</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-             <div className="form-navigation">
+            <div className="form-navigation">
               {step > 1 && (
                 <button type="button" className="back-btn" onClick={handleBack}>
                   Back
@@ -382,7 +387,7 @@ const SignupForm = () => {
 
       <div className="right-box">
         <div className="content">
-          <h1> Welcome to SkillMinds</h1>
+          <h1>Welcome to SkillMinds</h1>
         </div>
       </div>
     </div>
