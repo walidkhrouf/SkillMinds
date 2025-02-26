@@ -473,7 +473,7 @@ body.dark-mode .profile-photo {
     display: block;
     position: fixed;
     top: -20px;
-    right: 15px;
+    right: 35px;
     z-index: 25000;
   }
   .darkmode-toggle {

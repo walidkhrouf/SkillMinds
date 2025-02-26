@@ -11,7 +11,8 @@ const {
   updateUserSkills,
   getUserSkills ,
   getUserSkillsBySkillId,
-  forgotPassword,resetPassword  ,deleteUserSkill,finishSkillSelection,updateUserSkillById,removeUserSkillsBySkillId
+  forgotPassword,resetPassword  ,deleteUserSkill,finishSkillSelection,updateUserSkillById,removeUserSkillsBySkillId,googleCallback,linkedinLogin,
+  linkedinCallback,linkedinCallbackPost,handleLinkedInUser
 } = require("../Controllers/UserController");
 
 const User = require("../models/User");
@@ -22,9 +23,11 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = express.Router();
 
+router.get("/linkedin", linkedinLogin);
+router.get("/linkedin/callback", linkedinCallback)
 
 router.put("/userskills/:id", updateUserSkillById);
-
+router.post("/google/callback", googleCallback);
 router.put("/userskills", updateUserSkills);
 router.post("/finishSkills", finishSkillSelection);
 router.post("/verifyOTP", verifyOTP);

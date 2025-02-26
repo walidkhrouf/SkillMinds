@@ -1,4 +1,3 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -7,6 +6,7 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser"); 
 const adminRoutes = require("./Routes/adminRoute");
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
@@ -16,17 +16,25 @@ require("./config/databaseConnection");
 const app = express();
 
 app.use(morgan("dev"));
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
+app.use(cookieParser()); 
 app.use(
   session({
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: { secure: false } 
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json());
+
 
 passport.use(
   new GoogleStrategy(
@@ -41,16 +49,28 @@ passport.use(
   )
 );
 
+
 passport.use(
   new LinkedInStrategy(
     {
       clientID: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
       callbackURL: "http://localhost:5000/linkedin-callback",
-      scope: ['r_liteprofile', 'r_emailaddress']
+      scope: ['openid', 'profile', 'email'],
     },
     (accessToken, refreshToken, profile, done) => {
-      return done(null, profile);
+      console.log('Access Token:', accessToken);
+      console.log('Refresh Token:', refreshToken);
+      console.log('Profile:', profile);
+      if (!profile) {
+        return done(new Error('Profile fetch failed'));
+      }
+      const linkedinUser = {
+        id: profile.id,
+        displayName: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`.trim(),
+        email: profile.emails?.[0]?.value || null,
+      };
+      return done(null, linkedinUser);
     }
   )
 );
@@ -79,7 +99,7 @@ app.get(
     res.redirect(`http://localhost:5173/auth/google/callback?token=${token}`);
 
     res.send(`
-      <script type="text/javascript">
+      <script type="javascript">
         window.opener.postMessage({ token: '${token}' }, '*');
         window.close();
       </script>
@@ -87,15 +107,8 @@ app.get(
   }
 );
 
-app.get('/auth/linkedin', passport.authenticate('linkedin'));
-
-app.get('/auth/linkedin/callback',
-  passport.authenticate('linkedin', { failureRedirect: '/' }),
-  (req, res) => {
-    const token = generateToken(req.user);
-    res.redirect(`http://localhost:5173/auth/linkedin/callback?token=${token}`);
-  }
-);
+app.get('/auth/linkedin', require('./Controllers/UserController').linkedinLogin);
+app.get('/linkedin-callback', require('./Controllers/UserController').linkedinCallback);
 
 function generateToken(user) {
   return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });

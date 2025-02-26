@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import axios from "axios";
-import { GoogleLogin } from "react-google-login";
+import { GoogleOAuthProvider, googleLogout, useGoogleLogin } from '@react-oauth/google';
 import "./Signin.css";
+
 
 const Signin = () => {
   const navigate = useNavigate();
@@ -18,6 +19,37 @@ const Signin = () => {
     const re = /\S+@\S+\.\S+/;
     return re.test(email);
   };
+
+  useEffect(() => {
+    const handleSocialLogin = (event) => {
+      if (event.origin !== "http://localhost:5000") return; 
+      const { token, user } = event.data;
+      if (token && user) {
+        try {
+          const decodedUser = JSON.parse(user); 
+          console.log("Received user from LinkedIn:", decodedUser);
+          if (!decodedUser._id || typeof decodedUser._id !== 'string' || !decodedUser._id.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error("Invalid user ID from social login callback");
+          }
+          localStorage.setItem("currentUser", JSON.stringify(decodedUser));
+          localStorage.setItem("jwtToken", token);
+          if (decodedUser.role === "admin") {
+            navigate("/admin");
+          } else if (!decodedUser.hasChosenSkills) { 
+            navigate("/firstchoose");
+          } else {
+            navigate("/");
+          }
+        } catch (err) {
+          console.error("Error parsing social login data:", err);
+          setError("Invalid social authentication response. Please try again.");
+        }
+      }
+    };
+  
+    window.addEventListener("message", handleSocialLogin);
+    return () => window.removeEventListener("message", handleSocialLogin); 
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -72,6 +104,79 @@ const Signin = () => {
     }
   };
 
+  const handleLinkedInSignIn = () => {
+    const width = 600;
+    const height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+  
+    const authWindow = window.open(
+      "http://localhost:5000/api/users/linkedin", 
+      "_blank", 
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+  
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'http://localhost:5000') return;
+      const { token, user } = event.data;
+      if (token && user) {
+        try {
+          const decodedUser = JSON.parse(decodeURIComponent(user) || '{}');
+          if (!decodedUser._id || typeof decodedUser._id !== 'string' || !decodedUser._id.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error("Invalid user ID from LinkedIn callback");
+          }
+          localStorage.setItem('jwtToken', token);
+          localStorage.setItem('currentUser', user);
+          navigate('/');
+        } catch (err) {
+          console.error("Error parsing LinkedIn callback data:", err);
+          setError("Invalid LinkedIn authentication response. Please try again.");
+        }
+      }
+    });
+  
+    const interval = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(interval);
+        window.location.reload();
+      }
+    }, 1000);
+  };
+
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const profileResponse = await axios.get(
+          `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`
+        );
+        const googleId = profileResponse.data.sub;
+        const email = profileResponse.data.email;
+        const name = profileResponse.data.name;
+
+        const response = await axios.post("http://localhost:5000/api/users/google/callback", {
+          googleId,
+          email,
+          name,
+        });
+
+        localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+        localStorage.setItem("jwtToken", response.data.token);
+        if (response.data.user.role === "admin") {
+          navigate("/admin");
+        } else if (!response.data.user.hasChosenSkills) {
+          navigate("/firstchoose");
+        } else {
+          navigate("/");
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || "Error with Google authentication.");
+      }
+    },
+    onError: () => setError("Google sign-in failed."),
+    scope: "profile email",
+  });
+
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (!otp) {
@@ -122,64 +227,6 @@ const Signin = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    const width = 600;
-    const height = 600;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-
-    const authWindow = window.open(
-      "http://localhost:5000/auth/google", 
-      "_blank", 
-      `width=${width},height=${height},top=${top},left=${left}`
-    );
-
-    window.addEventListener('message', (event) => {
-      if (event.origin !== 'http://localhost:5000') return;
-      const { token } = event.data;
-      if (token) {
-        localStorage.setItem('jwtToken', token);
-        navigate('/');
-      }
-    });
-
-    const interval = setInterval(() => {
-      if (authWindow.closed) {
-        clearInterval(interval);
-        window.location.reload();
-      }
-    }, 1000);
-  };
-
-  const handleLinkedInSignIn = () => {
-    const width = 600;
-    const height = 600;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-
-    const authWindow = window.open(
-      "http://localhost:5000/auth/linkedin", 
-      "_blank", 
-      `width=${width},height=${height},top=${top},left=${left}`
-    );
-
-    window.addEventListener('message', (event) => {
-      if (event.origin !== 'http://localhost:5000') return;
-      const { token } = event.data;
-      if (token) {
-        localStorage.setItem('jwtToken', token);
-        navigate('/');
-      }
-    });
-
-    const interval = setInterval(() => {
-      if (authWindow.closed) {
-        clearInterval(interval);
-        window.location.reload();
-      }
-    }, 1000);
-  };
-
   return (
     <div className="signup-container">
       <div className="left-box">
@@ -224,7 +271,9 @@ const Signin = () => {
               <div className="social-login">
                 <p>Or connect with:</p>
                 <button type="button" className="social-btn linkedin" onClick={handleLinkedInSignIn}>LinkedIn</button>
-                <button type="button" className="social-btn google" onClick={handleGoogleSignIn}>Google</button>
+                <button type="button" className="social-btn google" onClick={() => handleGoogleLogin()}>
+                  Google
+                </button>
               </div>
             </form>
           ) : (
@@ -264,4 +313,8 @@ const Signin = () => {
   );
 };
 
-export default Signin;
+export default () => (
+  <GoogleOAuthProvider clientId="830930163890-i526al1nkp5f83cd5rjojtbloqkugeqg.apps.googleusercontent.com">
+    <Signin />
+  </GoogleOAuthProvider>
+);
