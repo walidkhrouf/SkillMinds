@@ -3,6 +3,8 @@ import { useNavigate, NavLink } from "react-router-dom";
 import axios from "axios";
 import { GoogleOAuthProvider, googleLogout, useGoogleLogin } from '@react-oauth/google';
 import "./Signin.css";
+import { FaGoogle } from 'react-icons/fa';  
+import { FaLinkedin } from 'react-icons/fa';  
 
 
 const Signin = () => {
@@ -270,9 +272,11 @@ const Signin = () => {
               </div>
               <div className="social-login">
                 <p>Or connect with:</p>
-                <button type="button" className="social-btn linkedin" onClick={handleLinkedInSignIn}>LinkedIn</button>
+                <button type="button" className="social-btn linkedin" onClick={handleLinkedInSignIn}>
+                  <FaLinkedin style={{ marginRight: '8px' }} /> 
+                </button>
                 <button type="button" className="social-btn google" onClick={() => handleGoogleLogin()}>
-                  Google
+                  <FaGoogle style={{ marginRight: '8px' }} /> 
                 </button>
               </div>
             </form>
