@@ -1,7 +1,7 @@
 
 .aboutHome {
   height: auto;
-  padding: 2rem 0;
+  padding: 2rem 1rem; 
   background-color: var(--background-color);
   transition: background-color var(--transition-speed);
 }
@@ -15,12 +15,16 @@ body.dark-mode .aboutHome {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  max-width: 1200px; 
+  margin: 0 auto;
+  gap: 2rem; 
 }
 
 .aboutHome .left,
 .aboutHome .right {
   flex: 1;
   padding: 1rem;
+  min-width: 0; 
 }
 
 .aboutHome .left img {
@@ -28,24 +32,28 @@ body.dark-mode .aboutHome {
   height: auto;
   object-fit: cover;
   border-radius: 0.5rem;
+  max-width: 500px; 
 }
 
 .aboutHome .right {
-  padding: 3rem 2rem;
+  padding: 2rem; 
 }
 
 .aboutHome .items {
   margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; 
 }
 
 .aboutHome .item {
   background-color: var(--secondary-color);
-  margin-top: 1.5rem;
   padding: 1.25rem;
   border-radius: 0.5rem;
   transition: background-color 0.5s, color 0.5s;
   display: flex;
   align-items: center;
+  gap: 1rem; 
 }
 
 body.dark-mode .aboutHome .item {
@@ -55,7 +63,6 @@ body.dark-mode .aboutHome .item {
 
 .aboutHome .item .img {
   flex-shrink: 0;
-  margin-right: 1rem;
 }
 
 .aboutHome .item .img img {
@@ -68,11 +75,20 @@ body.dark-mode .aboutHome .item {
 .aboutHome .item h2 {
   font-size: 1.25rem;
   margin-bottom: 0.75rem;
+  color: var(--text-color); 
+}
+
+body.dark-mode .aboutHome .item h2 {
+  color: var(--dark-text);
 }
 
 .aboutHome .item p {
   color: #999999;
   font-size: 0.95rem;
+}
+
+body.dark-mode .aboutHome .item p {
+  color: var(--dark-sidebar-text); 
 }
 
 .aboutHome .item:hover {
@@ -82,6 +98,7 @@ body.dark-mode .aboutHome .item {
   box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.06);
 }
 
+.aboutHome .item:hover h2,
 .aboutHome .item:hover p {
   color: var(--secondary-color);
 }
@@ -92,7 +109,7 @@ body.dark-mode .aboutHome .item {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
-  height: 30vh;
+  min-height: 30vh; 
   display: flex;
   align-items: center;
   color: var(--secondary-color);
@@ -105,18 +122,22 @@ body.dark-mode .awrapper {
 }
 
 .awrapper .container {
+  max-width: 1200px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  text-align: center;
+  gap: 1.5rem; /* Espacement accru */
+  padding: 1rem; /* Padding interne */
+  width: 100%;
 }
 
 .awrapper .box {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 1.5rem;
   flex-direction: row;
+  text-align: center;
 }
 
 .awrapper .box .img {
@@ -140,22 +161,88 @@ body.dark-mode .awrapper {
   margin: 0.5rem 0 0;
 }
 
-
-@media screen and (max-width: 768px) {
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
   .aboutHome .container {
     flex-direction: column-reverse;
     text-align: center;
+    gap: 1.5rem;
+  }
+  .aboutHome .left,
+  .aboutHome .right {
+    flex: none;
+    width: 100%;
+  }
+  .aboutHome .item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .aboutHome .item .img {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .aboutHome {
+    padding: 1.5rem 0.5rem;
   }
   .aboutHome .right {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
+  }
+  .aboutHome .item h2 {
+    font-size: 1.1rem;
+  }
+  .aboutHome .item p {
+    font-size: 0.9rem;
   }
   .awrapper {
-    height: 50vh;
+    min-height: 40vh; 
   }
   .awrapper .box {
     flex-direction: column;
+    padding: 1rem;
   }
   .awrapper .box .img {
-    margin: 0 0 1rem;
+    margin: 0 0 0.75rem;
+  }
+  .awrapper .box .text h1 {
+    font-size: 2rem;
+  }
+  .awrapper .box .text h3 {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .aboutHome {
+    padding: 1rem 0.25rem;
+  }
+  .aboutHome .left img {
+    max-width: 100%;
+  }
+  .aboutHome .right {
+    padding: 1rem 0.5rem;
+  }
+  .aboutHome .item .img img {
+    width: 60px;
+    height: 60px;
+  }
+  .aboutHome .item h2 {
+    font-size: 1rem;
+  }
+  .aboutHome .item p {
+    font-size: 0.85rem;
+  }
+  .awrapper .container {
+    grid-template-columns: 1fr; 
+    gap: 1rem;
+  }
+  .awrapper .box .text h1 {
+    font-size: 1.75rem;
+  }
+  .awrapper .box .text h3 {
+    font-size: 0.9rem;
   }
 }

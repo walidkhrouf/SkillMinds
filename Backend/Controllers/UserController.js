@@ -807,6 +807,8 @@ const handleLinkedInUser = async (linkedinId, email, username) => {
   }
 };
 
+
+
 module.exports = {
   getUserSkillsBySkillId,
   signup,

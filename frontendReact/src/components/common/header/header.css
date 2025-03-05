@@ -393,7 +393,7 @@ body.dark-mode .profile-photo {
   align-items: center;
   justify-content: center;
   margin: 0;
-  z-index: 10000;
+  z-index: 30000; 
 }
 .darkmode-toggle i {
   line-height: 1;
@@ -406,12 +406,12 @@ body.dark-mode .profile-photo {
 .toggle {
   display: none;
   background: none;
-  color: var(--light-bg);
+  color: black;
   border: none;
   font-size: 30px;
   cursor: pointer;
   transition: transform 0.3s;
-  z-index: 10000;
+  z-index: 30000; 
 }
 .toggle:hover {
   transform: rotate(90deg);
@@ -472,17 +472,19 @@ body.dark-mode .profile-photo {
   .toggle {
     display: block;
     position: fixed;
-    top: -20px;
-    right: 35px;
-    z-index: 25000;
+    top: 47px;
+    right: 0px;
+    z-index: 30000; 
   }
   .darkmode-toggle {
     position: fixed;
-    top: 10px;
-    left: 10px;
+    top: 19px;
+    right: 67px;
     padding: 6px;
     font-size: 18px;
-    z-index: 25000;
+    width: 35px;
+    height: 35px;
+    z-index: 30000; 
   }
 }
 

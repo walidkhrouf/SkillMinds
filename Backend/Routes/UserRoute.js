@@ -25,7 +25,7 @@ const router = express.Router();
 
 router.get("/linkedin", linkedinLogin);
 router.get("/linkedin/callback", linkedinCallback)
-
+router.post("/forgot-password", forgotPassword);
 router.put("/userskills/:id", updateUserSkillById);
 router.post("/google/callback", googleCallback);
 router.put("/userskills", updateUserSkills);
@@ -58,7 +58,7 @@ router.post("/signup",
     ]),
     signup
 );
-router.post("/forgot-password", forgotPassword);
+
 router.post("/reset-password/:id/:token", resetPassword);
 router.get("/all", async (req, res) => {
     try {

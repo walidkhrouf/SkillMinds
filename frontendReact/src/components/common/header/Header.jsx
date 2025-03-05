@@ -175,13 +175,7 @@ const Header = () => {
                   Contact
                 </NavLink>
               </li>
-              {currentUser?.role === "admin" && (
-                  <li>
-                    <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
-                      Admin
-                    </NavLink>
-                  </li>
-              )}
+         
               <li>
                 <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
                   Events
@@ -192,6 +186,16 @@ const Header = () => {
                   Recruitment
                 </a>
               </li>
+              <li>
+                ||
+              </li>
+              {currentUser?.role === "admin" && (
+                  <li>  
+                    <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
+                      Admin
+                    </NavLink>
+                  </li>
+              )}
               <li className="mobile-certificate">
                 {currentUser ? (
                     <div

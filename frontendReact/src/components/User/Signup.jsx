@@ -269,7 +269,7 @@ const SignupForm = () => {
                 <select id="role" name="role" onChange={handleChange} value={formData.role}>
                   <option value="learner">Learner</option>
                   <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
+                
                 </select>
               </div>
               <div className="form-group">

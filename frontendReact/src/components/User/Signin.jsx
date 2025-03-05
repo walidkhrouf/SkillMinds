@@ -6,7 +6,6 @@ import "./Signin.css";
 import { FaGoogle } from 'react-icons/fa';  
 import { FaLinkedin } from 'react-icons/fa';  
 
-
 const Signin = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -16,6 +15,9 @@ const Signin = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  const [isResetDisabled, setIsResetDisabled] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   const validateEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
@@ -52,6 +54,18 @@ const Signin = () => {
     window.addEventListener("message", handleSocialLogin);
     return () => window.removeEventListener("message", handleSocialLogin); 
   }, [navigate]);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (countdown === 0 && isResetDisabled) {
+      setIsResetDisabled(false);
+      setResetMessage("");
+    }
+  }, [countdown, isResetDisabled]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -145,7 +159,6 @@ const Signin = () => {
     }, 1000);
   };
 
-
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -217,15 +230,28 @@ const Signin = () => {
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
+    if (isResetDisabled || !formData.email) { 
+      setError(!formData.email ? "Please enter your email first." : "Please wait before retrying.");
+      return;
+    }
+    if (!validateEmail(formData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     try {
+      setLoading(true);
       const res = await axios.post("http://localhost:5000/api/users/forgot-password", { email: formData.email });
       if (res.data.message) {
-        setMessage(res.data.message);
+        setResetMessage("Password reset link has been sent to your email.");
         setError("");
+        setIsResetDisabled(true);
+        setCountdown(10);
       }
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred during forgot password.");
-      setMessage("");
+      setResetMessage("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -236,6 +262,10 @@ const Signin = () => {
           <h2>Sign In</h2>
           {error && <p className="error">{error}</p>}
           {message && <p className="success-message">{message}</p>}
+          {resetMessage && <p className="reset-message">{resetMessage}</p>}
+          {isResetDisabled && (
+            <p className="countdown-message">You can retry in {countdown} seconds</p>
+          )}
           {!otpSent ? (
             <form className="auth-form" onSubmit={handleSubmit}>
               <div className="form-group">
@@ -268,7 +298,13 @@ const Signin = () => {
                 </button>
               </div>
               <div className="forgot-password">
-                <NavLink to="#" onClick={handleForgotPassword}>Forgot Password?</NavLink>
+                <NavLink
+                  to="#"
+                  onClick={handleForgotPassword}
+                  className={isResetDisabled ? "disabled-link" : ""}
+                >
+                  Forgot Password?
+                </NavLink>
               </div>
               <div className="social-login">
                 <p>Or connect with:</p>
