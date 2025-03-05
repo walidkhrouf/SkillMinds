@@ -177,7 +177,7 @@ const Header = () => {
               </li>
          
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                <a href="/activities" className={({ isActive }) => (isActive ? "active" : "")}>
                   Events
                 </a>
               </li>

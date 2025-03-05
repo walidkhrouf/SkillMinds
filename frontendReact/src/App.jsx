@@ -16,7 +16,8 @@ import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
-
+import Activities from "./components/activities/Activities.jsx";
+import AddActivity from "./components/activities/AddActivity.jsx";
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
   if (!storedUser) {
@@ -51,7 +52,8 @@ const AppContent = () => {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
-     
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/add-activity" element={<AddActivity />} />
         <Route
           path="/admin"
           element={

@@ -1,0 +1,119 @@
+.add-activity-container {
+  display: flex;
+  width: 62.5rem; /* 1000px */
+  height: 40.625rem; /* 650px */
+  margin: 6.25rem auto; /* 100px */
+  background-color: #f8f8f8; /* Component-specific */
+  border-radius: 0.5rem; /* 8px */
+  overflow: hidden;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); /* Specific shadow */
+  align-items: stretch;
+}
+
+.add-activity-container .left-box,
+.add-activity-container .right-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.add-activity-container .left-box {
+  border-right: 1px solid #eee;
+}
+
+.add-activity-container .right-box {
+  background-image: url("/public/images/bgfinale.jpg");
+  color: white;
+  text-align: center;
+  height: 40.625rem; /* 650px */
+  background-size: cover;
+  background-position: center;
+}
+
+.add-activity-container h2 {
+  color: rgb(126, 83, 20); /* Component-specific */
+}
+
+.add-activity-container .auth-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-activity-container .auth-form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.add-activity-container .form-step {
+  display: none;
+}
+
+.add-activity-container .form-step.active {
+  display: block;
+}
+
+.add-activity-container .form-group {
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.add-activity-container .form-group input,
+.add-activity-container .form-group select,
+.add-activity-container .form-group textarea {
+  width: 100%;
+  padding: 0.625rem; /* 10px */
+  border: 1px solid #ddd;
+  border-radius: 0.25rem; /* 4px */
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.add-activity-container .auth-btn,
+.add-activity-container .back-btn {
+  flex: 1;
+  margin: 0 0.3125rem; /* 5px */
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  border-radius: 0.25rem; /* 4px */
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.add-activity-container .auth-btn {
+  background-color: #e9e1d5;
+  color: white;
+}
+
+.add-activity-container .auth-btn:hover {
+  background-color: #a47f18; /* Matches global --primary-color */
+}
+
+.add-activity-container .back-btn {
+  background-color: white;
+  color: #a47f18;
+  border: 2px solid #a47f18;
+}
+
+.add-activity-container .back-btn:hover {
+  background-color: #a47f18;
+  color: white;
+}
+
+.add-activity-container .error {
+  color: red;
+  margin-bottom: 0.9375rem; /* 15px */
+  text-align: center;
+}
+
+.add-activity-container .success {
+  color: green;
+  margin-bottom: 0.9375rem; /* 15px */
+  text-align: center;
+}
+
+.add-activity-container .form-navigation {
+  display: flex;
+  justify-content: space-between;
+}

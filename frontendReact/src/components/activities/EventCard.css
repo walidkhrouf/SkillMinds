@@ -1,0 +1,121 @@
+.event-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem; /* 20px */
+  justify-content: center; /* Center cards when fewer items */
+  padding: 1.25rem; /* 20px */
+  width: 100%; /* Ensure it takes full available width */
+  max-width: var(--container-max-width); /* Use global max-width: 85rem */
+  margin: 0 auto; /* Center the container */
+}
+
+.event-cards-container .items {
+  background-color: #fff;
+  border-radius: 0.5rem; /* 8px */
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); /* Matches global --box-shadow */
+  overflow: hidden;
+  width: 100%; /* Default to full width for small screens */
+  max-width: 20rem; /* 320px - reasonable card size */
+  transition: transform 0.2s ease;
+  position: relative;
+  min-height: 25rem; /* 400px - ensure consistent height */
+}
+
+.event-cards-container .items:hover {
+  transform: translateY(-0.3125rem); /* 5px */
+}
+
+.event-cards-container .img {
+  width: 100%;
+  height: 12.5rem; /* 200px */
+  overflow: hidden;
+  background-color: #f0f0f0; /* Fallback if image fails */
+}
+
+.event-cards-container .img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-cards-container .text {
+  padding: 0.9375rem; /* 15px */
+}
+
+.event-cards-container .admin {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping for small screens */
+  justify-content: space-between;
+  gap: 0.625rem; /* 10px */
+  margin-bottom: 0.625rem; /* 10px */
+}
+
+.event-cards-container .admin span {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem; /* 14px - slightly smaller for readability */
+}
+
+.event-cards-container .admin i {
+  margin-right: 0.3125rem; /* 5px */
+  color: #777;
+}
+
+.event-cards-container h1 {
+  font-size: 1.5rem; /* Matches original */
+  margin: 0.625rem 0; /* 10px */
+  color: #333;
+  word-wrap: break-word; /* Prevent overflow */
+}
+
+.event-cards-container p {
+  color: #555;
+  line-height: 1.5;
+  font-size: 1rem; /* Matches global base */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Truncate long text */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
+}
+
+.event-cards-container .delete-btn {
+  position: absolute;
+  bottom: 0.625rem; /* 10px */
+  right: 0.625rem; /* 10px */
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1.125rem; /* 18px */
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.event-cards-container .delete-btn:hover {
+  color: darkred;
+}
+
+/* Responsive Design */
+@media (min-width: 48rem) { /* 768px and up */
+  .event-cards-container .items {
+    width: calc(50% - 1.25rem); /* 2 columns with gap */
+  }
+}
+
+@media (min-width: 64rem) { /* 1024px and up */
+  .event-cards-container .items {
+    width: calc(33.333% - 1.25rem); /* 3 columns with gap */
+  }
+}
+
+@media (max-width: 30rem) { /* 480px and below */
+  .event-cards-container .items {
+    max-width: 100%; /* Full width on very small screens */
+    min-height: 22.5rem; /* 360px - slightly shorter */
+  }
+
+  .event-cards-container .admin {
+    flex-direction: column; /* Stack info vertically */
+    align-items: flex-start;
+  }
+}

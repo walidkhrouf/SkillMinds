@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser"); 
 const adminRoutes = require("./Routes/adminRoute");
 const fileRoutes = require("./Routes/fileRoute");
+const eventsRoutes = require('./Routes/eventsRoute');
 const notificationRoutes = require("./Routes/NotificationRoute");
 require("dotenv").config();
 require("./config/databaseConnection");
@@ -87,6 +88,9 @@ app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/uploads", express.static("uploads"));
+
 app.disable("etag");
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
