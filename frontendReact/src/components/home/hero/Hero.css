@@ -1,4 +1,3 @@
-/* Hero Section */
 .hero {
   position: relative;
   background-image: url("/images/back.webp");
@@ -6,47 +5,91 @@
   background-attachment: fixed;
   background-position: center;
   width: 100%;
-  height: 100vh;
-  padding: 8rem 50px 0; /* Adequate top and side padding */
-  color: var(--secondary-color); /* Light text by default */
+  min-height: 100vh;
+  padding: 8rem 3.125rem 0;
+  color: var(--secondary-color);
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   animation: zoomIn 1s ease;
-  /* Adding a subtle overlay for readability */
   background-blend-mode: overlay;
+  z-index: 1;
+  overflow: hidden;
 }
 
-/* Dark Mode Adjustments */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/images/back.webp");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-blend-mode: overlay;
+  filter: blur(5px); 
+  z-index: -1; 
+}
 body.dark-mode .hero {
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-    url("/images/back.webp");
+  background-image:
+          linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+          url("/images/back.webp");
   color: var(--secondary-color);
 }
 
-/* Heading and Paragraph adjustments */
 .hero .container {
   z-index: 2;
   position: relative;
+  width: 100%;
+  max-width: 75rem; 
+  margin: 0 auto; 
+  padding: 2rem 3rem; 
+  box-sizing: border-box; 
 }
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+  .hero .container {
+    padding: 1.5rem 2rem; 
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .hero .container {
+    padding: 1rem 1.5rem; 
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .hero .container {
+    padding: 0.75rem 1rem;
+  }
+}
+
 .hero .row {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 50rem;
+  margin: 0;
 }
+
 .hero p {
   font-size: 1.125rem;
   margin: 1.5rem 0 2.5rem;
   line-height: 1.8;
+  font-family: 'Inter', 'Arial', sans-serif;
+  font-weight: 400;
+  color: #a47f18;
+
 }
 
-/* Button Group */
+
 .button-group {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .primary-btn,
@@ -60,6 +103,8 @@ body.dark-mode .hero {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 1rem;
+  font-family: 'Inter', 'Arial', sans-serif;
 }
 
 .primary-btn {
@@ -68,29 +113,27 @@ body.dark-mode .hero {
 }
 
 .primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-0.1875rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
 }
 
 .secondary-btn {
   background-color: transparent;
-  border: 2px solid var(--primary-color);
+  border: 0.125rem solid var(--primary-color);
   color: var(--primary-color);
 }
 
 .secondary-btn:hover {
   background-color: var(--primary-color);
   color: var(--secondary-color);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-0.1875rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
 }
 
-/* Margin Element for Spacing */
 .margin {
-  margin-top: 40vh;
+  margin-top: 30vh;
 }
 
-/* Animation Keyframes */
 @keyframes zoomIn {
   from {
     transform: scale(0.95);
@@ -102,23 +145,61 @@ body.dark-mode .hero {
   }
 }
 
-/* Responsive Adjustments */
-@media screen and (max-width: 768px) {
+
+@media screen and (max-width: 48rem) {
   .hero {
-    background-position: right;
-    padding: 4rem 20px 0;
-    min-height: 70vh;
+    padding: 5rem 1.25rem 0;
+    min-height: 80vh;
+    background-position: center;
   }
-  
+
   .hero .row {
-    text-align: left;
+    max-width: 100%;
   }
-  
+
   .hero p {
     font-size: 1rem;
+    margin: 1rem 0 2rem;
   }
-  
+
+  .primary-btn,
+  .secondary-btn {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.9375rem;
+  }
+
   .margin {
-    margin-top: 30vh;
+    margin-top: 20vh;
+  }
+}
+
+
+@media screen and (max-width: 30rem) {
+  .hero {
+    padding: 4rem 1rem 0;
+    min-height: 70vh;
+    background-attachment: scroll;
+  }
+
+  .hero p {
+    font-size: 0.875rem;
+    margin: 0.75rem 0 1.5rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .margin {
+    margin-top: 15vh;
   }
 }

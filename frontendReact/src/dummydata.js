@@ -45,7 +45,7 @@ export const coursesCard = [
   {
     id: 1,
     cover: "../images/courses/c1.png",
-    coursesName: "Introducing to Software Engineering",
+    coursesName: "Introducing to Software Engineering Course",
     courTeacher: [
       {
         dcover: "./images/back.webp",

@@ -1,4 +1,6 @@
 const Skill = require('../models/Skill');
+const User = require("../models/User"); // Ajout du modèle User
+const UserSkill = require("../models/UserSkill"); // Ajout du modèle UserSkill
 
 exports.addSkill = async (req, res) => {
   try {
@@ -35,6 +37,21 @@ exports.getAllSkills = async (req, res) => {
   }
 };
 
+
+exports.getSkillById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const skill = await Skill.findById(id);
+    if (!skill) {
+      return res.status(404).json({ message: "Skill not found" });
+    }
+    res.status(200).json(skill);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving skill", error: error.message });
+  }
+};
+
+
 exports.deleteSkill = async (req, res) => {
   try {
     const { id } = req.params;
@@ -65,5 +82,48 @@ exports.updateSkill = async (req, res) => {
   } catch (error) {
     console.error("Error updating skill:", error);
     return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const rolesStats = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+      { $project: { role: "$_id", count: 1, _id: 0 } },
+    ]);
+    const categoriesStats = await Skill.aggregate([
+      { $group: { _id: "$category", value: { $sum: 1 } } },
+      { $project: { name: "$_id", value: 1, _id: 0 } },
+    ]);
+    const totalSkills = await Skill.countDocuments();
+    const trendingSkills = await UserSkill.aggregate([
+      { $match: { skillType: "has" } },
+      { $group: { _id: "$skillId", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }, 
+      
+      {
+        $lookup: {
+          from: "skills",
+          localField: "_id",
+          foreignField: "_id",
+          as: "skill",
+        },
+      },
+      { $unwind: "$skill" },
+      { $project: { name: "$skill.name", _id: 0 } },
+    ]);
+
+    const stats = {
+      users: { total: totalUsers, roles: rolesStats },
+      courses: { total: totalSkills, categories: categoriesStats },
+      skills: { total: totalSkills, trending: trendingSkills.map((skill) => skill.name) },
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };

@@ -1,199 +1,87 @@
-/*----------------------------------------
-  Skills List Container
-----------------------------------------*/
+:root {
+  --primary-color: #a47f18;
+  --secondary-color: #ffffff;
+  --accent-color: #a17540;
+  --light-bg: #f9f9f9;
+  --text-color: #333;
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+}
+
 .skills-list-container {
   max-width: 1000px;
-  margin: 40px auto;
+  margin: 88px auto;
   padding: 20px;
   background: var(--light-bg);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-
-body.dark-mode .skills-list-container {
-  background: #2c2c2c; /* darker background */
-  color: #f0f0f0;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-}
-
-/*----------------------------------------
-  Headings and Error
-----------------------------------------*/
-.skills-list-container h2 {
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 2rem;
 }
 
 .error {
   color: #ff6b6b;
-  text-align: center;
   margin-bottom: 10px;
 }
 
-/*----------------------------------------
-  Skills Selection Layout
-----------------------------------------*/
 .skills-selection {
   display: flex;
-  gap: 20px;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
 }
 
 .skills-section {
-  flex: 1;
-  min-width: 300px;
-  background: #f9f9f9;
+  background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 15px;
+  min-width: 300px;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
-body.dark-mode .skills-section {
-  background: #3a3a3a;
-  border-color: #555;
-}
-
-/*----------------------------------------
-  Section Headings
-----------------------------------------*/
 .skills-section h3 {
-  text-align: center;
-  margin-bottom: 10px;
   font-size: 1.2rem;
-  color: inherit;
+  margin-bottom: 15px;
+  color: var(--primary-color);
 }
 
-/*----------------------------------------
-  Skills Grid
-----------------------------------------*/
-.skills-grid {
+.skills-pill-list {
+  list-style: none;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: center;
 }
 
-/*----------------------------------------
-  Skill Card
-----------------------------------------*/
-.skill-card {
-  background: var(--light-bg);
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 45%;
-  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
-}
-
-.skill-card:hover {
-  transform: translateY(-3px);
-  background: #f1f1f1;
-}
-
-.skill-card p {
-  margin: 0;
-  font-size: 14px;
-}
-
-.skill-card button {
-  padding: 4px 8px;
-  background: var(--primary-color);
-  color: var(--light-bg);
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
+.skill-pill {
+  padding: 8px 15px;
+  border-radius: 20px;
+  background-color: #e0e0e0;
+  color: var(--text-color);
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background-color var(--transition-speed);
 }
 
-.skill-card button:hover {
-  background: #8f6713;
+.skill-pill:hover {
+  background-color: #d0d0d0;
 }
 
-body.dark-mode .skill-card {
-  background: #444;
-  border: 1px solid #666;
-  color: #ddd;
+.skill-pill.selected {
+  background-color: var(--accent-color);
+  color: var(--secondary-color);
 }
 
-body.dark-mode .skill-card:hover {
-  background: #555;
-}
-
-/*----------------------------------------
-  Selected Skills
-----------------------------------------*/
-.selected-skills {
-  margin-top: 15px;
-}
-
-.selected-skills h4 {
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-
-.selected-skill {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #e9e9e9;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 4px 8px;
-  margin-bottom: 5px;
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-.selected-skill span {
-  font-size: 14px;
-}
-
-.selected-skill button {
-  padding: 2px 6px;
-  background: #d9534f;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.selected-skill button:hover {
-  background: #c9302c;
-}
-
-body.dark-mode .selected-skill {
-  background: #333;
-  border-color: #555;
-  color: #f0f0f0;
-}
-
-body.dark-mode .selected-skill button {
-  background: #ff5c5c;
-}
-
-body.dark-mode .selected-skill button:hover {
-  background: #ff3b3b;
-}
-
-/*----------------------------------------
-  Next Button Container
-----------------------------------------*/
 .next-button-container {
-  text-align: center;
   margin-top: 20px;
 }
 
 .next-button-container button {
   padding: 10px 20px;
   background: var(--primary-color);
-  color: var(--light-bg);
+  color: var(--secondary-color);
   border: none;
   border-radius: 4px;
   font-size: 16px;
@@ -202,7 +90,33 @@ body.dark-mode .selected-skill button:hover {
 }
 
 .next-button-container button:hover {
-  background: #8f6713;
+  background: var(--accent-color);
+}
+
+/* Dark mode styles */
+body.dark-mode .skills-list-container {
+  background: #2c2c2c;
+  color: #f0f0f0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .skills-section {
+  background: #3a3a3a;
+  border-color: #555;
+}
+
+body.dark-mode .skill-pill {
+  background-color: #555;
+  color: #ddd;
+}
+
+body.dark-mode .skill-pill:hover {
+  background-color: #666;
+}
+
+body.dark-mode .skill-pill.selected {
+  background-color: #a47f18;
+  color: #fff;
 }
 
 body.dark-mode .next-button-container button {
@@ -211,5 +125,5 @@ body.dark-mode .next-button-container button {
 }
 
 body.dark-mode .next-button-container button:hover {
-  background: #8f6713;
+  background: var(--accent-color);
 }

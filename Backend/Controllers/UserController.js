@@ -1,26 +1,19 @@
-// UserController.js
 const otpStore = {};
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const UserSkill = require("../models/UserSkill");
-const mongoose = require("mongoose");
+const { mongoose } = require("../config/databaseConnection");
 const nodemailer = require("nodemailer");
 const { GridFSBucket } = require("mongodb");
 const { ObjectId } = mongoose.Types;
-
-mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/devminds_db", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.error("Error connecting to MongoDB", err));
-
-const conn = mongoose.connection;
+const axios = require('axios');
+const stateStore = {};
 let gfs;
-conn.once("open", () => {
-  gfs = new GridFSBucket(conn.db, { bucketName: "profileImages" });
+
+mongoose.connection.once("open", () => {
+  gfs = new GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
 });
 
 const uploadFileToGridFS = (file) => {
@@ -35,10 +28,12 @@ const uploadFileToGridFS = (file) => {
   });
 };
 
+
 const signup = async (req, res) => {
-  const { username, email, phoneNumber, password, confirmPassword, role, bio, location } = req.body;
-  const profileImage = req.files && req.files.profileImage ? req.files.profileImage[0] : null;
-  const certificateImage = req.files && req.files.certificateImage ? req.files.certificateImage[0] : null;
+  const { username, email, phoneNumber, password, confirmPassword, role, bio, location, mentorSkills } = req.body;
+
+  console.log("Signup Request Body:", req.body);
+  console.log("Signup Request Files:", req.files);
 
   if (!username || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ message: "All fields are required" });
@@ -55,30 +50,55 @@ const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     let profileImageData = null;
-    let certificateImageData = null;
+    let certificateImageData = [];
+    let mentorSkillEntries = [];
 
-    if (profileImage) {
-      const fileId = await uploadFileToGridFS(profileImage);
+    const profileImageFile = req.files.find(file => file.fieldname === "profileImage");
+    if (profileImageFile) {
+      console.log("Uploading Profile Image:", profileImageFile);
+      const fileId = await uploadFileToGridFS(profileImageFile);
       profileImageData = {
-        filename: profileImage.originalname,
-        contentType: profileImage.mimetype,
-        length: profileImage.size,
+        filename: profileImageFile.originalname,
+        contentType: profileImageFile.mimetype,
+        length: profileImageFile.size,
         fileId,
       };
+    } else {
+      console.log("No Profile Image Found");
     }
 
-    if (role === "mentor" && certificateImage) {
-      const certFileId = await uploadFileToGridFS(certificateImage);
-      certificateImageData = {
-        filename: certificateImage.originalname,
-        contentType: certificateImage.mimetype,
-        length: certificateImage.size,
-        fileId: certFileId,
-      };
+    const parsedMentorSkills = mentorSkills ? JSON.parse(mentorSkills) : [];
+    if (role === "mentor" && parsedMentorSkills.length > 0) {
+      certificateImageData = await Promise.all(
+        parsedMentorSkills.map(async (skillId) => {
+          const fieldName = `mentorCertificate_${skillId}`;
+          const certFile = req.files.find(file => file.fieldname === fieldName);
+          if (certFile) {
+            console.log(`Uploading Certificate for Skill ${skillId}:`, certFile);
+            const certFileId = await uploadFileToGridFS(certFile);
+            return {
+              filename: certFile.originalname,
+              contentType: certFile.mimetype,
+              length: certFile.size,
+              fileId: certFileId,
+            };
+          } else {
+            console.log(`No Certificate Found for Skill ${skillId}`);
+            return null;
+          }
+        })
+      ).then(results => results.filter(Boolean));
+
+      mentorSkillEntries = parsedMentorSkills.map(skillId => ({
+        userSkillId: Date.now().toString() + Math.random().toString(36).substring(2, 15),
+        userId: null,
+        skillId: new ObjectId(skillId),
+        skillType: "has",
+        verificationStatus: "unverified"
+      }));
     }
 
-    // For mentor signups, assign role "learner" until admin approval.
-    const finalRole = role === "mentor" ? "learner" : role;
+    const finalRole = role === "mentor" ? "unverified mentor" : role;
 
     const newUser = new User({
       userId: new ObjectId(),
@@ -95,7 +115,14 @@ const signup = async (req, res) => {
 
     await newUser.save();
 
-    // Create a welcome (or account update) notification for the new user
+    if (mentorSkillEntries.length > 0) {
+      mentorSkillEntries = mentorSkillEntries.map(entry => ({
+        ...entry,
+        userId: newUser._id
+      }));
+      await UserSkill.insertMany(mentorSkillEntries);
+    }
+
     const accountUpdateNotification = new Notification({
       userId: newUser._id,
       type: "ACCOUNT_UPDATE",
@@ -103,13 +130,28 @@ const signup = async (req, res) => {
     });
     await accountUpdateNotification.save();
 
-    // Do not return the hashed password to the client
     newUser.password = undefined;
 
+    console.log("New User Saved:", newUser);
     return res.status(201).json({ message: "User registered successfully!", user: newUser });
   } catch (err) {
-    console.error(err);
+    console.error("Signup Error:", err);
     return res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+const updateUserSkillById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const update = req.body;
+    const updatedSkill = await UserSkill.findByIdAndUpdate(id, update, { new: true });
+    if (!updatedSkill) {
+      return res.status(404).json({ message: "Skill not found." });
+    }
+    res.status(200).json(updatedSkill);
+  } catch (err) {
+    console.error("Error updating user skill:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
@@ -119,40 +161,70 @@ const signin = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user)
       return res.status(404).json({ message: "User not found" });
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
-    
-    // Generate a 6-digit OTP
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    // Store the OTP along with a timestamp (valid for 10 minutes)
     otpStore[email] = { otp, createdAt: Date.now() };
 
-    // Configure nodemailer with your EMAIL_USER and EMAIL_PASS
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: process.env.EMAIL_USER, // using your friend's email as set in your .env file
-        pass: process.env.EMAIL_PASS, // the app password for that email
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
-      // (Optional) If you run into certificate errors, you can add:
-      // tls: { rejectUnauthorized: false }
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Your OTP Code",
-      text: `Your OTP code is: ${otp}. It is valid for 10 minutes.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; padding: 20px; background-color: #007bff; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">SkillMinds</h1>
+          </div>
+          <div style="padding: 20px;">
+            <h2 style="color: #333; font-size: 20px; margin-bottom: 15px;">Your OTP Code</h2>
+            <p style="color: #555; font-size: 16px; line-height: 1.5;">Your One-Time Password (OTP) code is:</p>
+            <div style="text-align: center; margin: 20px 0;">
+              <p style="font-size: 24px; font-weight: bold; color: #007bff; background-color: #f8f9fa; padding: 10px; border-radius: 5px; display: inline-block;">
+                ${otp}
+              </p>
+            </div>
+            <p style="color: #555; font-size: 14px; text-align: center;">This code is valid for <strong>10 minutes</strong>.</p>
+            <p style="color: #777; font-size: 12px; text-align: center;">If you did not request this OTP, please ignore this email.</p>
+          </div>
+          <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 0 0 10px 10px;">
+            <p style="color: #777; margin: 5px 0 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds.team@gmail.com</a></p>
+          </div>
+        </div>
+      `,
+      text: `
+        ================================
+                Your OTP Code
+        ================================
+        Your One-Time Password (OTP) code is:
+        **${otp}**
+        This code is valid for 10 minutes.
+        If you did not request this OTP, please ignore this email.
+        ================================
+        DevMinds - Your Development Partner
+        Contact us: skillminds.team@gmail.com
+        ================================
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
-    // Instead of signing in immediately, respond that OTP has been sent.
-    return res.json({ 
-      message: "OTP sent to your email. Please verify to complete sign in.", 
-      userId: user._id 
+    return res.json({
+      message: "OTP sent to your email. Please verify to complete sign in.",
+      userId: user._id
     });
   } catch (err) {
     console.error(err);
@@ -171,7 +243,6 @@ const verifyOTP = async (req, res) => {
     return res.status(400).json({ message: "No OTP request found for this email." });
   }
 
-  // Check if the OTP has expired (10 minutes expiry)
   const now = Date.now();
   if (now - record.createdAt > 10 * 60 * 1000) {
     delete otpStore[email];
@@ -182,16 +253,13 @@ const verifyOTP = async (req, res) => {
     return res.status(401).json({ message: "Invalid OTP." });
   }
 
-  // OTP is correct; clear it from the store
   delete otpStore[email];
 
-  // Generate JWT token now since OTP is verified
   const user = await User.findOne({ email });
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
   user.password = undefined;
   return res.json({ message: "Signin successful", user, token });
 };
-
 
 const getAllUsers = async (req, res) => {
   try {
@@ -203,11 +271,44 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const getUserSkillsBySkillId = async (req, res) => {
+  const { skillId } = req.params;
+  try {
+    const userSkills = await UserSkill.find({ skillId: skillId });
+    if (!userSkills || userSkills.length === 0) {
+      return res.status(404).json({ message: "No user skills found for this skill" });
+    }
+    res.status(200).json(userSkills);
+  } catch (error) {
+    console.error("Error retrieving user skills by skillId:", error);
+    res.status(500).json({ message: "Error retrieving user skills", error: error.message });
+  }
+};
+
+const removeUserSkillsBySkillId = async (req, res) => {
+  try {
+    const { skillId } = req.params;
+    const result = await UserSkill.deleteMany({ skillId });
+    if (result.deletedCount === 0) {
+      return res.status(200).json({ message: "Aucune référence trouvée pour cette compétence" });
+    }
+    res.status(200).json({ message: `${result.deletedCount} références supprimées pour la compétence` });
+  } catch (error) {
+    console.error("Erreur lors de la suppression des références UserSkill:", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).lean();
     if (!user)
       return res.status(404).json({ message: "User not found" });
+
+    if (!Array.isArray(user.certificateImage)) {
+      user.certificateImage = user.certificateImage ? [user.certificateImage] : [];
+    }
+
     res.json(user);
   } catch (err) {
     console.error("Error fetching user:", err);
@@ -226,7 +327,6 @@ const updateUser = async (req, res) => {
       location: req.body.location,
     };
 
-    // Handle new profile image (if provided)
     if (req.file) {
       const profileImage = req.file;
       const fileId = await uploadFileToGridFS(profileImage);
@@ -251,7 +351,6 @@ const updateUser = async (req, res) => {
     if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
 
-    // Create a notification for the account update
     const updateNotification = new Notification({
       userId: updatedUser._id,
       type: "ACCOUNT_UPDATE",
@@ -279,7 +378,6 @@ const deleteUserSkill = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-
 
 const deleteUser = async (req, res) => {
   try {
@@ -311,7 +409,7 @@ const createUserSkills = async (req, res) => {
     }));
 
     const createdSkills = await UserSkill.insertMany(userSkills);
-    
+
     await User.findByIdAndUpdate(userId, { firstTimeLogin: false });
 
     res.status(201).json({ message: "Skills saved successfully", userSkills: createdSkills });
@@ -324,31 +422,33 @@ const createUserSkills = async (req, res) => {
 const updateUserSkills = async (req, res) => {
   try {
     const { userId, skills } = req.body;
+
+    const extraPayload = req.body.extraPayload || {};
+
     if (!userId || !Array.isArray(skills)) {
       return res.status(400).json({ message: "Invalid input. Please provide userId and an array of skills." });
     }
-    
-    // Check if the user exists
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    
-    // Remove existing skills for this user
+
     await UserSkill.deleteMany({ userId: userId });
-    
-    // Prepare new skills to insert.
-    // Each element should have: { skillId, skillType }
+
     const userSkills = skills.map(skill => ({
       userId: new ObjectId(userId),
       skillId: new ObjectId(skill.skillId),
       skillType: skill.skillType,
-      // Set verificationStatus based on skillType:
-      verificationStatus: skill.skillType === "has" ? "unverified" : "pending",
+      verificationStatus: extraPayload.verificationStatus
+        ? extraPayload.verificationStatus
+        : (skill.verificationStatus
+            ? skill.verificationStatus
+            : (skill.skillType === "has" ? "unverified" : "pending"))
     }));
-    
+
     const createdSkills = await UserSkill.insertMany(userSkills);
-    
+
     res.status(200).json({
       message: "User skills updated successfully",
       userSkills: createdSkills
@@ -358,8 +458,6 @@ const updateUserSkills = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-
-
 
 const getUserSkills = async (req, res) => {
   try {
@@ -386,31 +484,73 @@ const forgotPassword = async (req, res) => {
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
+    const resetLink = `http://localhost:5173/reset-password/${user._id}/${token}`;
+
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: { rejectUnauthorized: false }
     });
 
     const mailOptions = {
       to: user.email,
       subject: "Password Reset Request",
-      text: `
-        You requested a password reset. Please click the link below to reset your password:
-        http://localhost:5173/reset-password/${user._id}/${token}
-        
-        If you did not request this, please ignore this email.
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="text-align: center; padding: 10px; background-color: #007bff; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">SkillMinds</h1>
+          </div>
+          <div style="padding: 15px;">
+            <h2 style="color: #333; font-size: 18px; margin-bottom: 10px;">Password Reset Request</h2>
+            <p style="color: #555; font-size: 14px; line-height: 1.5;">You requested a password reset. Please click the button below to reset your password:</p>
+            <div style="text-align: center; margin: 15px 0;">
+              <a href="${resetLink}" style="display: inline-block; padding: 8px 16px; font-size: 14px; color: white; background-color: #007bff; text-decoration: none; border-radius: 4px;">
+                Reset Password
+              </a>
+            </div>
+            <p style="color: #555; font-size: 12px; text-align: center;">If you did not request this, please ignore this email.</p>
+          </div>
+          <div style="text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
+            <p style="color: #777; margin: 0; font-size: 12px;">Contact us: <a href="mailto:skillminds.team@gmail.com" style="color: #007bff; text-decoration: none;">skillminds.team@gmail.com</a></p>
+          </div>
+        </div>
       `,
+      text: `You requested a password reset. Please click the link below to reset your password:\n\n${resetLink}\n\nIf you did not request this, please ignore this email.`,
     };
 
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "Password reset link has been sent to your email." });
   } catch (err) {
-    console.error(err);
+    console.error("Error sending email:", err);
     res.status(500).json({ message: "An error occurred while processing your request.", error: err.message });
+  }
+};
+
+const finishSkillSelection = async (req, res) => {
+  try {
+    const { userId, selectedSkills } = req.body;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const userSkills = selectedSkills.map(skill => ({
+      userId: new ObjectId(userId),
+      skillId: new ObjectId(skill.skillId),
+      skillType: skill.skillType,
+      verificationStatus: user.role === "mentor" ? "pending" : "unverified"
+    }));
+    await UserSkill.insertMany(userSkills);
+
+    await User.findByIdAndUpdate(userId, { hasChosenSkills: true });
+
+    res.status(200).json({ message: "Skill selection complete." });
+  } catch (err) {
+    console.error("Error finishing skill selection:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
@@ -420,6 +560,7 @@ const resetPassword = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     if (decoded.id !== id) {
       return res.status(401).json({ message: "Unauthorized access." });
     }
@@ -435,17 +576,241 @@ const resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successfully!" });
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token." });
+      return res.status(401).json({ message: "Invalid token. Please request a new password reset link." });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(403).json({ message: "Token has expired." });
+      return res.status(403).json({
+        message: "Token has expired. Please request a new password reset link.",
+        expired: true,
+      });
     }
+
     console.error("Error resetting password:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
 
+
+const handleGoogleUser = async (googleId, email, name) => {
+  try {
+    let user = await User.findOne({ 'linkedAccounts.google': googleId });
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+   
+        user.linkedAccounts.google = googleId;
+        await user.save();
+      } else {
+      
+        user = new User({
+          userId: new ObjectId(), 
+          username: name,
+          email: email || `google_${googleId}@example.com`,
+          phoneNumber: "", 
+          password: bcrypt.hashSync(googleId, 10), 
+          role: "learner", 
+          bio: "",
+          location: "",
+          linkedAccounts: { google: googleId }, 
+          hasChosenSkills: false,
+        });
+        await user.save();
+      }
+    }
+    return user; 
+  } catch (err) {
+    throw new Error(`Error handling Google user: ${err.message}`);
+  }
+};
+
+
+const googleCallback = async (req, res) => {
+  const { googleId, email, name } = req.body;
+
+  console.log("Google Callback Data:", req.body); 
+
+  if (!googleId) {
+    return res.status(400).json({ message: "Google ID is required" });
+  }
+
+  try {
+    const user = await handleGoogleUser(googleId, email, name);
+
+  
+    const userId = user._id; 
+
+    
+    const token = jwt.sign({ id: userId, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    user.password = undefined;
+
+    
+    res.json({ token, user });
+  } catch (err) {
+    console.error("Google Callback Error:", err);
+    res.status(500).json({ message: "Error with Google authentication", error: err.message });
+  }
+};
+
+
+const linkedinLogin = (req, res) => {
+  const state = require('crypto').randomBytes(16).toString('hex');
+  const stateKey = Date.now().toString();
+  stateStore[stateKey] = state;
+  console.log("Setting linkedinStateKey cookie:", stateKey, "with state:", state); 
+  res.cookie('linkedinStateKey', stateKey, { 
+    httpOnly: true, 
+    secure: false, 
+    path: '/', 
+    sameSite: 'Lax'
+  });
+  const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent("http://localhost:5000/linkedin-callback")}&state=${state}&scope=openid%20profile%20email`;
+  res.redirect(linkedinAuthUrl);
+};
+
+const linkedinCallback = async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+
+  console.log("LinkedIn Callback Query:", req.query);
+  console.log("Cookies received:", req.cookies);
+
+  if (error) {
+    console.error("LinkedIn Authorization Error:", error, error_description);
+    return res.status(400).json({ message: `LinkedIn error: ${error_description}` });
+  }
+
+  if (!code) {
+    return res.status(400).json({ message: "Authorization code missing" });
+  }
+
+  const stateKey = req.cookies.linkedinStateKey;
+  console.log("StateKey from cookie:", stateKey, "StateStore contents:", stateStore);
+  if (!stateKey || !stateStore[stateKey]) {
+    return res.status(401).json({ message: "Invalid or missing state key for CSRF protection" });
+  }
+
+  const storedState = stateStore[stateKey];
+  if (state !== storedState) {
+    return res.status(401).json({ message: "State parameter modified. CSRF protection failed" });
+  }
+
+  delete stateStore[stateKey];
+  res.clearCookie('linkedinStateKey');
+
+  try {
+    const tokenResponse = await axios.post(
+      'https://www.linkedin.com/oauth/v2/accessToken',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: "http://localhost:5000/linkedin-callback",
+        client_id: process.env.LINKEDIN_CLIENT_ID,
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    console.log("Access Token:", accessToken);
+
+    const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const linkedinId = userInfoResponse.data.sub;
+    const email = userInfoResponse.data.email || null;
+    const username = userInfoResponse.data.name || `LinkedIn_${linkedinId}`;
+
+    const user = await handleLinkedInUser(linkedinId, email, username);
+    const userId = user._id;
+
+    const token = jwt.sign({ id: userId, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    user.password = undefined;
+
+  
+    res.send(`
+      <script>
+        window.opener.postMessage({ token: '${token}', user: '${JSON.stringify(user)}' }, 'http://localhost:5173');
+        window.close();
+      </script>
+    `);
+  } catch (err) {
+    console.error("LinkedIn Callback Error:", err.message, err.response?.data || {});
+    if (err.response) {
+      const status = err.response.status || 500;
+      return res.status(status).json({
+        message: err.response.data.error_description || "Error with LinkedIn authentication",
+        error: err.message,
+        details: err.response.data
+      });
+    }
+    res.status(500).json({ message: "Error with LinkedIn authentication", error: err.message });
+  }
+};
+const linkedinCallbackPost = async (req, res) => {
+  const { linkedinId, email, username } = req.body;
+
+  console.log("LinkedIn Callback Post Data:", req.body); 
+
+  if (!linkedinId) {
+    return res.status(400).json({ message: "LinkedIn ID is required" });
+  }
+
+  try {
+    const user = await handleLinkedInUser(linkedinId, email, username);
+
+
+    const userId = user._id;
+
+
+    const token = jwt.sign({ id: userId, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    user.password = undefined;
+
+
+    res.json({ token, user });
+  } catch (err) {
+    console.error("LinkedIn Callback Post Error:", err);
+    res.status(500).json({ message: "Error with LinkedIn authentication", error: err.message });
+  }
+};
+
+const handleLinkedInUser = async (linkedinId, email, username) => {
+  try {
+    let user = await User.findOne({ 'linkedAccounts.linkedin': linkedinId });
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+       
+        user.linkedAccounts.linkedin = linkedinId;
+        await user.save();
+      } else {
+ 
+        user = new User({
+          userId: new ObjectId(), 
+          username: username || `LinkedIn_${linkedinId}`,
+          email: email || `linkedin_${linkedinId}@example.com`,
+          phoneNumber: "",
+          password: bcrypt.hashSync(linkedinId, 10), 
+          role: "learner", 
+          bio: "",
+          location: "",
+          linkedAccounts: { linkedin: linkedinId },
+          hasChosenSkills: false,
+        });
+        await user.save();
+      }
+    }
+    return user;
+  } catch (err) {
+    throw new Error(`Error handling LinkedIn user: ${err.message}`);
+  }
+};
+
+
+
 module.exports = {
+  getUserSkillsBySkillId,
   signup,
   signin,
   verifyOTP,
@@ -459,4 +824,13 @@ module.exports = {
   resetPassword,
   deleteUserSkill,
   updateUserSkills,
+  finishSkillSelection,
+  updateUserSkillById,
+  removeUserSkillsBySkillId,
+  googleCallback,
+  handleGoogleUser,
+  linkedinLogin,
+  linkedinCallback,
+  linkedinCallbackPost,
+  handleLinkedInUser,
 };

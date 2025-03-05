@@ -11,9 +11,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import Header from "../common/header/Header";
+import Footer from "../common/footer/Footer";
 import "./AdminDashboard.css";
 
-// Dummy data for demonstration
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
   { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
@@ -34,28 +35,37 @@ const dummyEvents = [
   { id: 2, name: "Node.js Meetup", date: "2023-11-15" },
 ];
 
-const statsData = {
+const defaultStatsData = {
   users: {
-    total: 345,
-    roles: [
-      { role: "Learner", count: 250 },
-      { role: "Mentor", count: 80 },
-      { role: "Admin", count: 15 },
-    ],
+    total: 0,
+    roles: [],
   },
   courses: {
-    total: 89,
+    total: 0,
     categories: [
-      { name: "Technical", value: 60 },
-      { name: "Business", value: 15 },
-      { name: "Design", value: 10 },
-      { name: "Other", value: 4 },
+      { name: "Technical", value: 0 },
+      { name: "Business", value: 0 },
+      { name: "Design", value: 0 },
+      { name: "Other", value: 0 },
     ],
   },
   skills: {
-    total: 45,
-    trending: ["Design", "Development", "Full Stack", "Cybersecurity"],
+    total: 0,
+    trending: [],
   },
+};
+
+const Message = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`message ${type}`}>
+      {message}
+    </div>
+  );
 };
 
 const UserManager = () => {
@@ -71,9 +81,9 @@ const UserManager = () => {
     bio: "",
     location: "",
   });
-  // States for skills assignment:
   const [availableSkills, setAvailableSkills] = useState([]);
   const [assignedSkillIds, setAssignedSkillIds] = useState([]);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -89,6 +99,11 @@ const UserManager = () => {
     }
     fetchUsers();
   }, []);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
 
   const handleRowClick = async (id) => {
     if (selectedUser && selectedUser._id === id) {
@@ -133,7 +148,7 @@ const UserManager = () => {
     } catch (error) {
       console.error(error);
     }
-    const currentSkillIds = userSkills.map((item) => item.skillId._id);
+    const currentSkillIds = userSkills.map((item) => item.skillId?._id);
     setAssignedSkillIds(currentSkillIds);
   };
 
@@ -156,9 +171,7 @@ const UserManager = () => {
     setAssignedSkillIds(selected);
   };
 
-  const updateUserSkills = async (userId, skillIds) => {
-    // Map each skill id to an object with a default skillType ("has")
-    const skillsPayload = skillIds.map((id) => ({ skillId: id, skillType: "has" }));
+  const updateUserSkills = async (userId, skillsPayload) => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/userskills`, {
         method: "PUT",
@@ -169,13 +182,48 @@ const UserManager = () => {
         return true;
       } else {
         const data = await response.json();
-        alert(data.message || "Error updating user skills");
+        showMessage(data.message || "Error updating user skills", "error");
         return false;
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user skills");
+      showMessage("Error updating user skills", "error");
       return false;
+    }
+  };
+
+  const verifyUserSkill = async (skillId) => {
+    try {
+      const skillObj = userSkills.find((s) => s._id === skillId);
+      const skillName = skillObj?.skillId?.name || "Skill";
+      const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verificationStatus: "verified" }),
+      });
+      if (response.ok) {
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          setUserSkills(skillsData);
+        }
+        await fetch("http://localhost:5000/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: selectedUser._id,
+            type: "SKILL_VERIFICATION",
+            message: `${skillName} is verified by the admin, check your profile`,
+          }),
+        });
+        showMessage("✅ Skill verified");
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error verifying skill", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage("Error verifying skill", "error");
     }
   };
 
@@ -190,41 +238,77 @@ const UserManager = () => {
       if (response.ok) {
         setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
-        const skillsUpdated = await updateUserSkills(userId, assignedSkillIds);
+
+        const combinedPayload = [
+          ...userSkills
+            .filter((skill) => skill.skillType === "has")
+            .map((skill) => ({
+              skillId: skill.skillId?._id,
+              skillType: "has",
+              verificationStatus: "unverified",
+            })),
+          ...userSkills
+            .filter((skill) => skill.skillType === "wantsToLearn")
+            .map((skill) => ({
+              skillId: skill.skillId?._id,
+              skillType: "wantsToLearn",
+              verificationStatus: skill.verificationStatus || "pending",
+            })),
+        ];
+        const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
           const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json();
             setUserSkills(skillsData);
           }
-          alert("User updated successfully");
+          showMessage("✅ User updated");
         }
         setEditingUserId(null);
       } else {
-        alert(data.message || "Error updating user");
+        showMessage(data.message || "Error updating user", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user");
+      showMessage("Error updating user", "error");
     }
   };
 
   const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
+      const skillToDelete = userSkills.find((skill) => skill._id === skillId);
+      const skillName = skillToDelete?.skillId?.name || "Unknown Skill";
+
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
         method: "DELETE",
       });
       if (response.ok) {
-        setUserSkills(userSkills.filter((s) => s._id !== skillId));
-        alert("Skill deleted successfully");
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          setUserSkills(skillsData);
+
+          if (skillToDelete && skillToDelete.skillType === "has") {
+            await fetch("http://localhost:5000/api/notifications", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: selectedUser._id,
+                type: "SKILL_REMOVAL",
+                message: `${skillName} was deleted from your skills by admin, check your profile`,
+              }),
+            });
+          }
+        }
+        showMessage("🗑 Skill deleted successfully");
       } else {
         const data = await response.json();
-        alert(data.message || "Error deleting skill");
+        showMessage(data.message || "Error deleting skill", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting skill");
+      showMessage("Error deleting skill", "error");
     }
   };
 
@@ -238,13 +322,13 @@ const UserManager = () => {
       if (response.ok) {
         setUsers(users.filter((u) => u._id !== userId));
         setSelectedUser(null);
-        alert("User deleted successfully");
+        showMessage("User deleted successfully");
       } else {
-        alert(data.message || "Error deleting user");
+        showMessage(data.message || "Error deleting user", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting user");
+      showMessage("Error deleting user", "error");
     }
   };
 
@@ -259,169 +343,245 @@ const UserManager = () => {
       if (response.ok) {
         setUsers(users.map((u) => (u._id === data._id ? data : u)));
         setSelectedUser(data);
-        const notifRes = await fetch("http://localhost:5000/api/notifications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: data._id,
-            type: "SKILL_VERIFICATION",
-            message: "Your mentor skills have been verified by the admin.",
-          }),
-        });
-        if (notifRes.ok) {
-          alert("User role updated to mentor and notification sent.");
-        } else {
-          alert("User role updated to mentor, but failed to send notification.");
+
+        const combinedPayload = userSkills.map((skill) => ({
+          skillId: skill.skillId?._id,
+          skillType: skill.skillType,
+          verificationStatus: skill.skillType === "has" ? "verified" : (skill.verificationStatus || "pending"),
+        }));
+
+        const skillsUpdated = await updateUserSkills(userId, combinedPayload);
+        if (skillsUpdated) {
+          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
+          if (skillsResponse.ok) {
+            const skillsData = await skillsResponse.json();
+            setUserSkills(skillsData);
+          }
+          const notifRes = await fetch("http://localhost:5000/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: data._id,
+              type: "SKILL_VERIFICATION",
+              message: "Your mentor skills have been verified by the admin, check your profile",
+            }),
+          });
+          if (notifRes.ok) {
+            showMessage("✅ User role updated to mentor and skills verified");
+          } else {
+            showMessage("User role updated, but failed to send notification", "warning");
+          }
         }
       } else {
-        alert(data.message || "Error updating user role");
+        showMessage(data.message || "Error updating user role", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error updating user role");
+      showMessage("Error updating user role", "error");
     }
   };
 
+  const wantsToLearnSkills = userSkills.filter((s) => s.skillType === "wantsToLearn");
+  const hasSkillsList = userSkills.filter((s) => s.skillType === "has");
+
   return (
     <div className="user-manager">
+      {message && (
+        <Message
+          message={message.text}
+          type={message.type}
+          onClose={() => setMessage(null)}
+        />
+      )}
       <table className="user-table">
         <thead>
           <tr>
             <th>Username</th>
             <th>Email</th>
-            <th>Role</th>
+            <th>Role (👇 Click to expand)</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user._id} onClick={() => handleRowClick(user._id)}>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-            </tr>
+          {users.map((userItem) => (
+            <React.Fragment key={userItem._id}>
+              <tr onClick={() => handleRowClick(userItem._id)}>
+                <td>{userItem.username}</td>
+                <td>{userItem.email}</td>
+                <td>
+                  {userItem.role}{" "}
+                  {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
+                </td>
+              </tr>
+              {selectedUser && selectedUser._id === userItem._id && (
+                <tr className="expanded">
+                  <td colSpan="3">
+                    <div className="expanded-user-details">
+                      <div className="user-details-body">
+                        <div className="user-details-row">
+                          <span className="label">Username:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="username"
+                              value={editingData.username}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.username}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Email:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="email"
+                              value={editingData.email}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.email}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Role:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                              <option value="learner">Learner</option>
+                              <option value="unverified mentor">Unverified Mentor</option>
+                              <option value="mentor">Mentor</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          ) : (
+                            <span className="value">{selectedUser.role}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Phone:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="phoneNumber"
+                              value={editingData.phoneNumber}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Bio:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <textarea
+                              name="bio"
+                              value={editingData.bio}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.bio || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Location:</span>
+                          {editingUserId === selectedUser._id ? (
+                            <input
+                              type="text"
+                              name="location"
+                              value={editingData.location}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{selectedUser.location || "N/A"}</span>
+                          )}
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Wants to Learn:</span>
+                          <ul className="user-skills-list wants-to-learn">
+                            {wantsToLearnSkills.length > 0 ? (
+                              wantsToLearnSkills.map((skill) => (
+                                <li key={skill._id} className="skill-item">
+                                  <span className="skill-name">
+                                    {skill.skillId ? skill.skillId.name : "Skill no longer available"}
+                                  </span>
+                                  <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                                </li>
+                              ))
+                            ) : (
+                              <span className="value">No skills added</span>
+                            )}
+                          </ul>
+                        </div>
+                        <div className="user-details-row">
+                          <span className="label">Has:</span>
+                          <ul className="user-skills-list has-skills">
+                            {hasSkillsList.length > 0 ? (
+                              hasSkillsList.map((skill, index) => (
+                                <li key={skill._id} className="skill-item">
+                                  <div className="skill-card">
+                                    <div className="skill-header">
+                                      <span className="skill-name">
+                                        {skill.skillId ? skill.skillId.name : "Skill no longer available"}
+                                      </span>
+                                      <span className="verification-status">
+                                        ({skill.verificationStatus})
+                                      </span>
+                                    </div>
+                                    {selectedUser.certificateImage && selectedUser.certificateImage[index] && (
+                                      <div className="skill-certificate">
+                                        <img
+                                          src={`http://localhost:5000/api/files/${selectedUser.certificateImage[index].fileId}?t=${Date.now()}`}
+                                          alt={selectedUser.certificateImage[index].filename}
+                                        />
+                                        <p>Certificate: {selectedUser.certificateImage[index].filename}</p>
+                                      </div>
+                                    )}
+                                    <div className="skill-actions">
+                                      {skill.verificationStatus !== "verified" && (
+                                        <button className="verify-btn" onClick={() => verifyUserSkill(skill._id)}>✅ Verify</button>
+                                      )}
+                                      <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑 Delete</button>
+                                    </div>
+                                  </div>
+                                </li>
+                              ))
+                            ) : (
+                              <span className="value">No skills added</span>
+                            )}
+                          </ul>
+                        </div>
+                        {selectedUser.profileImage && (
+                          <div className="user-image-container">
+                            <img
+                              src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                              alt={selectedUser.profileImage.filename}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="user-actions">
+                        {editingUserId !== selectedUser._id ? (
+                          <>
+                            <button onClick={() => startEditing(selectedUser)}>✏️ Edit</button>
+                            <button onClick={() => deleteUser(selectedUser._id)}>🗑 Delete</button>
+                            {selectedUser.role === "unverified mentor" && (
+                              <button onClick={() => approveMentor(selectedUser._id)}>✅ Approve Mentor</button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => saveEditedUser(selectedUser._id)}>💾 Save</button>
+                            <button onClick={cancelEditing}>❌ Cancel</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
-      {selectedUser && (
-        <div className="user-details-card">
-          <div className="user-details-header">
-            <h3>User Details</h3>
-            {editingUserId !== selectedUser._id ? (
-              <div className="user-actions">
-                <button onClick={() => startEditing(selectedUser)}>Modify</button>
-                <button onClick={() => deleteUser(selectedUser._id)}>Delete</button>
-                {selectedUser.certificateImage && selectedUser.role === "learner" && (
-                  <button onClick={() => approveMentor(selectedUser._id)}>Approve Mentor</button>
-                )}
-              </div>
-            ) : (
-              <div className="user-actions">
-                <button onClick={() => saveEditedUser(selectedUser._id)}>Save</button>
-                <button onClick={cancelEditing}>Cancel</button>
-              </div>
-            )}
-          </div>
-          <div className="user-details-body">
-            <div className="user-details-row">
-              <span className="label">Username:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="username" value={editingData.username} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.username}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Email:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="email" value={editingData.email} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.email}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Role:</span>
-              {editingUserId === selectedUser._id ? (
-                <select name="role" value={editingData.role} onChange={handleEditingChange}>
-                  <option value="learner">Learner</option>
-                  <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              ) : (
-                <span className="value">{selectedUser.role}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Phone:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="phoneNumber" value={editingData.phoneNumber} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.phoneNumber}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Bio:</span>
-              {editingUserId === selectedUser._id ? (
-                <textarea name="bio" value={editingData.bio} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.bio}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">Location:</span>
-              {editingUserId === selectedUser._id ? (
-                <input type="text" name="location" value={editingData.location} onChange={handleEditingChange} />
-              ) : (
-                <span className="value">{selectedUser.location}</span>
-              )}
-            </div>
-            <div className="user-details-row">
-              <span className="label">User Skills:</span>
-              {editingUserId === selectedUser._id ? (
-                <select multiple value={assignedSkillIds} onChange={handleSkillChange}>
-                  {availableSkills.map((skill) => (
-                    <option key={skill._id} value={skill._id}>
-                      {skill.name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <ul className="user-skills-list">
-                  {userSkills.length > 0 ? (
-                    userSkills.map((us) => (
-                      <li key={us._id} className="skill-item">
-                        {us.skillId.name}
-                        <button onClick={() => handleDeleteSkill(us._id)}>Delete</button>
-                      </li>
-                    ))
-                  ) : (
-                    <span className="value">No skills assigned</span>
-                  )}
-                </ul>
-              )}
-            </div>
-            {selectedUser.profileImage && (
-              <div className="user-image-container">
-                <img
-                  src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
-                  alt={selectedUser.profileImage.filename}
-                />
-              </div>
-            )}
-            {selectedUser.certificateImage && (
-              <div className="user-certificate-container">
-                <h4>Certificate</h4>
-                <img
-                  src={`http://localhost:5000/api/files/${selectedUser.certificateImage.fileId}?t=${Date.now()}`}
-                  alt={selectedUser.certificateImage.filename}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      <div className="user-manager">
-        {/* Additional admin features if needed */}
-      </div>
     </div>
   );
 };
@@ -435,7 +595,7 @@ const SkillManager = () => {
     description: "",
     tags: "",
   });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [editingSkillId, setEditingSkillId] = useState(null);
   const [editingData, setEditingData] = useState({
     name: "",
@@ -454,7 +614,7 @@ const SkillManager = () => {
           setFormData((prev) => ({ ...prev, category: data[0] }));
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching skill categories:", err);
       }
     }
     fetchCategories();
@@ -467,13 +627,20 @@ const SkillManager = () => {
         if (response.ok) {
           const data = await response.json();
           setSkills(data);
+        } else {
+          console.error("Error fetching skills:", response.statusText);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching skills:", err);
       }
     }
     fetchSkills();
   }, []);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -491,7 +658,7 @@ const SkillManager = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setMessage("Skill added successfully!");
+        showMessage("Skill added successfully!");
         setSkills((prev) => [...prev, data]);
         setFormData({
           name: "",
@@ -500,30 +667,70 @@ const SkillManager = () => {
           tags: "",
         });
       } else {
-        setMessage(data.message || "Error adding skill.");
+        showMessage(data.message || "Error adding skill", "error");
       }
     } catch (error) {
-      console.error(error);
-      setMessage("Error adding skill.");
+      console.error("Error adding skill:", error);
+      showMessage("Error adding skill", "error");
     }
   };
 
-  const handleDeleteSkill = async (id) => {
+  const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/skills/${id}`, {
+      const skillData = skills.find((skill) => skill._id === skillId);
+      if (!skillData) throw new Error("Skill details not found in local state");
+      const skillName = skillData.name;
+
+      const usersWithSkillResponse = await fetch(
+        `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`
+      );
+      let usersWithSkill = [];
+      if (usersWithSkillResponse.ok) {
+        usersWithSkill = await usersWithSkillResponse.json();
+      } else if (usersWithSkillResponse.status === 404) {
+        console.log("No users found with this skill.");
+      } else {
+        console.warn("Error fetching users with skill:", usersWithSkillResponse.statusText);
+      }
+
+      const deleteSkillResponse = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "DELETE",
       });
-      const data = await response.json();
-      if (response.ok) {
-        setSkills((prev) => prev.filter((skill) => skill._id !== id));
-        alert("Skill deleted successfully");
-      } else {
-        alert(data.message || "Error deleting skill");
+      if (!deleteSkillResponse.ok) {
+        const deleteData = await deleteSkillResponse.json();
+        throw new Error(deleteData.message || "Error deleting skill");
       }
+
+      const deleteUserSkillsResponse = await fetch(
+        `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
+        { method: "DELETE" }
+      );
+      if (!deleteUserSkillsResponse.ok) {
+        console.warn("Error deleting UserSkill references:", deleteUserSkillsResponse.statusText);
+      }
+
+      setSkills((prev) => prev.filter((skill) => skill._id !== skillId));
+
+      const usersWithHasSkill = usersWithSkill.filter((userSkill) => userSkill.skillType === "has");
+      if (usersWithHasSkill.length > 0) {
+        const notificationPromises = usersWithHasSkill.map((userSkill) =>
+          fetch("http://localhost:5000/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: userSkill.userId,
+              type: "SKILL_REMOVAL",
+              message: `${skillName} is no longer available, check your profile`,
+            }),
+          })
+        );
+        await Promise.all(notificationPromises);
+      }
+      showMessage("🗑 Skill deleted successfully");
     } catch (error) {
-      console.error(error);
-      alert("Error deleting skill");
+      console.error("Error deleting skill:", error);
+      showMessage("Error deleting skill: " + error.message, "error");
     }
   };
 
@@ -559,25 +766,30 @@ const SkillManager = () => {
           tags: tagsArray,
         }),
       });
-
-      
       const data = await response.json();
       if (response.ok) {
         setSkills((prev) => prev.map((s) => (s._id === data._id ? data : s)));
         setEditingSkillId(null);
         setEditingData({ name: "", category: "", description: "", tags: "" });
-        alert("Skill updated successfully");
+        showMessage("💾 Skill updated successfully");
       } else {
-        alert(data.message || "Error updating skill");
+        showMessage(data.message || "Error updating skill", "error");
       }
     } catch (error) {
-      console.error(error);
-      alert("Error updating skill");
+      console.error("Error updating skill:", error);
+      showMessage("Error updating skill", "error");
     }
   };
 
   return (
     <div className="skill-manager">
+      {message && (
+        <Message
+          message={message.text}
+          type={message.type}
+          onClose={() => setMessage(null)}
+        />
+      )}
       <form onSubmit={handleSubmit} className="skill-form">
         <div>
           <label>Skill Name</label>
@@ -601,10 +813,9 @@ const SkillManager = () => {
           <label>Tags</label>
           <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
         </div>
-        <button type="submit">Add Skill</button>
-        {message && <p className="form-message">{message}</p>}
+        <button type="submit">➕ Add Skill</button>
       </form>
-      <h3>List of Skills</h3>
+      <h3>Skill List</h3>
       <table className="skill-table">
         <thead>
           <tr>
@@ -657,13 +868,13 @@ const SkillManager = () => {
               <td>
                 {editingSkillId === skill._id ? (
                   <>
-                    <button onClick={() => saveEditedSkill(skill._id)}>Save</button>
-                    <button onClick={cancelEditing}>Cancel</button>
+                    <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
+                    <button onClick={cancelEditing}>❌</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => startEditing(skill)}>Modify</button>
-                    <button onClick={() => handleDeleteSkill(skill._id)}>Delete</button>
+                    <button onClick={() => startEditing(skill)}>✏️</button>
+                    <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
                   </>
                 )}
               </td>
@@ -678,28 +889,78 @@ const SkillManager = () => {
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
+  const [statsData, setStatsData] = useState(defaultStatsData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-useEffect(() => {
-  const storedDarkMode = localStorage.getItem("darkMode");
-  if (storedDarkMode === "true") {
-    setDarkMode(true);
-    document.body.classList.add("dark-mode");
-  }
-}, []);
-
-
-const toggleDarkMode = () => {
-  setDarkMode((prev) => {
-    const newMode = !prev;
-    if (newMode) {
+  useEffect(() => {
+    const storedDarkMode = localStorage.getItem("darkMode");
+    if (storedDarkMode === "true") {
+      setDarkMode(true);
       document.body.classList.add("dark-mode");
-    } else {
-      document.body.classList.remove("dark-mode");
     }
-    localStorage.setItem("darkMode", newMode);
-    return newMode;
-  });
-};
+  }, []);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/admin/dashboard-stats", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch statistics");
+        }
+        const data = await response.json();
+        const cleanedData = {
+          ...data,
+          users: {
+            ...data.users,
+            roles: data.users.roles.map((role) => ({
+              ...role,
+              count: Math.floor(role.count),
+            })),
+          },
+          courses: {
+            ...data.courses,
+            total: 0,
+            categories: [
+              { name: "Technical", value: 0 },
+              { name: "Business", value: 0 },
+              { name: "Design", value: 0 },
+              { name: "Other", value: 0 },
+            ], 
+          },
+        };
+        setStatsData(cleanedData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        setError("Failed to load statistics. Using default data.");
+        setStatsData(defaultStatsData);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (activeSection === "statistics") {
+      fetchStats();
+    }
+  }, [activeSection]);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
+      localStorage.setItem("darkMode", newMode);
+      return newMode;
+    });
+  };
 
   const renderSection = () => {
     switch (activeSection) {
@@ -707,64 +968,70 @@ const toggleDarkMode = () => {
         return (
           <div className="section-content">
             <h2>Overview Statistics</h2>
-            <div className="stats-grid">
-              <div className="stats-card">
-                <h3>Users Overview</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={statsData.users.roles}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="role" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="var(--primary-color)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="stats-card">
-                <h3>Course Categories</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={statsData.courses.categories}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="var(--accent-color)"
-                      label
-                    />
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="stats-card metric-group">
-                <div className="metric-box">
-                  <h4>Total Users</h4>
-                  <p className="metric-value">{statsData.users.total}</p>
+            {loading ? (
+              <p>Loading statistics...</p>
+            ) : error ? (
+              <p className="error-message">{error}</p>
+            ) : (
+              <div className="stats-grid">
+                <div className="stats-card">
+                  <h3>Users Overview</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={statsData.users.roles}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="role" />
+                      <YAxis tickFormatter={(value) => Math.floor(value)} /> {/* Entiers uniquement */}
+                      <Tooltip formatter={(value) => Math.floor(value)} /> {/* Entiers dans tooltips */}
+                      <Legend />
+                      <Bar dataKey="count" fill="var(--primary-color)" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="metric-box">
-                  <h4>Total Courses</h4>
-                  <p className="metric-value">{statsData.courses.total}</p>
+                <div className="stats-card">
+                  <h3>Course Categories</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={statsData.courses.categories}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="var(--accent-color)"
+                        label={({ name, value }) => `${name}: ${Math.floor(value)}`}
+                      />
+                      <Tooltip formatter={(value) => Math.floor(value)} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="metric-box">
-                  <h4>Skills Available</h4>
-                  <p className="metric-value">{statsData.skills.total}</p>
+                <div className="stats-card metric-group">
+                  <div className="metric-box">
+                    <h4>Total Users</h4>
+                    <p className="metric-value">{statsData.users.total}</p>
+                  </div>
+                  <div className="metric-box">
+                    <h4>Total Courses</h4>
+                    <p className="metric-value">{statsData.courses.total}</p>
+                  </div>
+                  <div className="metric-box">
+                    <h4>Skills Available</h4>
+                    <p className="metric-value">{statsData.skills.total}</p>
+                  </div>
+                </div>
+                <div className="stats-card">
+                  <h3>Trending Skills</h3>
+                  <ul className="trending-list">
+                    {statsData.skills.trending.map((skill, index) => (
+                      <li key={index} className="trending-item">
+                        <span className="trending-rank">#{index + 1}</span>
+                        {skill}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <div className="stats-card">
-                <h3>Trending Skills</h3>
-                <ul className="trending-list">
-                  {statsData.skills.trending.map((skill, index) => (
-                    <li key={index} className="trending-item">
-                      <span className="trending-rank">#{index + 1}</span>
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
           </div>
         );
       case "users":
@@ -878,59 +1145,60 @@ const toggleDarkMode = () => {
 
   return (
     <>
-      <button className="admin-darkmode-toggle" onClick={toggleDarkMode}>
-        {darkMode ? <i className="fas fa-sun"></i> : <i className="fas fa-moon"></i>}
-      </button>
-      <section className="admin-dashboard">
-        <aside className="dashboard-sidebar">
-          <h1 className="logo">SkillMinds Admin</h1>
-          <ul>
-            <li
-              className={activeSection === "statistics" ? "active" : ""}
-              onClick={() => setActiveSection("statistics")}
-            >
-              📊 Statistics
-            </li>
-            <li
-              className={activeSection === "users" ? "active" : ""}
-              onClick={() => setActiveSection("users")}
-            >
-              👥 Users
-            </li>
-            <li
-              className={activeSection === "courses" ? "active" : ""}
-              onClick={() => setActiveSection("courses")}
-            >
-              📚 Courses
-            </li>
-            <li
-              className={activeSection === "jobs" ? "active" : ""}
-              onClick={() => setActiveSection("jobs")}
-            >
-              💼 Jobs
-            </li>
-            <li
-              className={activeSection === "groups" ? "active" : ""}
-              onClick={() => setActiveSection("groups")}
-            >
-              👥 Groups
-            </li>
-            <li
-              className={activeSection === "events" ? "active" : ""}
-              onClick={() => setActiveSection("events")}
-            >
-              🗓 Events
-            </li>
-            <li
-              className={activeSection === "addSkill" ? "active" : ""}
-              onClick={() => setActiveSection("addSkill")}
-            >
-              ➕ Add Skill
-            </li>
-          </ul>
-        </aside>
-        <main className="dashboard-content">{renderSection()}</main>
-      </section>
+      <Header />
+      <div className="admin-dashboard-container">
+        <section className="admin-dashboard">
+          <aside className="dashboard-sidebar">
+            <h1 className="logo">SkillMinds Admin</h1>
+            <ul>
+              <li
+                className={activeSection === "statistics" ? "active" : ""}
+                onClick={() => setActiveSection("statistics")}
+              >
+                📊 Statistics
+              </li>
+              <li
+                className={activeSection === "users" ? "active" : ""}
+                onClick={() => setActiveSection("users")}
+              >
+                👥 Users
+              </li>
+              <li
+                className={activeSection === "courses" ? "active" : ""}
+                onClick={() => setActiveSection("courses")}
+              >
+                📚 Courses
+              </li>
+              <li
+                className={activeSection === "jobs" ? "active" : ""}
+                onClick={() => setActiveSection("jobs")}
+              >
+                💼 Jobs
+              </li>
+              <li
+                className={activeSection === "groups" ? "active" : ""}
+                onClick={() => setActiveSection("groups")}
+              >
+                👥 Groups
+              </li>
+              <li
+                className={activeSection === "events" ? "active" : ""}
+                onClick={() => setActiveSection("events")}
+              >
+                🗓 Events
+              </li>
+              <li
+                className={activeSection === "addSkill" ? "active" : ""}
+                onClick={() => setActiveSection("addSkill")}
+              >
+                ➕ Skills
+              </li>
+            </ul>
+          </aside>
+          <main className="dashboard-content">{renderSection()}</main>
+        </section>
+      </div>
+      <Footer />
     </>
   );
 };

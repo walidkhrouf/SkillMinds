@@ -15,23 +15,22 @@ const certificateImageSchema = new Schema({
   fileId: { type: Schema.Types.ObjectId }
 }, { _id: false });
 
-const linkedAccountsSchema = new Schema({
-  google: String,
-  facebook: String
-}, { _id: false });
-
 const userSchema = new Schema({
   userId: { type: String, required: true, unique: true },
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phoneNumber: String,
   password: { type: String, required: true },
-  role: { type: String, enum: ["learner", "mentor", "admin"], required: true },
+  role: { type: String, enum: ["learner", "mentor", "admin", "unverified mentor"], required: true },
   bio: String,
   location: String,
   profileImage: profileImageSchema,
-  certificateImage: certificateImageSchema, 
-  linkedAccounts: linkedAccountsSchema,
+  certificateImage: { type: [certificateImageSchema], default: [] },
+  linkedAccounts: {
+    google: String,
+    linkedin: String
+  },
+  hasChosenSkills: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

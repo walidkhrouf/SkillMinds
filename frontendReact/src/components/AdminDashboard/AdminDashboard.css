@@ -1,481 +1,860 @@
-/*----------------------------------------
-  CSS Variables & Global Settings
-----------------------------------------*/
 :root {
-  /* Colors */
-  --primary-color: #a47f18;         /* Warm Gold */
-  --secondary-color: #fff;          /* White */
-  --accent-color: #e2a23f;          /* Accent (for dark mode & hover) */
-  --light-bg: #ffffff;              /* Light background */
-  --background-color: #f8f8f8;       /* Page background */
-  --text-color: #333333;            /* Dark text */
-  
-  /* Sidebar Colors */
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #333333;
-  
-  /* Dark Mode Colors */
-  --dark-background: #1d1d1d;
-  --dark-content-bg: #2a2a2a;
-  --dark-sidebar-bg: #2a2a2a;
-  --dark-sidebar-text: #eeeeee;
-  
-  /* Misc */
-  --box-shadow: 0 5px 25px -2px rgba(0, 0, 0, 0.1);
-  --transition-speed: 0.5s;
-  --font-family: "Roboto", sans-serif;
+  --primary-color: #ff6f61; /* Coral red */
+  --secondary-color: #ffffff; /* White */
+  --accent-color: #48c774; /* Fresh green */
+  --light-bg: #f9fafc; /* Soft off-white */
+  --background-color: #eef2f6; /* Light blue-gray */
+  --text-color: #1a202c; /* Deep charcoal */
+  --sidebar-bg: linear-gradient(135deg, #2d3748, #1a202c); /* Dark slate gradient */
+  --sidebar-text: #e2e8f0; /* Light slate */
+  --dark-background: #0d1219; /* Deep midnight blue */
+  --dark-content-bg: #1a202c; /* Dark gray-blue */
+  --dark-sidebar-bg: linear-gradient(135deg, #1a202c, #2d3748);
+  --dark-sidebar-text: #e2e8f0;
+  --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.4s;
+  --font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --header-height: 70px;
 }
 
-/*----------------------------------------
-  Global Styles
-----------------------------------------*/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-family);
   background: var(--background-color);
   color: var(--text-color);
-  margin: 0;
-  padding: 0;
+  line-height: 1.7;
+  overflow-x: hidden;
+  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
 body.dark-mode {
   background: var(--dark-background);
-  color: #eee;
+  color: var(--dark-sidebar-text);
 }
 
-/*----------------------------------------
-  Admin Dashboard Layout
-----------------------------------------*/
+html,
+body {
+  height: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.admin-dashboard-container {
+  flex: 1;
+  display: flex;
+  background: var(--background-color);
+  transition: background var(--transition-speed) ease;
+  padding-top: var(--header-height);
+}
+
 .admin-dashboard {
   display: flex;
-  min-height: 100vh;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height) - 60px);
   background: var(--background-color);
+  box-shadow: var(--box-shadow);
   transition: background var(--transition-speed) ease;
 }
 
-/*----------------------------------------
-  Sidebar
-----------------------------------------*/
 .dashboard-sidebar {
-  width: 280px;
+  width: 300px;
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
-  padding: 2rem;
-  box-shadow: var(--box-shadow);
-  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+  padding: 2rem 1.5rem;
+  transition: width var(--transition-speed) ease;
+  animation: slideInLeft 0.6s ease-out;
 }
 
 .dashboard-sidebar .logo {
-  font-size: 2.4rem;
-  font-weight: bold;
-  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent-color);
   text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--accent-color);
+  margin-bottom: 2.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  animation: fadeInDown 0.8s ease-out;
 }
 
 .dashboard-sidebar ul {
   list-style: none;
-  padding: 0;
-  margin: 0;
 }
 
 .dashboard-sidebar ul li {
   padding: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all var(--transition-speed) ease;
 }
 
 .dashboard-sidebar ul li:hover,
 .dashboard-sidebar ul li.active {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  color: var(--secondary-color);
-  transform: translateX(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: var(--accent-color);
+  color: #fff;
+  transform: translateX(10px) scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  animation: pulse 0.5s infinite alternate;
 }
 
 body.dark-mode .dashboard-sidebar {
   background: var(--dark-sidebar-bg);
-  color: var(--dark-sidebar-text);
 }
 
 body.dark-mode .dashboard-sidebar .logo {
-  color: var(--accent-color);
-}
-
-body.dark-mode .dashboard-sidebar ul li {
-  color: var(--dark-sidebar-text);
+  color: var(--primary-color);
 }
 
 body.dark-mode .dashboard-sidebar ul li:hover,
 body.dark-mode .dashboard-sidebar ul li.active {
-  background: var(--accent-color);
-  color: #1d1d1d;
+  background: var(--primary-color);
+  color: var(--dark-background);
 }
 
-/*----------------------------------------
-  Content Area
-----------------------------------------*/
 .dashboard-content {
   flex: 1;
-  padding: 2rem;
-  margin: 1.5rem;
-  border-radius: 15px;
+  padding: 2.5rem;
   background: var(--light-bg);
-  box-shadow: var(--box-shadow);
-  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+  transition: all var(--transition-speed) ease;
+  animation: fadeIn 0.6s ease-out;
+  overflow-y: auto;
 }
 
 body.dark-mode .dashboard-content {
   background: var(--dark-content-bg);
-  color: #eee;
+  color: var(--dark-sidebar-text);
 }
 
-/*----------------------------------------
-  Section Content
-----------------------------------------*/
 .section-content {
-  margin-bottom: 40px;
-  animation: popIn 0.5s ease-out both;
+  margin-bottom: 3rem;
+  animation: zoomIn 0.5s ease-out;
 }
 
 .section-content h2 {
-  font-size: 1.9rem;
-  margin-bottom: 20px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
   color: var(--primary-color);
-  border-bottom: 2px solid var(--accent-color);
-  padding-bottom: 10px;
-  transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.section-content h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--accent-color);
+  border-radius: 2px;
+  transition: width var(--transition-speed) ease;
+}
+
+.section-content h2:hover::after {
+  width: 100px;
 }
 
 body.dark-mode .section-content h2 {
   color: var(--accent-color);
-  border-color: var(--accent-color);
 }
 
-/*----------------------------------------
-  Data Table Styles
-----------------------------------------*/
-table {
+body.dark-mode .section-content h2::after {
+  background: var(--primary-color);
+}
+
+table,
+.user-table,
+.skill-table,
+.data-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1.5rem;
   background: var(--light-bg);
-  transition: background var(--transition-speed) ease;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+  animation: slideUp 0.6s ease-out;
 }
 
 table th,
-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-  transition: background var(--transition-speed) ease;
-}
-
-table th {
-  background: var(--primary-color);
-  color: var(--secondary-color);
-}
-
-body.dark-mode table {
-  background: #3a3a3a;
-}
-
-body.dark-mode table th {
-  background: var(--accent-color);
-  color: #1d1d1d;
-}
-
-/*----------------------------------------
-  User Table
-----------------------------------------*/
-.user-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
+table td,
 .user-table th,
-.user-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #ddd;
+.user-table td,
+.skill-table th,
+.skill-table td,
+.data-table th,
+.data-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.user-table th {
+table th,
+.user-table th,
+.skill-table th,
+.data-table th {
   background: var(--primary-color);
   color: var(--secondary-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+table tr,
+.user-table tr,
+.skill-table tr,
+.data-table tr {
+  transition: all var(--transition-speed) ease;
+}
+
+table tr:hover,
+.user-table tr:hover,
+.skill-table tr:hover,
+.data-table tr:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: scale(1.01);
 }
 
 .user-table tr {
   cursor: pointer;
-  transition: background 0.3s ease;
 }
 
-.user-table tr:hover {
-  background: #f2f2f2;
+.user-table .expanded {
+  background: var(--secondary-color);
 }
 
-body.dark-mode .user-table tr:hover {
-  background: #444;
+.user-table .expanded-user-details {
+  padding: 2rem;
+  background: var(--secondary-color);
+  border-top: 2px solid var(--accent-color);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+  animation: slideDown 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
 }
 
-/*----------------------------------------
-  User Details Card
-----------------------------------------*/
-.user-details-card {
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--light-bg);
-  border: 1px solid #ddd;
+body.dark-mode .user-table .expanded {
+  background: var(--dark-content-bg);
+}
+
+body.dark-mode .user-table .expanded-user-details {
+  background: var(--dark-content-bg);
+  border-top-color: var(--primary-color);
+}
+
+.expanded-user-details .user-details-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  flex-grow: 1;
+}
+
+.expanded-user-details .user-details-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.expanded-user-details .label {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.expanded-user-details .value {
+  font-size: 1rem;
+  color: var(--text-color);
+  word-break: break-word;
+}
+
+.expanded-user-details input,
+.expanded-user-details select,
+.expanded-user-details textarea {
+  padding: 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all var(--transition-speed) ease;
+  width: 100%;
+}
+
+.expanded-user-details input:focus,
+.expanded-user-details select:focus,
+.expanded-user-details textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 8px rgba(72, 199, 116, 0.3);
+  outline: none;
+}
+
+.expanded-user-details textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+body.dark-mode .expanded-user-details .label {
+  color: var(--accent-color);
+}
+
+body.dark-mode .expanded-user-details .value {
+  color: var(--dark-sidebar-text);
+}
+
+body.dark-mode .expanded-user-details input,
+body.dark-mode .expanded-user-details select,
+body.dark-mode .expanded-user-details textarea {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: var(--dark-sidebar-text);
+}
+
+.user-skills-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+
+.user-skills-list.wants-to-learn .skill-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.user-skills-list.wants-to-learn .skill-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.user-skills-list.wants-to-learn .skill-name {
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+body.dark-mode .user-skills-list.wants-to-learn .skill-name {
+  color: var(--dark-sidebar-text); 
+}
+
+.user-skills-list.has-skills .skill-item {
+  margin-bottom: 1.5rem;
+}
+
+.skill-card {
+  background: var(--secondary-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-speed) ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.skill-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-color);
+}
+
+.skill-card .skill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.skill-card .skill-name {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.skill-card .verification-status {
+  font-size: 0.9rem;
+  color: #718096;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.skill-card .skill-certificate {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.skill-card .skill-certificate img {
+  max-width: 250px;
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition-speed) ease;
+  border: 2px solid var(--accent-color);
+}
+
+.skill-card .skill-certificate img:hover {
+  transform: scale(1.05);
+}
+
+.skill-card .skill-certificate p {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
+.skill-card .skill-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.skill-card button {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.skill-card .verify-btn {
+  background: var(--accent-color);
+  color: var(--secondary-color);
+}
+
+.skill-card .verify-btn:hover {
+  background: #3ba55d;
+  transform: scale(1.05);
+}
+
+.skill-card .delete-btn {
+  background: #e53e3e;
+  color: var(--secondary-color);
+}
+
+.skill-card .delete-btn:hover {
+  background: #c53030;
+  transform: scale(1.05);
+}
+
+body.dark-mode .skill-card {
+  background: #2d3748;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .skill-card .skill-name {
+  color: var(--accent-color);
+}
+
+body.dark-mode .skill-card .skill-certificate p {
+  color: var(--dark-sidebar-text);
+}
+
+body.dark-mode .skill-card .verification-status {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--dark-sidebar-text);
+}
+
+.user-image-container {
+  margin-top: 1.5rem;
+}
+
+.user-image-container img {
+  max-width: 300px;
+  width: 100%;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transition: background var(--transition-speed) ease;
+  transition: transform var(--transition-speed) ease;
+  margin-bottom: 1rem;
 }
 
-body.dark-mode .user-details-card {
-  background: #353535;
-  border-color: #555;
-  color: #eee;
+.user-image-container img:hover {
+  transform: scale(1.05);
 }
 
-.user-details-header {
+.user-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .user-actions button {
-  margin-left: 10px;
-  padding: 5px 10px;
-  border: none;
+  padding: 0.75rem 1.5rem;
   background: var(--primary-color);
   color: var(--secondary-color);
-  border-radius: 4px;
+  border: none;
+  border-radius: 25px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-speed) ease;
 }
 
 .user-actions button:hover {
   background: var(--accent-color);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.user-details-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+body.dark-mode .user-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 
-.user-details-row {
-  flex: 1 1 45%;
-  display: flex;
-  align-items: center;
+body.dark-mode table,
+body.dark-mode .user-table,
+body.dark-mode .skill-table,
+body.dark-mode .data-table {
+  background: var(--dark-content-bg);
 }
 
-.user-details-row .label {
-  font-weight: bold;
-  width: 100px;
+body.dark-mode table th,
+body.dark-mode .user-table th,
+body.dark-mode .skill-table th,
+body.dark-mode .data-table th {
+  background: var(--accent-color);
+  color: var(--dark-background);
 }
 
-.user-details-row .value {
-  flex: 1;
+body.dark-mode table tr:hover,
+body.dark-mode .user-table tr:hover,
+body.dark-mode .skill-table tr:hover,
+body.dark-mode .data-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.user-image-container {
-  width: 100%;
-  text-align: center;
-  margin-top: 15px;
+.user-manager {
+  padding: 1rem 0;
+  position: relative;
 }
 
-.user-image-container img {
-  max-width: 200px;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Certificate Image */
-.user-certificate-container img {
-  width: 300px;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-
-/*----------------------------------------
-  Skill Form
-----------------------------------------*/
 .skill-form {
-  margin-bottom: 30px;
-  padding: 20px;
+  margin-bottom: 2.5rem;
+  padding: 2rem;
   background: var(--light-bg);
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  transition: background var(--transition-speed) ease;
+  border-radius: 12px;
+  box-shadow: var(--box-shadow);
+  animation: slideInRight 0.6s ease-out;
 }
 
 body.dark-mode .skill-form {
-  background: #444;
-  border-color: #666;
-  color: #eee;
+  background: var(--dark-content-bg);
 }
 
 .skill-form div {
-  margin-bottom: 15px;
+  margin-bottom: 1.5rem;
 }
 
 .skill-form label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
   display: block;
+  color: var(--primary-color);
+}
+
+body.dark-mode .skill-form label {
+  color: var(--accent-color);
 }
 
 .skill-form input,
 .skill-form select,
 .skill-form textarea {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+  padding: 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all var(--transition-speed) ease;
 }
 
-body.dark-mode .skill-form input,
-body.dark-mode .skill-form select,
-body.dark-mode .skill-form textarea {
-  background: #555;
-  color: #eee;
-  border: 1px solid #666;
+.skill-form input:focus,
+.skill-form select:focus,
+.skill-form textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 8px rgba(72, 199, 116, 0.3);
 }
 
 .skill-form button {
-  padding: 10px 20px;
+  padding: 0.75rem 1.5rem;
   background: var(--primary-color);
   color: var(--secondary-color);
   border: none;
-  border-radius: 4px;
+  border-radius: 25px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: all var(--transition-speed) ease;
 }
 
 .skill-form button:hover {
   background: var(--accent-color);
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.form-message {
-  margin-top: 10px;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.stats-card {
+  padding: 2rem;
+  background: var(--light-bg);
+  border-radius: 12px;
+  box-shadow: var(--box-shadow);
+  transition: transform var(--transition-speed) ease;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+}
+
+body.dark-mode .stats-card {
+  background: var(--dark-content-bg);
+}
+
+.stats-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .stats-card h3 {
   color: var(--accent-color);
 }
 
-/*----------------------------------------
-  Skill Table
-----------------------------------------*/
-.skill-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+.metric-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.skill-table th,
-.skill-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
+.metric-box {
+  text-align: center;
 }
 
-.skill-table th {
-  background: var(--primary-color);
+.metric-box h4 {
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+body.dark-mode .metric-box h4 {
+  color: var(--dark-sidebar-text);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+body.dark-mode .metric-value {
+  color: var(--accent-color);
+}
+
+.trending-list {
+  list-style: none;
+}
+
+.trending-item {
+  padding: 0.75rem 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.trending-rank {
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-right: 1rem;
+  background: rgba(72, 199, 116, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.message {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: var(--box-shadow);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.5s ease-out 4.5s;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.message.success {
+  background: var(--accent-color);
+  color: var(--dark-background);
+}
+
+.message.error {
+  background: #e53e3e;
   color: var(--secondary-color);
 }
 
-body.dark-mode .skill-table {
-  background: #3a3a3a;
+.message.warning {
+  background: #f6ad55;
+  color: var(--dark-background);
 }
 
-body.dark-mode .skill-table th {
+body.dark-mode .message.success {
   background: var(--accent-color);
-  color: #1d1d1d;
+  color: var(--dark-background);
 }
 
-/*----------------------------------------
-  Admin Dark Mode Toggle
-----------------------------------------*/
-.admin-darkmode-toggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: var(--secondary-color);
-  border: none;
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.5s ease, transform 0.3s;
-  z-index: 100;
+body.dark-mode .message.error {
+  background: #e53e3e;
+  color: var(--secondary-color);
 }
 
-.admin-darkmode-toggle:hover {
-  transform: scale(1.1);
+body.dark-mode .message.warning {
+  background: #f6ad55;
+  color: var(--dark-background);
 }
 
-body.dark-mode .admin-darkmode-toggle {
-  background: #444;
-  color: #eee;
+/* Animations */
+@keyframes slideInLeft {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
 }
 
-/*----------------------------------------
-  Custom Button Styles
-----------------------------------------*/
-/* Modify/Delete buttons in user skills list */
-.skill-item button {
-  margin-left: 8px;
-  padding: 4px 8px;
-  background: #d9534f; /* Bright red for delete */
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+@keyframes slideInRight {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
 }
 
-.skill-item button:hover {
-  background: #c9302c;
-  transform: scale(1.05);
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-/*----------------------------------------
-  Animations
-----------------------------------------*/
-@keyframes popIn {
-  0% {
-    transform: scale(0.95);
-    opacity: 0;
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(50px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(-10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    width: 250px;
   }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
-/*----------------------------------------
-  Responsive Styles
-----------------------------------------*/
-@media screen and (max-width: 768px) {
+@media (max-width: 768px) {
   .admin-dashboard {
     flex-direction: column;
   }
   .dashboard-sidebar {
     width: 100%;
-    text-align: center;
-    margin-bottom: 20px;
+    padding: 1.5rem;
   }
   .dashboard-content {
-    margin: 10px;
-    padding: 2rem;
+    padding: 1.5rem;
   }
   .stats-grid {
     grid-template-columns: 1fr;
   }
+  .expanded-user-details .user-details-body {
+    grid-template-columns: 1fr;
+  }
+  .skill-card {
+    padding: 1rem;
+  }
+  .skill-card .skill-certificate img {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-sidebar ul li {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+  .section-content h2 {
+    font-size: 1.5rem;
+  }
+  .user-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  .skill-card .skill-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .skill-card .skill-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.error-message {
+  color: #e53e3e;
+  font-weight: 500;
+  text-align: center;
 }

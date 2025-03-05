@@ -101,7 +101,7 @@ body.dark-mode .auth-container .auth-btn {
   font-size: 14px;
 }
 
-.social-btn.facebook {
+.social-btn.linkedin {
   background-color: #3b5998;
   color: #fff;
 }
@@ -167,4 +167,41 @@ body.dark-mode .auth-container .auth-btn {
 .error {
   color: red;
   text-align: center;
+}
+
+/* Message de réinitialisation en rouge */
+.reset-message {
+  color: #ff0000; /* Rouge vif */
+  text-align: center;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+/* Message du compte à rebours */
+.countdown-message {
+  color: #888; /* Gris pour le contraste */
+  text-align: center;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Style du lien Forgot Password quand il est désactivé */
+.forgot-password a.disabled-link {
+  color: #888; /* Gris clair pour indiquer qu'il est désactivé */
+  pointer-events: none; /* Empêche le clic */
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+/* Mode sombre : ajuster les couleurs pour rester lisibles */
+body.dark-mode .reset-message {
+  color: #ff3333; /* Rouge légèrement plus clair pour le mode sombre */
+}
+
+body.dark-mode .countdown-message {
+  color: #ccc; /* Gris clair pour le mode sombre */
+}
+
+body.dark-mode .forgot-password a.disabled-link {
+  color: #666; /* Gris foncé pour le mode sombre */
 }

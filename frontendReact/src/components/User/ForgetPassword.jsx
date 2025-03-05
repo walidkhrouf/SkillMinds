@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom"; // useParams for dynamic token
+import { useNavigate, useParams } from "react-router-dom"; 
 import axios from "axios";
 import { NavLink } from "react-router-dom";
 import "./ForgetPassword.css"; 
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
-  const { id, token } = useParams(); // Extract id and token from URL parameters
+  const { id, token } = useParams(); 
   const [formData, setFormData] = useState({
     password: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false); 
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,7 +20,7 @@ const ForgetPassword = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setLoading(true); // Start loading
+    setLoading(true);
   
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   
@@ -37,41 +37,41 @@ const ForgetPassword = () => {
       return;
     }
   
-    // Ensure that password is being sent correctly
-    axios.post(`http://localhost:5000/api/users/reset-password/${id}/${token}`, {
-      password: formData.password,
-    })
-    .then(res => {
-      if (res.data.message === "Password reset successfully!") {
-        setSuccess("Your password has been reset successfully!");
+    // Send the request to reset the password
+    axios
+      .post(`http://localhost:5000/api/users/reset-password/${id}/${token}`, {
+        password: formData.password,
+      })
+      .then((res) => {
+        if (res.data.message === "Password reset successfully!") {
+          setSuccess("Your password has been reset successfully!");
   
-        // Redirect to sign-in page after a short delay
-        setTimeout(() => {
-          navigate("/signin");
-        }, 2000);
-      } else {
-        // Handle cases where the reset operation failed
-        setError(res.data.message);
-      }
-    })
-    .catch(err => {
-        console.error('Reset password error:', err);
-      
-        // Check if the error has a response
-        if (err.response) {
-          // Server responded with a status other than 200-299
+          // Redirect to the login page after 2 seconds
+          setTimeout(() => {
+            navigate("/signin");
+          }, 2000);
+        } else {
+          setError(res.data.message);
+        }
+      })
+      .catch((err) => {
+        console.error("Reset password error:", err);
+  
+        // Handle token expiration
+        if (err.response?.data?.expired) {
+          setError("The password reset link has expired. Please request a new one.");
+          navigate("/forgot-password"); // Redirect to the forgot password page
+        } else if (err.response) {
           setError(err.response.data.message || "Failed to reset password. Please try again later.");
         } else if (err.request) {
-          // Request was made but no response received
           setError("No response from server. Please check your network connection.");
         } else {
-          // Something happened in setting up the request
           setError("An error occurred: " + err.message);
         }
       })
-    .finally(() => {
-      setLoading(false); // Stop loading
-    });
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
