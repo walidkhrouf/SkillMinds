@@ -10,11 +10,19 @@ const cookieParser = require("cookie-parser");
 const adminRoutes = require("./Routes/adminRoute");
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
-require("dotenv").config();
+const groupeRoutes = require("./Routes/GestionGroupeRoute");
+const User = require("./models/User"); // Add User model
+require("dotenv").config({ path: __dirname + "/.env" });
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+  console.log("Using fallback JWT_SECRET");
+}
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 require("./config/databaseConnection");
 
 const app = express();
-
+console.log("AZURE_TTS_KEY:", process.env.AZURE_TTS_KEY);
+console.log("AZURE_TTS_REGION:", process.env.AZURE_TTS_REGION);
 app.use(morgan("dev"));
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -113,6 +121,9 @@ app.get('/linkedin-callback', require('./Controllers/UserController').linkedinCa
 function generateToken(user) {
   return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 }
+
+app.use("/api/groups", groupeRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

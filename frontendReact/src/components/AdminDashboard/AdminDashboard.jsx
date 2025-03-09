@@ -25,11 +25,6 @@ const dummyJobs = [
   { id: 2, title: "Backend Developer", company: "Dev Solutions", location: "Onsite" },
 ];
 
-const dummyGroups = [
-  { id: 1, name: "React Enthusiasts", members: 120 },
-  { id: 2, name: "Node.js Developers", members: 80 },
-];
-
 const dummyEvents = [
   { id: 1, name: "React Conference", date: "2023-12-01" },
   { id: 2, name: "Node.js Meetup", date: "2023-11-15" },
@@ -86,18 +81,24 @@ const UserManager = () => {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    async function fetchUsers() {
+    const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/users/all");
+        const response = await fetch("http://localhost:5000/api/users/all", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        });
         if (response.ok) {
           const data = await response.json();
           setUsers(data);
         }
       } catch (err) {
         console.error(err);
+        showMessage("Error fetching users", "error");
       }
-    }
+    };
+
     fetchUsers();
+    const interval = setInterval(fetchUsers, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const showMessage = (text, type = "success") => {
@@ -113,12 +114,16 @@ const UserManager = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`);
+      const response = await fetch(`http://localhost:5000/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setSelectedUser(data);
         setEditingUserId(null);
-        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${id}`);
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
           setUserSkills(skillsData);
@@ -126,6 +131,7 @@ const UserManager = () => {
       }
     } catch (err) {
       console.error(err);
+      showMessage("Error fetching user details", "error");
     }
   };
 
@@ -140,13 +146,16 @@ const UserManager = () => {
       location: user.location || "",
     });
     try {
-      const response = await fetch("http://localhost:5000/api/admin/skills");
+      const response = await fetch("http://localhost:5000/api/admin/skills", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+      });
       if (response.ok) {
         const skillsData = await response.json();
         setAvailableSkills(skillsData);
       }
     } catch (error) {
       console.error(error);
+      showMessage("Error fetching skills", "error");
     }
     const currentSkillIds = userSkills.map((item) => item.skillId?._id);
     setAssignedSkillIds(currentSkillIds);
@@ -175,7 +184,10 @@ const UserManager = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/userskills`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify({ userId, skills: skillsPayload }),
       });
       if (response.ok) {
@@ -198,18 +210,26 @@ const UserManager = () => {
       const skillName = skillObj?.skillId?.name || "Skill";
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify({ verificationStatus: "verified" }),
       });
       if (response.ok) {
-        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
           setUserSkills(skillsData);
         }
         await fetch("http://localhost:5000/api/notifications", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          },
           body: JSON.stringify({
             userId: selectedUser._id,
             type: "SKILL_VERIFICATION",
@@ -231,7 +251,10 @@ const UserManager = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify(editingData),
       });
       const data = await response.json();
@@ -257,7 +280,9 @@ const UserManager = () => {
         ];
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
-          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
+          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          });
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json();
             setUserSkills(skillsData);
@@ -282,9 +307,12 @@ const UserManager = () => {
 
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
       });
       if (response.ok) {
-        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
           setUserSkills(skillsData);
@@ -292,7 +320,10 @@ const UserManager = () => {
           if (skillToDelete && skillToDelete.skillType === "has") {
             await fetch("http://localhost:5000/api/notifications", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+              },
               body: JSON.stringify({
                 userId: selectedUser._id,
                 type: "SKILL_REMOVAL",
@@ -317,6 +348,7 @@ const UserManager = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
       });
       const data = await response.json();
       if (response.ok) {
@@ -336,7 +368,10 @@ const UserManager = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify({ role: "mentor" }),
       });
       const data = await response.json();
@@ -352,14 +387,19 @@ const UserManager = () => {
 
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
-          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
+          const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          });
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json();
             setUserSkills(skillsData);
           }
           const notifRes = await fetch("http://localhost:5000/api/notifications", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+            },
             body: JSON.stringify({
               userId: data._id,
               type: "SKILL_VERIFICATION",
@@ -605,36 +645,37 @@ const SkillManager = () => {
   });
 
   useEffect(() => {
-    async function fetchCategories() {
+    const fetchCategoriesAndSkills = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/admin/skillCategories");
-        const data = await response.json();
-        setCategories(data);
-        if (data.length > 0) {
-          setFormData((prev) => ({ ...prev, category: data[0] }));
-        }
-      } catch (err) {
-        console.error("Error fetching skill categories:", err);
-      }
-    }
-    fetchCategories();
-  }, []);
+        const [categoriesResponse, skillsResponse] = await Promise.all([
+          fetch("http://localhost:5000/api/admin/skillCategories", {
+            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          }),
+          fetch("http://localhost:5000/api/admin/skills", {
+            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          }),
+        ]);
 
-  useEffect(() => {
-    async function fetchSkills() {
-      try {
-        const response = await fetch("http://localhost:5000/api/admin/skills");
-        if (response.ok) {
-          const data = await response.json();
+        if (categoriesResponse.ok) {
+          const data = await categoriesResponse.json();
+          setCategories(data);
+          if (data.length > 0 && !formData.category) {
+            setFormData((prev) => ({ ...prev, category: data[0] }));
+          }
+        }
+        if (skillsResponse.ok) {
+          const data = await skillsResponse.json();
           setSkills(data);
-        } else {
-          console.error("Error fetching skills:", response.statusText);
         }
       } catch (err) {
-        console.error("Error fetching skills:", err);
+        console.error("Error fetching skill data:", err);
+        showMessage("Error fetching skills or categories", "error");
       }
-    }
-    fetchSkills();
+    };
+
+    fetchCategoriesAndSkills();
+    const interval = setInterval(fetchCategoriesAndSkills, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const showMessage = (text, type = "success") => {
@@ -653,7 +694,10 @@ const SkillManager = () => {
     try {
       const response = await fetch("http://localhost:5000/api/admin/skills", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify({ name, category, description, tags: tagsArray }),
       });
       const data = await response.json();
@@ -683,7 +727,8 @@ const SkillManager = () => {
       const skillName = skillData.name;
 
       const usersWithSkillResponse = await fetch(
-        `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`
+        `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` } }
       );
       let usersWithSkill = [];
       if (usersWithSkillResponse.ok) {
@@ -696,6 +741,7 @@ const SkillManager = () => {
 
       const deleteSkillResponse = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
       });
       if (!deleteSkillResponse.ok) {
         const deleteData = await deleteSkillResponse.json();
@@ -704,7 +750,10 @@ const SkillManager = () => {
 
       const deleteUserSkillsResponse = await fetch(
         `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        }
       );
       if (!deleteUserSkillsResponse.ok) {
         console.warn("Error deleting UserSkill references:", deleteUserSkillsResponse.statusText);
@@ -717,7 +766,10 @@ const SkillManager = () => {
         const notificationPromises = usersWithHasSkill.map((userSkill) =>
           fetch("http://localhost:5000/api/notifications", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+            },
             body: JSON.stringify({
               userId: userSkill.userId,
               type: "SKILL_REMOVAL",
@@ -758,7 +810,10 @@ const SkillManager = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
         body: JSON.stringify({
           name: editingData.name,
           category: editingData.category,
@@ -886,6 +941,303 @@ const SkillManager = () => {
   );
 };
 
+const GroupManager = () => {
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [editingGroupId, setEditingGroupId] = useState(null);
+  const [editingData, setEditingData] = useState({ name: "" });
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const response = await fetch("http://localhost:5000/api/admin/groups", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGroups(data);
+        } else {
+          console.error("Error fetching groups:", response.statusText);
+          showMessage("Error fetching groups", "error");
+        }
+      } catch (err) {
+        console.error("Error fetching groups:", err);
+        showMessage("Error fetching groups", "error");
+      }
+    };
+
+    fetchGroups();
+    const interval = setInterval(fetchGroups, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleGroupClick = (groupId) => {
+    if (selectedGroup && selectedGroup._id === groupId) {
+      setSelectedGroup(null);
+      setSelectedPost(null);
+      setEditingGroupId(null);
+      return;
+    }
+    const group = groups.find((g) => g._id === groupId);
+    setSelectedGroup(group);
+    setSelectedPost(null);
+    setEditingGroupId(null);
+  };
+
+  const handlePostClick = (postId) => {
+    if (selectedPost && selectedPost._id === postId) {
+      setSelectedPost(null);
+      return;
+    }
+    const post = selectedGroup.posts.find((p) => p._id === postId);
+    setSelectedPost(post);
+  };
+
+  const startEditing = (group) => {
+    setEditingGroupId(group._id);
+    setEditingData({ name: group.name });
+  };
+
+  const cancelEditing = () => {
+    setEditingGroupId(null);
+    setEditingData({ name: "" });
+  };
+
+  const handleEditingChange = (e) => {
+    setEditingData({ ...editingData, [e.target.name]: e.target.value });
+  };
+
+  const saveEditedGroup = async (groupId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/admin/groups/${groupId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editingData.name }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setGroups(groups.map((g) => (g._id === groupId ? { ...g, name: data.group.name } : g)));
+        setSelectedGroup({ ...selectedGroup, name: data.group.name });
+        setEditingGroupId(null);
+        showMessage("✅ Group name updated successfully");
+      } else {
+        showMessage(data.message || "Error updating group", "error");
+      }
+    } catch (err) {
+      console.error("Error updating group:", err);
+      showMessage("Error updating group", "error");
+    }
+  };
+
+  const deleteGroup = async (groupId) => {
+    if (!window.confirm("Are you sure you want to delete this group?")) return;
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/admin/groups/${groupId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setGroups(groups.filter((g) => g._id !== groupId));
+        setSelectedGroup(null);
+        showMessage("🗑 Group deleted successfully");
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error deleting group", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting group:", err);
+      showMessage("Error deleting group", "error");
+    }
+  };
+
+  const deleteGroupPost = async (groupId, postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/admin/groups/${groupId}/posts/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setGroups(groups.map((g) => 
+          g._id === groupId 
+            ? { ...g, posts: g.posts.filter((p) => p._id !== postId), postCount: g.postCount - 1 }
+            : g
+        ));
+        setSelectedGroup({ 
+          ...selectedGroup, 
+          posts: selectedGroup.posts.filter((p) => p._id !== postId),
+          postCount: selectedGroup.postCount - 1 
+        });
+        setSelectedPost(null);
+        showMessage("🗑 Post deleted successfully");
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error deleting post", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      showMessage("Error deleting post", "error");
+    }
+  };
+
+  return (
+    <div className="group-manager">
+      {message && (
+        <Message
+          message={message.text}
+          type={message.type}
+          onClose={() => setMessage(null)}
+        />
+      )}
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Members</th>
+            <th>Posts</th>
+            <th>Reports</th>
+            <th>Created By</th>
+            <th>Privacy</th>
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map((group) => (
+            <React.Fragment key={group._id}>
+              <tr onClick={() => handleGroupClick(group._id)} className="group-row">
+                <td>{group.name}</td>
+                <td>{group.memberCount || 0}</td>
+                <td>{group.postCount || 0}</td>
+                <td>{group.reports?.length || 0}</td>
+                <td>{group.createdBy?.username || "Unknown"}</td>
+                <td>{group.privacy}</td>
+              </tr>
+              {selectedGroup && selectedGroup._id === group._id && (
+                <tr className="expanded">
+                  <td colSpan="6">
+                    <div className="expanded-group-details">
+                      <div className="group-details-body">
+                        <div className="group-details-row">
+                          <span className="label">Group Name:</span>
+                          {editingGroupId === group._id ? (
+                            <input
+                              type="text"
+                              name="name"
+                              value={editingData.name}
+                              onChange={handleEditingChange}
+                            />
+                          ) : (
+                            <span className="value">{group.name}</span>
+                          )}
+                        </div>
+                        <div className="group-details-row">
+                          <span className="label">Description:</span>
+                          <span className="value">{group.description || "N/A"}</span>
+                        </div>
+                        <div className="group-details-row">
+                          <span className="label">Privacy:</span>
+                          <span className="value">{group.privacy}</span>
+                        </div>
+                        <div className="group-details-row">
+                          <span className="label">Created At:</span>
+                          <span className="value">{new Date(group.createdAt).toLocaleString()}</span>
+                        </div>
+                        <div className="group-details-row">
+                          <span className="label">Members ({group.memberCount || 0}):</span>
+                          <div className="members-list">
+                            {group.members && group.members.length > 0 ? (
+                              group.members.map((member) => (
+                                <span key={member.id} className="member-item">
+                                  {member.username}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="value">No members</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="group-details-row">
+                          <span className="label">Posts ({group.postCount || 0}):</span>
+                          <div className="posts-container">
+                            {group.posts && group.posts.length > 0 ? (
+                              group.posts.map((post) => (
+                                <React.Fragment key={post._id}>
+                                  <div 
+                                    className="post-item"
+                                    onClick={() => handlePostClick(post._id)}
+                                  >
+                                    <span className="post-title">{post.title}</span>
+                                    <span className="post-meta">
+                                      {post.likesCount} Likes • {post.commentsCount} Comments
+                                    </span>
+                                  </div>
+                                  {selectedPost && selectedPost._id === post._id && (
+                                    <div className="post-details">
+                                      <p><strong>Subject:</strong> {post.subject}</p>
+                                      <p><strong>Content:</strong> {post.content}</p>
+                                      <p><strong>Likes:</strong> {post.likesCount}</p>
+                                      <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
+                                      <p><strong>Comments:</strong> {post.commentsCount}</p>
+                                      <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
+                                      <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
+                                      <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
+                                      <button 
+                                        className="delete-btn"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteGroupPost(group._id, post._id);
+                                        }}
+                                      >
+                                        🗑 Delete
+                                      </button>
+                                    </div>
+                                  )}
+                                </React.Fragment>
+                              ))
+                            ) : (
+                              <span className="value">No posts yet</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="group-actions">
+                        {editingGroupId !== group._id ? (
+                          <>
+                            <button onClick={() => startEditing(group)}>✏️ Edit</button>
+                            <button onClick={() => deleteGroup(group._id)}>🗑 Delete Group</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => saveEditedGroup(group._id)}>💾 Save</button>
+                            <button onClick={cancelEditing}>❌ Cancel</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
@@ -902,12 +1254,12 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    async function fetchStats() {
+    const fetchStats = async () => {
       try {
         setLoading(true);
         const response = await fetch("http://localhost:5000/api/admin/dashboard-stats", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
           },
         });
         if (!response.ok) {
@@ -931,7 +1283,7 @@ const AdminDashboard = () => {
               { name: "Business", value: 0 },
               { name: "Design", value: 0 },
               { name: "Other", value: 0 },
-            ], 
+            ],
           },
         };
         setStatsData(cleanedData);
@@ -943,9 +1295,12 @@ const AdminDashboard = () => {
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     if (activeSection === "statistics") {
       fetchStats();
+      const interval = setInterval(fetchStats, 5000); // Poll every 5 seconds
+      return () => clearInterval(interval);
     }
   }, [activeSection]);
 
@@ -980,8 +1335,8 @@ const AdminDashboard = () => {
                     <BarChart data={statsData.users.roles}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="role" />
-                      <YAxis tickFormatter={(value) => Math.floor(value)} /> {/* Entiers uniquement */}
-                      <Tooltip formatter={(value) => Math.floor(value)} /> {/* Entiers dans tooltips */}
+                      <YAxis tickFormatter={(value) => Math.floor(value)} />
+                      <Tooltip formatter={(value) => Math.floor(value)} />
                       <Legend />
                       <Bar dataKey="count" fill="var(--primary-color)" />
                     </BarChart>
@@ -1091,22 +1446,7 @@ const AdminDashboard = () => {
         return (
           <div className="section-content">
             <h2>Groups</h2>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Members</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dummyGroups.map((group) => (
-                  <tr key={group.id}>
-                    <td>{group.name}</td>
-                    <td>{group.members}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <GroupManager />
           </div>
         );
       case "events":
