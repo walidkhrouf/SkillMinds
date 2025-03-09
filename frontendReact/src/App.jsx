@@ -16,6 +16,15 @@ import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
+import GroupsList from "./components/Gestion_groupe/GroupsList.jsx";
+import CreateGroup from "./components/Gestion_groupe/CreateGroup.jsx";
+import CreateGroupPost from "./components/Gestion_groupe/CreateGroupPost.jsx";
+import GroupPosts from "./components/Gestion_groupe/GroupPosts.jsx";
+import GroupPostDetails from "./components/Gestion_groupe/GroupPostDetails.jsx";
+import GroupRequests from "./components/Gestion_groupe/GroupRequests"; 
+import EditGroup from "./components/Gestion_groupe/EditGroup.jsx";
+import GroupMembers from "./components/Gestion_groupe/GroupMembers.jsx";
+
 
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
@@ -50,7 +59,16 @@ const AppContent = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/groups/:groupId/edit" element={<EditGroup />} />
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
+        <Route path="/groups" element={<GroupsList />} />
+        <Route path="/groups/:groupId" element={<GroupPosts />} />
+        <Route path="/groups/:groupId/posts/:postId" element={<GroupPostDetails />} />
+        <Route path="/groups/:groupId/requests" element={<GroupRequests />} /> 
+        <Route path="/create-group" element={<CreateGroup />} />
+        <Route path="/groups/:groupId/post" element={<CreateGroupPost />} />
+        <Route path="/groups/:groupId/members" element={<GroupMembers />} />
+        
      
         <Route
           path="/admin"
