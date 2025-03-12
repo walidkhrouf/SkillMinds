@@ -1,0 +1,490 @@
+
+/* ================= Recruitement Section ================= */
+.recruitement {
+  padding: 50px 0;
+  background-color:rgb(232, 222, 215);
+}
+
+.recruitement .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* ================= View More Button ================= */
+.viewmore {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #a47f18;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+.viewmore:hover {
+  background-color: #8a6c1a;
+}
+
+/* ================= Job Offer Card ================= */
+.job-offers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.job-offer-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+  width: 300px;
+}
+
+.job-offer-card:hover {
+  transform: translateY(-5px);
+}
+
+.job-offer-card h3 {
+  font-size: 20px;
+  color: #333;
+}
+
+.job-offer-card p {
+  margin: 5px 0;
+  color: #666;
+}
+
+/* ================= Actions (Edit & Delete) ================= */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.edit-button, .delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.edit-button { color: #4CAF50; }
+.delete-button { color: #f44336; }
+
+.edit-button:hover { color: #388E3C; }
+.delete-button:hover { color: #D32F2F; }
+
+/* Styles pour la barre de recherche */
+.search-bar {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap; /* Permet un affichage réactif */
+}
+
+/* Styles pour le sélecteur de filtrage */
+.filter-select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+/* Styles pour le champ de saisie */
+.search-input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 300px;
+  max-width: 100%;
+}
+
+/* Styles pour le bouton de réinitialisation */
+.clear-button {
+  padding: 10px 20px;
+  background-color: #a47f18;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.clear-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.clear-button:hover:not(:disabled) {
+  background-color: #8a6c1a;
+}
+
+/* Styles pour les résultats vides */
+.no-results {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  margin-top: 20px;
+}
+/* ================= Horizontal Job Cards (Latest Jobs) ================= */
+.horizontal-cards {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.horizontal-cards .job-offer-card {
+  min-width: 300px;
+}
+
+/* ================= Responsive Design ================= */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-input, .filter-select {
+    width: 100%;
+  }
+
+  .job-offers-list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .horizontal-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+/* Conteneur principal du formulaire */
+.create-job-offer {
+  width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Titre du formulaire */
+.create-job-offer h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: rgb(78, 49, 6);
+  margin-bottom: 20px;
+}
+
+/* Conteneur des champs du formulaire */
+.create-job-offer form div {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+/* Labels des champs */
+.create-job-offer label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Champs de saisie */
+.create-job-offer input[type="text"],
+.create-job-offer textarea,
+.create-job-offer select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.create-job-offer input[type="text"]:focus,
+.create-job-offer textarea:focus,
+.create-job-offer select:focus {
+  border-color: #a47f18;
+  box-shadow: 0 0 5px rgba(164, 127, 24, 0.5);
+  outline: none;
+}
+
+
+
+/* Zone de texte (textarea) */
+.create-job-offer textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Bouton de soumission */
+.create-job-offer button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #a47f18;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.create-job-offer button[type="submit"]:hover {
+  background-color: #8a6c1a;
+}
+
+/* Style pour les messages d'erreur ou de succès (optionnel) */
+.create-job-offer .message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.create-job-offer .message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.create-job-offer .message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+
+
+
+/* src/components/Recruitement.css ou un fichier CSS dédié */
+
+/* Conteneur principal du formulaire */
+.apply-to-job {
+  width: 600px;
+  height: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Titre du formulaire */
+.apply-to-job h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Conteneur des champs du formulaire */
+.job-offer-form form div {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+/* Labels des champs */
+.job-offer-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Champs de saisie */
+.job-offer-form input[type="text"],
+.job-offer-form select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.job-offer-form input[type="text"]:focus,
+.job-offer-form select:focus {
+  border-color: #a47f18;
+  box-shadow: 0 0 5px rgba(164, 127, 24, 0.5);
+  outline: none;
+}
+
+/* Bouton de soumission */
+.job-offer-form button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #155724;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.job-offer-form button[type="submit"]:hover {
+  background-color: #8a6c1a;
+}
+
+/* Bouton annuler */
+.job-offer-form .cancel-button {
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #dc3545;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.job-offer-form .cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Conteneur principal du formulaire */
+.job-offer-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 500px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.job-offer-form h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Form Actions */
+.job-offer-form .form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.job-offer-form .form-actions button {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+
+/* Container principal */
+.apply-container {
+  width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Titre */
+.apply-container h2 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+/* Message d'erreur */
+.error-message {
+  color: #ff4d4d;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Message de succès */
+.success-message {
+  color: #28a745;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Formulaire */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+form label {
+  margin-bottom: 8px;
+}
+
+/* Zone de texte pour la lettre de motivation */
+form textarea {
+  height: 150px;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+/* Champ de fichier pour le CV */
+form input[type="file"] {
+  margin-bottom: 20px;
+}
+
+/* Bouton de soumission */
+form button {
+  background-color: #a47f18;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+form button:hover {
+  background-color: #a47f18;
+}

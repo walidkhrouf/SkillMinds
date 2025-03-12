@@ -412,3 +412,49 @@ export const testimonal = [
     cover: "./images/testo/t3.webp",
   },
 ]
+export const JobApplication = [
+  {
+    cover: "./images/skills.jpg",
+    name: "Ph.D Adrian Molises",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/skills.jpg",
+    name: "Ph.D Arthur MaGregor",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/skills.jpg",
+    name: "Ph.D Anna Hanzen",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/skills.jpg",
+    name: "Ph.D Brian Wooden",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  
+]
+export const JobOffer = [
+  {
+    cover: "./images/back1.jpg",
+    name: "Ph.D Adrian Molises",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/back1.jpg",
+    name: "Ph.D Arthur MaGregor",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/back1.jpg",
+    name: "Ph.D Anna Hanzen",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  {
+    cover: "./images/back1.jpg",
+    name: "Ph.D Brian Wooden",
+    work: "DEVELOPER AND LEAD INSTRUCTOR",
+  },
+  
+]

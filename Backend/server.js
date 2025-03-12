@@ -6,10 +6,11 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser"); 
+const cookieParser = require("cookie-parser");
 const adminRoutes = require("./Routes/adminRoute");
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
+const GestionRecruitementRoute = require("./Routes/GestionRecruitementRoute"); // Import des routes de gestion du recrutement
 require("dotenv").config();
 require("./config/databaseConnection");
 
@@ -21,13 +22,13 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
-app.use(cookieParser()); 
+app.use(cookieParser());
 app.use(
   session({
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } 
+    cookie: { secure: false }
   })
 );
 
@@ -35,7 +36,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
 
-
+// Configuration de Passport pour Google
 passport.use(
   new GoogleStrategy(
     {
@@ -49,7 +50,7 @@ passport.use(
   )
 );
 
-
+// Configuration de Passport pour LinkedIn
 passport.use(
   new LinkedInStrategy(
     {
@@ -83,12 +84,15 @@ passport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
+// Routes
 app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/recruitment", GestionRecruitementRoute); // Routes de gestion du recrutement
 app.disable("etag");
 
+// Authentification Google
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get(
@@ -107,17 +111,21 @@ app.get(
   }
 );
 
+// Authentification LinkedIn
 app.get('/auth/linkedin', require('./Controllers/UserController').linkedinLogin);
 app.get('/linkedin-callback', require('./Controllers/UserController').linkedinCallback);
 
+// Fonction pour générer un token JWT
 function generateToken(user) {
   return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 }
 
+// Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log("******************************************");
   console.log(`Express server running on port ${PORT}`);
   console.log("******************************************");
   console.log("User routes loaded");
+  console.log("Recruitment routes loaded"); // Indique que les routes de gestion du recrutement sont chargées
 });

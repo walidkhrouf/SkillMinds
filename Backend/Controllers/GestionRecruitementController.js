@@ -1,0 +1,197 @@
+const JobOffer = require('../models/JobOffer');
+const JobApplication = require('../models/JobApplication');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+
+const createJobApplication = async (req, res) => {
+  try {
+    const { applicantId, coverLetter, jobId } = req.body;
+    const resumeFile = req.file; // Multer provides the file in memory
+
+    if (!applicantId || !coverLetter || !jobId || !resumeFile) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const jobExists = await JobOffer.findById(jobId);
+    if (!jobExists) return res.status(400).json({ message: 'Invalid jobId' });
+
+    // Store the file content directly in the resume object
+    const resume = {
+      data: resumeFile.buffer, // Binary data from Multer's in-memory storage
+      contentType: resumeFile.mimetype,
+      filename: resumeFile.originalname, // Original filename from the client
+      length: resumeFile.size
+    };
+
+    const newApplication = new JobApplication({
+      jobId,
+      applicantId,
+      coverLetter,
+      resume
+    });
+
+    await newApplication.save();
+
+    // Notify applicant
+    const applicantNotification = new Notification({
+      userId: applicantId,
+      type: 'JOB_APPLICATION_STATUS',
+      message: `Your application for "${jobExists.title}" has been submitted.`
+    });
+    await applicantNotification.save();
+
+    // Notify job poster
+    const posterNotification = new Notification({
+      userId: jobExists.postedBy,
+      type: 'JOB_APPLICATION_RECEIVED',
+      message: `A new application has been received for your job "${jobExists.title}".`
+    });
+    await posterNotification.save();
+
+    res.status(201).json({ message: 'Application submitted successfully', application: newApplication });
+  } catch (error) {
+    console.error('Error in createJobApplication:', error); // For debugging
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Other controllers remain unchanged
+const createJobOffer = async (req, res) => {
+  try {
+    const { title, description, experienceLevel, jobType, location, salaryRange } = req.body;
+    const postedBy = req.body.postedBy;
+
+    if (!title || !description || !experienceLevel || !jobType || !postedBy) {
+      return res.status(400).json({ message: 'Required fields are missing' });
+    }
+
+    const newJobOffer = new JobOffer({
+      title,
+      description,
+      experienceLevel,
+      jobType,
+      location,
+      salaryRange,
+      postedBy
+    });
+
+    await newJobOffer.save();
+
+    const notification = new Notification({
+      userId: postedBy,
+      type: 'JOB_OFFER_CREATED',
+      message: `Your job offer "${title}" has been created successfully.`
+    });
+    await notification.save();
+
+    res.status(201).json(newJobOffer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllJobOffers = async (req, res) => {
+  try {
+    const jobOffers = await JobOffer.find().populate('postedBy', 'username');
+    res.status(200).json(jobOffers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getJobOfferById = async (req, res) => {
+  try {
+    const jobOffer = await JobOffer.findById(req.params.id).populate('postedBy', 'username');
+    if (!jobOffer) return res.status(404).json({ message: 'Job offer not found' });
+
+    const currentUserId = req.query.userId;
+    if (currentUserId && jobOffer.postedBy._id.toString() === currentUserId) {
+      const applications = await JobApplication.find({ jobId: jobOffer._id })
+        .populate('applicantId', 'username email');
+      return res.status(200).json({ jobOffer, applications });
+    }
+
+    res.status(200).json({ jobOffer });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateJobOffer = async (req, res) => {
+  try {
+    const { title, description, experienceLevel, jobType, location, salaryRange } = req.body;
+    const currentUserId = req.body.userId;
+
+    const jobOffer = await JobOffer.findById(req.params.id);
+    if (!jobOffer) return res.status(404).json({ message: 'Job offer not found' });
+    if (jobOffer.postedBy.toString() !== currentUserId) {
+      return res.status(403).json({ message: 'You can only update your own job offers' });
+    }
+
+    const updatedJobOffer = await JobOffer.findByIdAndUpdate(
+      req.params.id,
+      { title, description, experienceLevel, jobType, location, salaryRange },
+      { new: true }
+    ).populate('postedBy', 'username');
+
+    const notification = new Notification({
+      userId: currentUserId,
+      type: 'JOB_OFFER_UPDATED',
+      message: `Your job offer "${title}" has been updated successfully.`
+    });
+    await notification.save();
+
+    res.status(200).json(updatedJobOffer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteJobOffer = async (req, res) => {
+  try {
+    const currentUserId = req.query.userId;
+    const jobOffer = await JobOffer.findById(req.params.id);
+    if (!jobOffer) return res.status(404).json({ message: 'Job offer not found' });
+    if (jobOffer.postedBy.toString() !== currentUserId) {
+      return res.status(403).json({ message: 'You can only delete your own job offers' });
+    }
+
+    await JobOffer.findByIdAndDelete(req.params.id);
+
+    const notification = new Notification({
+      userId: currentUserId,
+      type: 'JOB_OFFER_DELETED',
+      message: `Your job offer "${jobOffer.title}" has been deleted successfully.`
+    });
+    await notification.save();
+
+    res.status(200).json({ message: 'Job offer deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAllJobApplications = async (req, res) => {
+  try {
+    const currentUserId = req.query.userId;
+    const jobOffers = await JobOffer.find({ postedBy: currentUserId });
+    const jobIds = jobOffers.map(job => job._id);
+
+    const applications = await JobApplication.find({ jobId: { $in: jobIds } })
+      .populate('jobId', 'title')
+      .populate('applicantId', 'username email');
+    res.status(200).json(applications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  createJobOffer,
+  getAllJobOffers,
+  getJobOfferById,
+  updateJobOffer,
+  deleteJobOffer,
+  createJobApplication,
+  getAllJobApplications
+};

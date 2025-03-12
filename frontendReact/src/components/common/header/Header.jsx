@@ -182,20 +182,21 @@ const Header = () => {
                 </a>
               </li>
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
-                  Recruitment
-                </a>
-              </li>
-              <li>
-                ||
-              </li>
-              {currentUser?.role === "admin" && (
+              <NavLink to="/all-job-offers" className={({ isActive }) => (isActive ? "active" : "")}>
+                Recruitment
+              </NavLink>
+            </li>
+            <li>
+            ||
+            </li>
+            {currentUser?.role === "admin" && (
                   <li>  
                     <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
                       Admin
                     </NavLink>
                   </li>
               )}
+            
               <li className="mobile-certificate">
                 {currentUser ? (
                     <div

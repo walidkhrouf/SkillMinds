@@ -16,6 +16,12 @@ import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
+import AllJobOffers from "./components/GestionRecruitement/AllJobOffers.jsx";
+import CreateJobOffer from "./components/GestionRecruitement/CreateJobOffer.jsx";
+import ApplyToJob from "./components/GestionRecruitement/ApplyToJob.jsx";
+import AllJobApplications from "./components/GestionRecruitement/AllJobApplication.jsx";
+import EditJobOffer from "./components/GestionRecruitement/EditJobOffer.jsx";
+import JobOfferDetails from "./components/GestionRecruitement/JobOfferDetails.jsx";
 
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
@@ -51,7 +57,16 @@ const AppContent = () => {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
-     
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/firstchoose" element={<SkillsList />} />
+        
+        <Route path="/all-job-offers" element={<AllJobOffers />} />
+        <Route path="/create-job-offer" element={<CreateJobOffer />} />
+        <Route path="/apply-to-job/:jobId" element={<ApplyToJob />} />
+        <Route path="/all-job-applications" element={<AllJobApplications />} />
+        <Route path="/edit-job-offer/:jobId" element={<EditJobOffer />} />
+        <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
+
         <Route
           path="/admin"
           element={
