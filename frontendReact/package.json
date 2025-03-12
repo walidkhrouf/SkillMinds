@@ -17,7 +17,6 @@
     "country-flag-icons": "^1.5.18",
     "country-list": "^2.3.0",
     "franc": "^6.2.0",
-    "frontendreact": "file:",
     "html2pdf.js": "^0.10.3",
     "libphonenumber-js": "^1.11.20",
     "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
