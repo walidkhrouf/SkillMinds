@@ -4,11 +4,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const EditJobOffer = () => {
   const { jobId } = useParams();
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({});
+  const [countries, setCountries] = useState([]);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+  
+  useEffect(() => {
+    axios.get('https://restcountries.com/v3.1/all')
+      .then(response => {
+        const countryNames = response.data.map(country => country.name.common);
+        setCountries(countryNames.sort());
+      })
+      .catch(error => console.error("Erreur récupération des pays :", error));
+  }, []);
 
   useEffect(() => {
     axios.get(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
@@ -40,7 +52,7 @@ const EditJobOffer = () => {
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
+    <div style={{width: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}> <br />
       <h2>Edit Job Offer</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {success && <p style={{ color: 'green' }}>{success}</p>}
@@ -71,14 +83,26 @@ const EditJobOffer = () => {
           </select>
         </div>
         <div>
-          <label>Location:</label>
-          <input type="text" name="location" value={formData.location || ''} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
+           <label>Location (Country):</label> <br />
+           <select 
+  name="location" 
+  value={formData.location} 
+  onChange={handleChange} 
+  required 
+  style={{ height: '40px', width:'450px',overflowY: 'auto' }} 
+>
+  <option value="">Select a Country</option>
+  {countries.map(country => (
+    <option key={country} value={country}>{country}</option>
+  ))}
+</select>
+
         </div>
         <div>
           <label>Salary Range:</label>
           <input type="text" name="salaryRange" value={formData.salaryRange || ''} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
         </div>
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>Update</button>
+        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#a47f18', color: 'white', border: 'none', borderRadius: '5px' }}>Update</button>
       </form>
     </div>
   );

@@ -34,7 +34,7 @@ const JobOfferDetails = () => {
   if (!job) return <p>Loading...</p>;
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px' }}> <br /> <br />
       <h1>{job.title}</h1>
       <p><strong>Description:</strong> {job.description}</p>
       <p><strong>Location:</strong> {job.location || 'N/A'}</p>

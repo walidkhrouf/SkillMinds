@@ -46,8 +46,8 @@ const ApplyToJob = () => {
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
-      <h2>Apply to Job</h2>
+    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}> <br />
+      <h2>Apply to Job</h2> <br /> 
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {success && <p style={{ color: 'green' }}>{success}</p>}
       <form onSubmit={handleSubmit}>
@@ -59,7 +59,7 @@ const ApplyToJob = () => {
           <label>Resume:</label>
           <input type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx" required style={{ marginBottom: '10px' }} />
         </div>
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>Submit</button>
+        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#a47f18', color: 'white', border: 'none', borderRadius: '5px' }}>Submit</button>
       </form>
     </div>
   );

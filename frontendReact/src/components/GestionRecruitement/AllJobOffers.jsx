@@ -25,9 +25,9 @@ const AllJobOffers = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px' }}> <br /> <br /> <br />
       <h1>All Job Offers</h1>
-      <Link to="/create-job-offer" style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '5px', marginBottom: '20px', display: 'inline-block' }}>
+      <Link to="/create-job-offer" style={{ padding: '10px 20px', backgroundColor: '#a47f18', color: 'white', textDecoration: 'none', borderRadius: '5px', marginBottom: '20px', display: 'inline-block' }}>
         Create New Job Offer
       </Link>
       {jobOffers.length === 0 ? (
@@ -39,9 +39,11 @@ const AllJobOffers = () => {
             <p><strong>Location:</strong> {job.location || 'N/A'}</p>
             <p><strong>Experience:</strong> {job.experienceLevel}</p>
             <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
-            <Link to={`/job-details/${job._id}`} style={{ padding: '5px 10px', backgroundColor: '#17a2b8', color: 'white', textDecoration: 'none', borderRadius: '5px', marginRight: '10px' }}>
+            <Link to={`/job-details/${job._id}`} style={{ padding: '5px 10px', backgroundColor: '#a47f18', color: 'white', textDecoration: 'none', borderRadius: '5px', marginRight: '10px' }}>
               View Details
             </Link>
+          
+
             {job.postedBy._id === currentUser._id && (
               <>
                 <button onClick={() => navigate(`/edit-job-offer/${job._id}`)} style={{ padding: '5px 10px', backgroundColor: '#ffc107', color: 'black', border: 'none', borderRadius: '5px', marginRight: '10px' }}>
@@ -50,11 +52,12 @@ const AllJobOffers = () => {
                 <button onClick={() => handleDelete(job._id)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', marginRight: '10px' }}>
                   Delete
                 </button>
-              </>
-            )}
-            <Link to={`/apply-to-job/${job._id}`} style={{ padding: '5px 10px', backgroundColor: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
+                <Link to={`/apply-to-job/${job._id}`} style={{ padding: '5px 10px', backgroundColor: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
               Apply
             </Link>
+              </>
+            )}
+           
           </div>
         ))
       )}

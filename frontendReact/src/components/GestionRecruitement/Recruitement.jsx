@@ -3,7 +3,6 @@ import "./Recruitement.css";
 import Awrapper from "../about/Awrapper";
 import "../about/about.css";
 import JobOfferCard from "./JobOfferCard"; // Remplace JobCard
-import { getLatestJobOffers } from "./AllJobOffers"; 
 import { Link } from "react-router-dom";
 import JobApplicationCard from "./JobApplicationCard";
 
@@ -11,8 +10,13 @@ const Recruitement = () => {
   const [latestJobs, setLatestJobs] = useState([]);
 
   useEffect(() => {
+    // Suppression de getLatestJobOffers
     const fetchLatestJobs = async () => {
-      const jobs = await getLatestJobOffers();
+      // Simule des offres d'emploi en attendant une vraie API
+      const jobs = [
+        { id: 1, title: "Frontend Developer", company: "Tech Corp" },
+        { id: 2, title: "Backend Engineer", company: "Innovate Ltd" },
+      ];
       setLatestJobs(jobs);
     };
 
@@ -34,8 +38,6 @@ const Recruitement = () => {
           <Link to="/all-job-offers" className="viewmore">View More</Link>
         </div>
       </section>
-
- 
 
       <Awrapper />
     </>

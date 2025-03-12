@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './Recruitement.css';
 
 const CreateJobOffer = () => {
   const navigate = useNavigate();
@@ -10,57 +11,98 @@ const CreateJobOffer = () => {
     experienceLevel: 'Beginner',
     jobType: 'Full-Time',
     location: '',
+    city: '',
     salaryRange: ''
   });
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // Add submission flag
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+
+  useEffect(() => {
+    axios.get('https://restcountries.com/v3.1/all')
+      .then(response => {
+        const countryNames = response.data.map(country => country.name.common);
+        setCountries(countryNames.sort());
+      })
+      .catch(error => console.error("Erreur récupération des pays :", error));
+  }, []);
+
+  const fetchCities = async (country) => {
+    try {
+      const response = await axios.post('https://countriesnow.space/api/v0.1/countries/cities', { country });
+      if (response.data && response.data.data) {
+        setCities(response.data.data);
+      } else {
+        setCities([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des villes :", error);
+      setCities([]);
+    }
+  };
 
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === "location") {
+      setFormData(prev => ({ ...prev, city: '' }));
+      fetchCities(value);
+    }
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (isSubmitting) return; // Prevent double submission
+    if (isSubmitting) return;
     if (!currentUser._id) return setError('Please log in to create a job offer');
 
-    setIsSubmitting(true); // Set flag to true
+    setIsSubmitting(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/recruitment/job-offers', {
+      await axios.post('http://localhost:5000/api/recruitment/job-offers', {
         ...formData,
         postedBy: currentUser._id
       });
       setSuccess('Job offer created successfully!');
       setTimeout(() => {
-        setIsSubmitting(false); // Reset flag after success
+        setIsSubmitting(false);
         navigate('/all-job-offers');
       }, 2000);
     } catch (err) {
       setError(err.response?.data.message || 'Error creating job offer');
-      setIsSubmitting(false); // Reset flag on error
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
+    <div className="create-job-offer">
       <h2>Create Job Offer</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+      {error && <p className="message error">{error}</p>}
+      {success && <p className="message success">{success}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Title:</label>
-          <input type="text" name="title" value={formData.title} onChange={handleChange} required style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
+          <input type="text" name="title" value={formData.title} onChange={handleChange} required />
         </div>
         <div>
           <label>Description:</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} required style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
+          <textarea name="description" value={formData.description} onChange={handleChange} required />
+        </div>
+        <div>
+            <label>Location (Country):</label>
+            <select name="location" value={formData.location} onChange={handleChange} required>
+              <option value="">Select a Country</option>
+              {countries.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
         </div>
         <div>
           <label>Experience Level:</label>
-          <select name="experienceLevel" value={formData.experienceLevel} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }}>
+          <select name="experienceLevel" value={formData.experienceLevel} onChange={handleChange}>
             <option value="Beginner">Beginner</option>
             <option value="Intermediate">Intermediate</option>
             <option value="Advanced">Advanced</option>
@@ -68,7 +110,7 @@ const CreateJobOffer = () => {
         </div>
         <div>
           <label>Job Type:</label>
-          <select name="jobType" value={formData.jobType} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }}>
+          <select name="jobType" value={formData.jobType} onChange={handleChange}>
             <option value="Full-Time">Full-Time</option>
             <option value="Part-Time">Part-Time</option>
             <option value="Freelance">Freelance</option>
@@ -76,25 +118,10 @@ const CreateJobOffer = () => {
           </select>
         </div>
         <div>
-          <label>Location:</label>
-          <input type="text" name="location" value={formData.location} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
-        </div>
-        <div>
           <label>Salary Range:</label>
-          <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
+          <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleChange} required />
         </div>
-        <button 
-          type="submit" 
-          disabled={isSubmitting} 
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#007bff', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '5px', 
-            cursor: isSubmitting ? 'not-allowed' : 'pointer' 
-          }}
-        >
+        <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Creating...' : 'Create'}
         </button>
       </form>
