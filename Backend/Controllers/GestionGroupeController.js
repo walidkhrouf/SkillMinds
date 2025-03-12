@@ -11,6 +11,10 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const axios = require("axios");
+const Skill = require("../models/Skill");
+const UserSkill = require("../models/UserSkill");
+
+
 
 const conn = mongoose.connection;
 let gfs;
@@ -276,6 +280,7 @@ const getGroupPostById = async (req, res) => {
     const hasLiked = likes.some((like) => like.userId.toString() === userId.toString());
     const hasDisliked = dislikes.some((dislike) => dislike.userId.toString() === userId.toString());
     const isGroupOwner = group.createdBy.toString() === userId.toString();
+    
 
     res.status(200).json({
       ...post,
@@ -1228,6 +1233,122 @@ const checkMembership = async (req, res) => {
   }
 };
 
+// Cosine similarity function
+function cosineSimilarity(vecA, vecB) {
+  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+  const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+  const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+  return magA && magB ? dotProduct / (magA * magB) : 0;
+}
+
+// Recommend groups based on user skills (split by has and wantToLearn)
+const recommendGroups = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch user skills, separated by type
+    const userSkillsHas = await UserSkill.find({ userId, skillType: "has" }).populate("skillId");
+    const userSkillsWant = await UserSkill.find({ userId, skillType: "wantsToLearn" }).populate("skillId");
+
+    console.log("User Skills (Has):", userSkillsHas.map(us => ({ skillId: us.skillId._id, name: us.skillId.name })));
+    console.log("User Skills (Want):", userSkillsWant.map(us => ({ skillId: us.skillId._id, name: us.skillId.name })));
+
+    if (!userSkillsHas.length && !userSkillsWant.length) {
+      return res.status(400).json({ message: "You have no skills defined." });
+    }
+
+    // Fetch all skills for vocabulary
+    const allSkills = await Skill.find();
+    const skillVocab = allSkills.map((skill) => skill._id.toString());
+
+    // User skill vectors
+    const hasSkillIds = userSkillsHas.map((us) => us.skillId._id.toString());
+    const wantSkillIds = userSkillsWant.map((us) => us.skillId._id.toString());
+    const hasVector = skillVocab.map((skillId) => (hasSkillIds.includes(skillId) ? 1 : 0));
+    const wantVector = skillVocab.map((skillId) => (wantSkillIds.includes(skillId) ? 1 : 0));
+
+    console.log("Has Skill IDs:", hasSkillIds);
+    console.log("Want Skill IDs:", wantSkillIds);
+
+    // Fetch all groups
+    const groups = await Group.find()
+      .populate("createdBy", "username")
+      .populate("skillId")
+      .lean();
+    if (!groups.length) {
+      return res.status(404).json({ message: "No groups available." });
+    }
+
+    console.log("Groups:", groups.map(g => ({ name: g.name, skillId: g.skillId?._id })));
+
+    // Calculate recommendations for both categories
+    const hasRecommendations = [];
+    const wantRecommendations = [];
+
+    await Promise.all(
+      groups.map(async (group) => {
+        // Use group.skillId if present, otherwise infer from members
+        let groupSkillIds = group.skillId
+          ? [group.skillId._id.toString()]
+          : await UserSkill.find({ userId: { $in: group.members || [] } })
+              .distinct("skillId")
+              .then((ids) => ids.map((id) => id.toString()));
+
+        console.log(`Group ${group.name} Skill IDs:`, groupSkillIds);
+
+        const groupVector = skillVocab.map((skillId) => (groupSkillIds.includes(skillId) ? 1 : 0));
+
+        // Calculate similarity for "has" skills
+        const hasSimilarity = cosineSimilarity(hasVector, groupVector);
+        if (hasSimilarity > 0) {
+          hasRecommendations.push({
+            group,
+            similarity: hasSimilarity,
+          });
+        }
+
+        // Calculate similarity for "wantToLearn" skills
+        const wantSimilarity = cosineSimilarity(wantVector, groupVector);
+        if (wantSimilarity > 0) {
+          wantRecommendations.push({
+            group,
+            similarity: wantSimilarity,
+          });
+        }
+      })
+    );
+
+    console.log("Has Recommendations:", hasRecommendations.map(r => ({ name: r.group.name, similarity: r.similarity })));
+    console.log("Want Recommendations:", wantRecommendations.map(r => ({ name: r.group.name, similarity: r.similarity })));
+
+    // Sort and limit each to top 5
+    const formatRecommendations = (recs) =>
+      recs
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5)
+        .map((rec) => ({
+          _id: rec.group._id,
+          name: rec.group.name,
+          description: rec.group.description,
+          privacy: rec.group.privacy,
+          createdBy: { username: rec.group.createdBy?.username || "Unknown" },
+          memberCount: rec.group.memberCount || 0,
+          similarity: rec.similarity,
+        }));
+
+    const hasGroups = formatRecommendations(hasRecommendations);
+    const wantGroups = formatRecommendations(wantRecommendations);
+
+    res.status(200).json({
+      has: hasGroups,
+      wantToLearn: wantGroups,
+    });
+  } catch (error) {
+    console.error("Recommendation Error:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
 module.exports = {
   getAllGroups,
   createGroup,
@@ -1256,4 +1377,5 @@ module.exports = {
   removeGroupMember,
   leaveGroup,
   checkMembership,
+  recommendGroups
 };
