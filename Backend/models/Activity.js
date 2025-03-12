@@ -15,11 +15,13 @@ const activitySchema = new Schema({
   category: { type: String, enum: ["Workshop", "Webinar", "Meetup", "Training"], required: true },
   date: { type: Date, required: true },
   location: String,
+  numberOfPlaces: { type: Number, default: 0 },
   eventImage: eventImageSchema,
   isPaid: { type: Boolean, default: false },
   amount: { type: Number },
   link: { type: String },
   createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+  participants: [{ type: Schema.Types.ObjectId, ref: "User" }], // Added this line
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -18,6 +18,7 @@ import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
 import Activities from "./components/activities/Activities.jsx";
 import AddActivity from "./components/activities/AddActivity.jsx";
+import UpdateActivity from "./components/activities/UpdateActivity.jsx";
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
   if (!storedUser) {
@@ -54,6 +55,7 @@ const AppContent = () => {
         <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
         <Route path="/activities" element={<Activities />} />
         <Route path="/add-activity" element={<AddActivity />} />
+        <Route path="/update-activity/:id" element={<UpdateActivity />} />
         <Route
           path="/admin"
           element={

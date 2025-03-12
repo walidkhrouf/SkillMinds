@@ -147,7 +147,7 @@ const Header = () => {
               </li>
               <li>
                 <NavLink to="/courses" className={({ isActive }) => (isActive ? "active" : "")}>
-                  All Courses
+                  Courses
                 </NavLink>
               </li>
               <li>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createActivity, getActivities, getActivityById, updateActivity, deleteActivity } = require('../Controllers/eventsController');
+const { createActivity, getActivities, getActivityById, updateActivity, deleteActivity, participateInActivity, confirmPayment, recommendActivities} = require('../Controllers/eventsController');
 const multer = require('multer');
 const path = require('path');
 
@@ -19,6 +19,8 @@ const upload = multer({ storage: storage });
 // Create a new activity (with file upload)
 router.post('/', upload.single('eventImage'), createActivity);
 
+router.get('/recommend', recommendActivities);
+
 // Get all activities
 router.get('/', getActivities);
 
@@ -30,5 +32,10 @@ router.put('/:id', upload.single('eventImage'), updateActivity);
 
 // Delete an activity by ID
 router.delete('/:id', deleteActivity);
+
+router.post('/:id/confirm-payment', confirmPayment);
+
+router.post('/:id/participate', participateInActivity); 
+
 
 module.exports = router;

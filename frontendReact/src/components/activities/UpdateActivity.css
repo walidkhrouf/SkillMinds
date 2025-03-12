@@ -1,0 +1,204 @@
+.update-activity-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 6.25rem auto;
+  background-color: #f8f8f8;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.left-box {
+  flex: 2; /* Takes 2/3 of the space */
+  padding: 2rem;
+}
+
+.right-box {
+  flex: 1; /* Takes 1/3 of the space */
+  padding: 2rem;
+  background-color: #fff;
+  border-left: 1px solid #ddd;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-container h2 {
+  color: rgb(126, 83, 20);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.form-columns {
+  display: flex;
+  gap: 3rem; /* Increased space between columns */
+  width: 100%;
+}
+
+.form-column {
+  flex: 1; /* Each column takes equal space */
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.625rem; /* 10px */
+  border: 1px solid #ddd;
+  border-radius: 0.25rem; /* 4px */
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: #fff;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #a47f18; /* Highlight focus */
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.form-group .existing-image img {
+  width: 100px;
+  height: auto;
+  margin-bottom: 10px;
+  border-radius: 0.25rem; /* 4px */
+  border: 1px solid #ddd;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  border-radius: 0.25rem; /* 4px */
+  cursor: pointer;
+  font-size: 1rem;
+  background-color: #a47f18; /* Primary color */
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.auth-btn:hover {
+  background-color: #8a6a15; /* Darker shade for hover */
+}
+
+.auth-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error {
+  color: red;
+  margin-bottom: 0.9375rem; /* 15px */
+  text-align: center;
+  font-weight: bold;
+}
+
+.success {
+  color: green;
+  margin-bottom: 0.9375rem; /* 15px */
+  text-align: center;
+  font-weight: bold;
+}
+
+.switch-auth {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.switch-auth a {
+  color: #a47f18;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.switch-auth a:hover {
+  text-decoration: underline;
+}
+
+/* Map Container */
+.map-container {
+  margin-top: 1rem;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem; /* 4px */
+  overflow: hidden;
+}
+
+/* Calendly Widget Styles */
+.calendly-modal {
+  position: sticky;
+  top: 2rem; /* Stick to the top */
+  height: calc(100vh - 4rem); /* Full height minus padding */
+  overflow-y: auto; /* Scroll if content is too long */
+}
+
+.calendly-btn {
+  width: 100%;
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  border-radius: 0.25rem; /* 4px */
+  cursor: pointer;
+  font-size: 1rem;
+  background-color: #a47f18; /* Primary color */
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.calendly-btn:hover {
+  background-color: #8a6a15; /* Darker shade for hover */
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: #a47f18;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background-color: #8a6a15;
+}

@@ -14,6 +14,7 @@ import {
 import Header from "../common/header/Header";
 import Footer from "../common/footer/Footer";
 import "./AdminDashboard.css";
+import AddActivityBack from "../activities/AddActivityBack";
 
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
@@ -883,8 +884,9 @@ const SkillManager = () => {
       </div>
   );
 };
-const ActivityManager = () => {
-  const [activities, setActivities] = useState([]);
+
+
+const ActivityManager = ({ activities, setActivities }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingActivityId, setEditingActivityId] = useState(null);
@@ -903,7 +905,17 @@ const ActivityManager = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/events");
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/events', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch activities');
+        }
+
         const data = await response.json();
         setActivities(data);
         setLoading(false);
@@ -912,29 +924,25 @@ const ActivityManager = () => {
         setLoading(false);
       }
     };
-    fetchActivities();
-  }, []);
 
-  const showMessage = (text, type = "success") => {
-    setError({ text, type });
-    setTimeout(() => setError(''), 5000);
-  };
+    fetchActivities();
+  }, [setActivities]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) return;
+    if (!window.confirm('Are you sure you want to delete this activity?')) return;
     try {
       const response = await fetch(`http://localhost:5000/api/events/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (response.ok) {
         setActivities((prev) => prev.filter((activity) => activity._id !== id));
-        showMessage("🗑 Activity deleted successfully");
+        setError({ text: '🗑 Activity deleted successfully', type: 'success' });
       } else {
-        throw new Error("Failed to delete activity");
+        throw new Error('Failed to delete activity');
       }
     } catch (err) {
-      console.error("Error deleting activity:", err);
-      showMessage("Error deleting activity", "error");
+      console.error('Error deleting activity:', err);
+      setError({ text: 'Error deleting activity', type: 'error' });
     }
   };
 
@@ -1009,28 +1017,25 @@ const ActivityManager = () => {
           }
         });
         setEditingActivityId(null);
-        showMessage(activityId === 'new' ? "➕ Activity created successfully" : "💾 Activity updated successfully");
+        setError({ text: activityId === 'new' ? '➕ Activity created successfully' : '💾 Activity updated successfully', type: 'success' });
       } else {
-        throw new Error(data.message || "Error saving activity");
+        throw new Error(data.message || 'Error saving activity');
       }
     } catch (error) {
-      console.error("Error saving activity:", error);
-      showMessage("Error saving activity", "error");
+      console.error('Error saving activity:', error);
+      setError({ text: 'Error saving activity', type: 'error' });
     }
   };
 
   return (
     <div className="skill-manager">
       {error && (
-        <Message
-          message={error.text}
-          type={error.type}
-          onClose={() => setError('')}
-        />
+        <div className={`message ${error.type}`}>
+          {error.text}
+          <button onClick={() => setError('')}>×</button>
+        </div>
       )}
-
-    
-
+      <h3>Activities List</h3>
       {loading ? (
         <div className="loading">⏳ Loading activities...</div>
       ) : (
@@ -1042,6 +1047,8 @@ const ActivityManager = () => {
               <th>Date</th>
               <th>Location</th>
               <th>Type</th>
+              <th>Created By</th>
+              <th>Participants</th> {/* New column for participants */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -1067,7 +1074,7 @@ const ActivityManager = () => {
                       value={editingData.category}
                       onChange={handleEditingChange}
                     >
-                      {["Workshop", "Webinar", "Meetup", "Training"].map((opt) => (
+                      {['Workshop', 'Webinar', 'Meetup', 'Training'].map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
                         </option>
@@ -1129,6 +1136,21 @@ const ActivityManager = () => {
                   )}
                 </td>
                 <td>
+                  {activity.createdBy?.username || 'Unknown'}
+                </td>
+                <td>
+                  {/* Display participants */}
+                  {activity.participants?.length > 0 ? (
+                    <ul className="participants-list">
+                      {activity.participants.map((participant, index) => (
+                        <li key={index}>{participant.username || 'Anonymous'}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'No participants'
+                  )}
+                </td>
+                <td>
                   {editingActivityId === activity._id ? (
                     <>
                       <button onClick={() => saveEditedActivity(activity._id)}>
@@ -1148,23 +1170,16 @@ const ActivityManager = () => {
           </tbody>
         </table>
       )}
-
-      {editingActivityId === 'new' && (
-        <ActivityModal
-          activity={null}
-          onClose={cancelEditing}
-          onSave={saveEditedActivity}
-          mode="create"
-        />
-      )}
     </div>
   );
 };
-
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
-
+  const [activities, setActivities] = useState([]);
+  useEffect(() => {
+    console.log('Activities updated:', activities);
+  }, [activities]);
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
     if (storedDarkMode === "true") {
@@ -1185,7 +1200,9 @@ const AdminDashboard = () => {
       return newMode;
     });
   };
-
+  const handleAddActivity = (newActivity) => {
+    setActivities((prevActivities) => [newActivity, ...prevActivities]);
+  };
   const renderSection = () => {
     switch (activeSection) {
       case "statistics":
@@ -1330,8 +1347,9 @@ const AdminDashboard = () => {
         case "events":
           return (
             <div className="section-content">
-              <h2>Events & Activities</h2>
-              <ActivityManager />
+              <h2>Add New Activity </h2>
+              <AddActivityBack onAddActivity={handleAddActivity} />
+              <ActivityManager activities={activities} setActivities={setActivities} />
             </div>
           );
       case "addSkill":
@@ -1388,7 +1406,7 @@ const AdminDashboard = () => {
               className={activeSection === "events" ? "active" : ""}
               onClick={() => setActiveSection("events")}
             >
-              🗓 Events & Activities
+              🗓 Activities
             </li>
                 <li
                     className={activeSection === "addSkill" ? "active" : ""}
