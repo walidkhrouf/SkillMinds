@@ -10,7 +10,7 @@ const GroupsList = () => {
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
   const [requests, setRequests] = useState({});
-  const [memberships, setMemberships] = useState({}); 
+  const [memberships, setMemberships] = useState({});
   const [reportModal, setReportModal] = useState({ open: false, groupId: null, type: null });
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
@@ -35,7 +35,7 @@ const GroupsList = () => {
       });
       setGroups(response.data);
       setLoading(false);
-  
+
       const membershipPromises = response.data.map((group) =>
         axios.get(`http://localhost:5000/api/groups/${group._id}/membership`, {
           headers: { Authorization: `Bearer ${jwtToken}` },
@@ -47,7 +47,7 @@ const GroupsList = () => {
         membershipStatus[response.data[index]._id] = isMember;
       });
       setMemberships(membershipStatus);
-  
+
       const requestPromises = response.data.map((group) =>
         axios.get(`http://localhost:5000/api/groups/${group._id}/requests`, {
           headers: { Authorization: `Bearer ${jwtToken}` },
@@ -191,6 +191,10 @@ const GroupsList = () => {
     }
   };
 
+  const handleRecommendGroups = () => {
+    navigate('/ai-recommendation');
+  };
+
   const filteredGroups = groups.filter((group) =>
     searchQuery
       ? group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -223,6 +227,9 @@ const GroupsList = () => {
               <option value="public">Public</option>
               <option value="private">Private</option>
             </select>
+            <button className="group-button ai-recommend-btn" onClick={handleRecommendGroups}>
+              Recommend with AI
+            </button>
           </div>
           <div className="group-grid">
             {filteredGroups.map((group) => {

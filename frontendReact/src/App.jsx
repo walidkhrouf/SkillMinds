@@ -24,6 +24,7 @@ import GroupPostDetails from "./components/Gestion_groupe/GroupPostDetails.jsx";
 import GroupRequests from "./components/Gestion_groupe/GroupRequests"; 
 import EditGroup from "./components/Gestion_groupe/EditGroup.jsx";
 import GroupMembers from "./components/Gestion_groupe/GroupMembers.jsx";
+import AIRecommendation from "./components/Gestion_groupe/AIRecommendation.jsx";
 
 
 const AdminRoute = ({ children }) => {
@@ -68,6 +69,7 @@ const AppContent = () => {
         <Route path="/create-group" element={<CreateGroup />} />
         <Route path="/groups/:groupId/post" element={<CreateGroupPost />} />
         <Route path="/groups/:groupId/members" element={<GroupMembers />} />
+        <Route path="/ai-recommendation" element={<AIRecommendation />} />
         
      
         <Route

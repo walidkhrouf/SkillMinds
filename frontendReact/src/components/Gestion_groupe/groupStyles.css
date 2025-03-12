@@ -991,6 +991,28 @@ body.dark-mode .group-filter__select:focus {
   transition: background var(--transition-speed) ease;
 }
 
+.group-post-details__share-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 0 5px;
+  background-color: #3b5998; /* Facebook blue */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.group-post-details__share-btn:hover {
+  background-color: #2a4373; /* Darker shade on hover */
+}
+
+.group-post-details__share-btn span {
+  margin-left: 8px;
+}
+
 .group-post-details__delete-comment-btn:hover {
   background: #c82333;
 }
@@ -1072,6 +1094,126 @@ body.dark-mode .group-filter__select:focus {
   font-size: 0.9rem;
   font-style: italic;
 }
+
+
+
+/* AI Recommendation Page Specific Section */
+.ai-recommendation-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--background-color);
+  padding: var(--spacing-lg);
+}
+
+/* AI Thinking Animation (Scoped to AI Page) */
+.ai-recommendation-thinking {
+  text-align: center;
+  color: var(--text-color);
+}
+
+.ai-recommendation-thinking h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  color: var(--primary-color);
+}
+
+.ai-recommendation-loader {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.ai-recommendation-dot {
+  width: 1rem;
+  height: 1rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  animation: ai-pulse 1.2s infinite ease-in-out;
+}
+
+.ai-recommendation-dot:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.ai-recommendation-dot:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+.ai-recommendation-thinking p {
+  font-size: 1.25rem;
+  color: #666;
+}
+
+/* Recommended Group Card (Already Scoped) */
+.group-card.recommended {
+  border: 2px solid var(--primary-color);
+  background: rgba(164, 127, 24, 0.05);
+}
+
+/* Two-Section Layout for AI Recommendations */
+.ai-recommendation-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.ai-recommendation-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+/* Dark Mode (Scoped to AI Page) */
+body.dark-mode .ai-recommendation-page {
+  background: var(--dark-bg);
+}
+
+body.dark-mode .ai-recommendation-thinking h2 {
+  color: var(--primary-color);
+}
+
+body.dark-mode .ai-recommendation-thinking p {
+  color: #b0b0b0;
+}
+
+body.dark-mode .group-card.recommended {
+  background: rgba(164, 127, 24, 0.1);
+}
+
+body.dark-mode .ai-recommendation-section h2 {
+  color: var(--primary-color);
+}
+
+/* Animation Keyframes (Scoped to AI) */
+@keyframes ai-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+/* Style for Recommend Button (Unchanged, Already Specific) */
+.ai-recommend-btn {
+  background: linear-gradient(135deg, #2196f3, #21cbf3);
+}
+
+.ai-recommend-btn:hover {
+  background: linear-gradient(135deg, #21cbf3, #2196f3);
+}
+
+
+
+
+
 
 body.dark-mode .group-section {
   background: var(--dark-bg);

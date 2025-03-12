@@ -306,30 +306,26 @@ const GroupPostDetails = () => {
       return;
     }
 
-    
     const element = document.createElement("div");
     element.style.padding = "20px";
     element.style.fontFamily = "Arial, sans-serif";
-    element.style.maxWidth = "8.5in"; 
+    element.style.maxWidth = "8.5in";
     element.style.margin = "0 auto";
 
-    
     element.innerHTML = `
       <h1 style="font-size: 24pt; color: #a47f18; margin-bottom: 10px; text-align: center;">${post.title}</h1>
       <h2 style="font-size: 18pt; color: #666; margin-bottom: 20px; text-align: center;">${post.subject}</h2>
       <div style="font-size: 12pt; line-height: 1.6; color: #333;">${post.content}</div>
     `;
 
-    
     const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5], 
+      margin: [0.5, 0.5, 0.5, 0.5],
       filename: `${post.title.replace(/\s+/g, "_")}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
     };
 
-    
     html2pdf()
       .set(opt)
       .from(element)
@@ -395,6 +391,8 @@ const GroupPostDetails = () => {
       return <p>Error rendering content: {err.message}</p>;
     }
   };
+
+
 
   if (loading) return <p>Loading post...</p>;
   if (error) return <p className="group-form__error">{error}</p>;
@@ -489,6 +487,10 @@ const GroupPostDetails = () => {
                   <i className="fas fa-print"></i>
                   <span>Print PDF</span>
                 </button>
+
+          
+
+                  
                 {(isPostAuthor || isGroupOwner) && (
                   <button
                     className="group-button group-post-details__delete-btn"

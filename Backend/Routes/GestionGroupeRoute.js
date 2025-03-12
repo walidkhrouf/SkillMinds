@@ -31,6 +31,7 @@ const {
   removeGroupMember,
   leaveGroup,
   checkMembership,
+  recommendGroups,
 } = require("../Controllers/GestionGroupeController");
 
 const storage = multer.memoryStorage();
@@ -89,5 +90,7 @@ router.put("/:groupId/request/:requestId/accept", authenticateToken, acceptGroup
 router.put("/:groupId/request/:requestId/reject", authenticateToken, rejectGroupRequest);
 router.get("/:groupId/members", authenticateToken, getGroupMembers);
 router.delete("/:groupId/members/:memberId", authenticateToken, removeGroupMember);
+
+router.get("/recommend", authenticateToken, recommendGroups);
 
 module.exports = router;
