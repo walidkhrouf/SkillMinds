@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import Header from "../common/header/Header";
 import Footer from "../common/footer/Footer";
+import AddActivityBack from '../activities/AddActivityBack';
 import "./AdminDashboard.css";
 
 const dummyCourses = [
@@ -1238,12 +1239,302 @@ const GroupManager = () => {
   );
 };
 
+
+const ActivityManager = ({ activities, setActivities }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editingActivityId, setEditingActivityId] = useState(null);
+  const [editingData, setEditingData] = useState({
+    title: '',
+    description: '',
+    category: 'Workshop',
+    date: new Date().toISOString().split('T')[0],
+    location: '',
+    isPaid: false,
+    amount: 0,
+    link: '',
+    eventImage: null,
+  });
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/events', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch activities');
+        }
+
+        const data = await response.json();
+        setActivities(data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load activities');
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, [setActivities]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this activity?')) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setActivities((prev) => prev.filter((activity) => activity._id !== id));
+        setError({ text: '🗑 Activity deleted successfully', type: 'success' });
+      } else {
+        throw new Error('Failed to delete activity');
+      }
+    } catch (err) {
+      console.error('Error deleting activity:', err);
+      setError({ text: 'Error deleting activity', type: 'error' });
+    }
+  };
+
+  const startEditing = (activity) => {
+    setEditingActivityId(activity._id);
+    setEditingData({
+      title: activity.title,
+      description: activity.description,
+      category: activity.category,
+      date: new Date(activity.date).toISOString().split('T')[0],
+      location: activity.location,
+      isPaid: activity.isPaid,
+      amount: activity.amount || 0,
+      link: activity.link || '',
+      eventImage: null,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingActivityId(null);
+    setEditingData({
+      title: '',
+      description: '',
+      category: 'Workshop',
+      date: new Date().toISOString().split('T')[0],
+      location: '',
+      isPaid: false,
+      amount: 0,
+      link: '',
+      eventImage: null,
+    });
+  };
+
+  const handleEditingChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    setEditingData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value,
+      ...(name === 'isPaid' && !checked && { amount: 0 }), // Reset amount if isPaid is unchecked
+    }));
+  };
+
+  const saveEditedActivity = async (activityId) => {
+    try {
+      const formData = new FormData();
+      Object.keys(editingData).forEach((key) => {
+        if (key === 'eventImage' && editingData[key]) {
+          formData.append('image', editingData[key]);
+        } else if (key !== 'eventImage') {
+          formData.append(key, editingData[key]);
+        }
+      });
+
+      const url = activityId === 'new'
+        ? 'http://localhost:5000/api/events' // POST for new activity
+        : `http://localhost:5000/api/events/${activityId}`; // PUT for update
+
+      const method = activityId === 'new' ? 'POST' : 'PUT';
+
+      const response = await fetch(url, {
+        method,
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setActivities((prev) => {
+          if (activityId === 'new') {
+            return [data, ...prev]; // Add new activity to the list
+          } else {
+            return prev.map((a) => (a._id === data._id ? data : a)); // Update existing activity
+          }
+        });
+        setEditingActivityId(null);
+        setError({ text: activityId === 'new' ? '➕ Activity created successfully' : '💾 Activity updated successfully', type: 'success' });
+      } else {
+        throw new Error(data.message || 'Error saving activity');
+      }
+    } catch (error) {
+      console.error('Error saving activity:', error);
+      setError({ text: 'Error saving activity', type: 'error' });
+    }
+  };
+
+  return (
+    <div className="skill-manager">
+      {error && (
+        <div className={`message ${error.type}`}>
+          {error.text}
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+      <h3>Activities List</h3>
+      {loading ? (
+        <div className="loading">⏳ Loading activities...</div>
+      ) : (
+        <table className="skill-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Type</th>
+              <th>Created By</th>
+              <th>Participants</th> {/* New column for participants */}
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activities.map((activity) => (
+              <tr key={activity._id}>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <input
+                      type="text"
+                      name="title"
+                      value={editingData.title}
+                      onChange={handleEditingChange}
+                    />
+                  ) : (
+                    activity.title
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <select
+                      name="category"
+                      value={editingData.category}
+                      onChange={handleEditingChange}
+                    >
+                      {['Workshop', 'Webinar', 'Meetup', 'Training'].map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    activity.category
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <input
+                      type="date"
+                      name="date"
+                      value={editingData.date}
+                      onChange={handleEditingChange}
+                    />
+                  ) : (
+                    new Date(activity.date).toLocaleDateString()
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <input
+                      type="text"
+                      name="location"
+                      value={editingData.location}
+                      onChange={handleEditingChange}
+                    />
+                  ) : (
+                    activity.location || 'Virtual'
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <>
+                      <label>
+                        <input
+                          type="checkbox"
+                          name="isPaid"
+                          checked={editingData.isPaid}
+                          onChange={handleEditingChange}
+                        />
+                        Paid
+                      </label>
+                      {editingData.isPaid && (
+                        <input
+                          type="number"
+                          name="amount"
+                          value={editingData.amount}
+                          onChange={handleEditingChange}
+                          min="0"
+                          step="0.01"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    activity.isPaid ? `💰 $${activity.amount}` : 'Free'
+                  )}
+                </td>
+                <td>
+                  {activity.createdBy?.username || 'Unknown'}
+                </td>
+                <td>
+                  {/* Display participants */}
+                  {activity.participants?.length > 0 ? (
+                    <ul className="participants-list">
+                      {activity.participants.map((participant, index) => (
+                        <li key={index}>{participant.username || 'Anonymous'}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'No participants'
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                    <>
+                      <button onClick={() => saveEditedActivity(activity._id)}>
+                        💾
+                      </button>
+                      <button onClick={cancelEditing}>❌</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEditing(activity)}>✏️</button>
+                      <button onClick={() => handleDelete(activity._id)}>🗑</button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
   const [statsData, setStatsData] = useState(defaultStatsData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activities, setActivities] = useState([]);
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
@@ -1315,6 +1606,10 @@ const AdminDashboard = () => {
       localStorage.setItem("darkMode", newMode);
       return newMode;
     });
+  };
+
+  const handleAddActivity = (newActivity) => {
+    setActivities((prevActivities) => [newActivity, ...prevActivities]);
   };
 
   const renderSection = () => {
@@ -1452,23 +1747,9 @@ const AdminDashboard = () => {
       case "events":
         return (
           <div className="section-content">
-            <h2>Events</h2>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dummyEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td>{event.name}</td>
-                    <td>{event.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h2>Add New Activity</h2>
+            <AddActivityBack onAddActivity={handleAddActivity} />
+            <ActivityManager activities={activities} setActivities={setActivities} />
           </div>
         );
       case "addSkill":
@@ -1525,7 +1806,7 @@ const AdminDashboard = () => {
                 className={activeSection === "events" ? "active" : ""}
                 onClick={() => setActiveSection("events")}
               >
-                🗓 Events
+                🗓 Activities
               </li>
               <li
                 className={activeSection === "addSkill" ? "active" : ""}

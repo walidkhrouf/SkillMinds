@@ -16,7 +16,9 @@ import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
 import UserProfile from "./components/User/UserProfile.jsx";
 import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
-import GroupsList from "./components/Gestion_groupe/GroupsList.jsx";
+import Activities from "./components/activities/Activities.jsx";
+import AddActivity from "./components/activities/AddActivity.jsx";
+import UpdateActivity from "./components/activities/UpdateActivity.jsx";import GroupsList from "./components/Gestion_groupe/GroupsList.jsx";
 import CreateGroup from "./components/Gestion_groupe/CreateGroup.jsx";
 import CreateGroupPost from "./components/Gestion_groupe/CreateGroupPost.jsx";
 import GroupPosts from "./components/Gestion_groupe/GroupPosts.jsx";
@@ -71,7 +73,9 @@ const AppContent = () => {
         <Route path="/groups/:groupId/members" element={<GroupMembers />} />
         <Route path="/ai-recommendation" element={<AIRecommendation />} />
         
-     
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/add-activity" element={<AddActivity />} />
+        <Route path="/update-activity/:id" element={<UpdateActivity />} />
         <Route
           path="/admin"
           element={
