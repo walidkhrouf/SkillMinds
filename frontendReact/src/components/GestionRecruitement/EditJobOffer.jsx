@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import './Recruitement.css';
 
 const EditJobOffer = () => {
   const { jobId } = useParams();
-  
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({});
   const [countries, setCountries] = useState([]);
-
+  const [cities, setCities] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
-  
+
   useEffect(() => {
     axios.get('https://restcountries.com/v3.1/all')
       .then(response => {
@@ -26,13 +27,37 @@ const EditJobOffer = () => {
     axios.get(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
       params: { userId: currentUser._id }
     })
-      .then(res => setFormData(res.data.jobOffer))
+      .then(res => {
+        setFormData(res.data.jobOffer);
+        if (res.data.jobOffer.location) {
+          fetchCities(res.data.jobOffer.location);
+        }
+      })
       .catch(err => setError('Error fetching job offer'));
   }, [jobId]);
+
+  const fetchCities = async (country) => {
+    try {
+      const response = await axios.post('https://countriesnow.space/api/v0.1/countries/cities', { country });
+      if (response.data && response.data.data) {
+        setCities(response.data.data);
+      } else {
+        setCities([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des villes :", error);
+      setCities([]);
+    }
+  };
 
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === "location") {
+      fetchCities(value);
+      setFormData(prev => ({ ...prev, location: value, city: '' }));
+    }
   };
 
   const handleSubmit = async e => {
@@ -40,7 +65,7 @@ const EditJobOffer = () => {
     if (!currentUser._id) return setError('Please log in to edit');
 
     try {
-      const response = await axios.put(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
+      await axios.put(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
         ...formData,
         userId: currentUser._id
       });
@@ -52,58 +77,75 @@ const EditJobOffer = () => {
   };
 
   return (
-    <div style={{width: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}> <br />
-      <h2>Edit Job Offer</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Title:</label>
-          <input type="text" name="title" value={formData.title || ''} onChange={handleChange} required style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
-        </div>
-        <div>
-          <label>Description:</label>
-          <textarea name="description" value={formData.description || ''} onChange={handleChange} required style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
-        </div>
-        <div>
-          <label>Experience Level:</label>
-          <select name="experienceLevel" value={formData.experienceLevel || 'Beginner'} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }}>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
-        </div>
-        <div>
-          <label>Job Type:</label>
-          <select name="jobType" value={formData.jobType || 'Full-Time'} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }}>
-            <option value="Full-Time">Full-Time</option>
-            <option value="Part-Time">Part-Time</option>
-            <option value="Freelance">Freelance</option>
-            <option value="Internship">Internship</option>
-          </select>
-        </div>
-        <div>
-           <label>Location (Country):</label> <br />
-           <select 
-  name="location" 
-  value={formData.location} 
-  onChange={handleChange} 
-  required 
-  style={{ height: '40px', width:'450px',overflowY: 'auto' }} 
->
-  <option value="">Select a Country</option>
-  {countries.map(country => (
-    <option key={country} value={country}>{country}</option>
-  ))}
-</select>
+    <div className="signup-container2">
+      <div className="left-box2">
+          <h2 style={{textAlign:'center'}}>Edit Job Offer</h2>
+          {error && <p className="message error">{error}</p>}
+          {success && <p className="message success">{success}</p>}
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Title:</label>
+              <input type="text" name="title" value={formData.title || ''} onChange={handleChange} required />
+            </div>
 
+            <div className="form-group">
+              <label>Description:</label>
+              <textarea name="description" value={formData.description || ''} onChange={handleChange} required />
+            </div>
+
+            <div className="form-group">
+              <label>Experience Level:</label>
+              <select name="experienceLevel" value={formData.experienceLevel || 'Beginner'} onChange={handleChange}>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Job Type:</label>
+              <select name="jobType" value={formData.jobType || 'Full-Time'} onChange={handleChange}>
+                <option value="Full-Time">Full-Time</option>
+                <option value="Part-Time">Part-Time</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Internship">Internship</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Location (Country):</label>
+              <select name="location" value={formData.location || ''} onChange={handleChange} required>
+                <option value="">Select a Country</option>
+                {countries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>City:</label>
+              <select name="city" value={formData.city || ''} onChange={handleChange} required>
+                <option value="">Select a City</option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Salary Range:</label>
+              <input type="text" name="salaryRange" value={formData.salaryRange || ''} onChange={handleChange} />
+            </div>
+
+            <button type="submit" className="auth-btn">Update</button>
+          </form>
+      </div>
+
+      <div className="right-box2">
+        <div className="content">
+          {/* Image de fond via CSS */}
         </div>
-        <div>
-          <label>Salary Range:</label>
-          <input type="text" name="salaryRange" value={formData.salaryRange || ''} onChange={handleChange} style={{ width: '100%', padding: '8px', marginBottom: '10px' }} />
-        </div>
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#a47f18', color: 'white', border: 'none', borderRadius: '5px' }}>Update</button>
-      </form>
+      </div>
     </div>
   );
 };

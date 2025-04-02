@@ -23,6 +23,7 @@ import CreateJobOffer from "./components/GestionRecruitement/CreateJobOffer.jsx"
 import ApplyToJob from "./components/GestionRecruitement/ApplyToJob.jsx";
 import EditJobOffer from "./components/GestionRecruitement/EditJobOffer.jsx";
 import JobOfferDetails from "./components/GestionRecruitement/JobOfferDetails.jsx";
+import RecommendedJobs from "./components/GestionRecruitement/RecommendedJobs.jsx";
 
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
@@ -65,7 +66,7 @@ const AppContent = () => {
         <Route path="/apply-to-job/:jobId" element={<ApplyToJob />} /> {/* Route pour postuler */}
         <Route path="/edit-job-offer/:jobId" element={<EditJobOffer />} />
         <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
-
+        <Route path="/recommended-jobs" element={<RecommendedJobs />} />
 
 
      

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import './Recruitement.css';
 
 const ApplyToJob = () => {
   const { jobId } = useParams();
@@ -46,21 +47,47 @@ const ApplyToJob = () => {
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}> <br />
-      <h2>Apply to Job</h2> <br /> 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Cover Letter:</label>
-          <textarea value={coverLetter} onChange={e => setCoverLetter(e.target.value)} required style={{ width: '100%', padding: '8px', marginBottom: '10px', height: '100px' }} />
-        </div>
-        <div>
-          <label>Resume:</label>
-          <input type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx" required style={{ marginBottom: '10px' }} />
-        </div>
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#a47f18', color: 'white', border: 'none', borderRadius: '5px' }}>Submit</button>
-      </form>
+    <div className="signup-container3"> <br /> <br />
+      <div className="left-box3" style={{ height: '650px', width: '60%' }}>
+        <h2 style={{ textAlign: 'center' }}>Apply to Job</h2>
+        {error && <p className="message error">{error}</p>}
+        {success && <p className="message success">{success}</p>}
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Cover Letter:</label>
+            <textarea
+              value={coverLetter}
+              onChange={e => setCoverLetter(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px', height: '100px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Resume:</label>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx"
+              required
+              style={{ marginBottom: '10px' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="auth-btn"
+            style={{ backgroundColor: '#a47f18' }}
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+
+      <div className="right-box3">
+        <div className="content"></div>
+      </div>
     </div>
   );
 };

@@ -2,11 +2,13 @@ const JobOffer = require('../models/JobOffer');
 const JobApplication = require('../models/JobApplication');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const UserSkill = require('../models/UserSkill');
+
 
 const createJobApplication = async (req, res) => {
   try {
     const { applicantId, coverLetter, jobId } = req.body;
-    const resumeFile = req.file; // Multer provides the file in memory
+    const resumeFile = req.file;
 
     if (!applicantId || !coverLetter || !jobId || !resumeFile) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -15,11 +17,10 @@ const createJobApplication = async (req, res) => {
     const jobExists = await JobOffer.findById(jobId);
     if (!jobExists) return res.status(400).json({ message: 'Invalid jobId' });
 
-    // Store the file content directly in the resume object
     const resume = {
-      data: resumeFile.buffer, // Binary data from Multer's in-memory storage
+      data: resumeFile.buffer,
       contentType: resumeFile.mimetype,
-      filename: resumeFile.originalname, // Original filename from the client
+      filename: resumeFile.originalname,
       length: resumeFile.size
     };
 
@@ -32,7 +33,6 @@ const createJobApplication = async (req, res) => {
 
     await newApplication.save();
 
-    // Notify applicant
     const applicantNotification = new Notification({
       userId: applicantId,
       type: 'JOB_APPLICATION_STATUS',
@@ -40,7 +40,6 @@ const createJobApplication = async (req, res) => {
     });
     await applicantNotification.save();
 
-    // Notify job poster
     const posterNotification = new Notification({
       userId: jobExists.postedBy,
       type: 'JOB_APPLICATION_RECEIVED',
@@ -50,15 +49,59 @@ const createJobApplication = async (req, res) => {
 
     res.status(201).json({ message: 'Application submitted successfully', application: newApplication });
   } catch (error) {
-    console.error('Error in createJobApplication:', error); // For debugging
+    console.error('Error in createJobApplication:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Other controllers remain unchanged
+const updateApplicationStatus = async (req, res) => {
+  const { applicationId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const application = await JobApplication.findById(applicationId).populate('jobId');
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+
+    application.status = status;
+    await application.save();
+
+    if (status === 'accepted') {
+      await JobOffer.findByIdAndUpdate(application.jobId._id, { status: 'closed' });
+
+      const otherApps = await JobApplication.find({
+        jobId: application.jobId._id,
+        _id: { $ne: applicationId }
+      });
+
+      for (const other of otherApps) {
+        if (other.status === 'pending') {
+          other.status = 'rejected';
+          await other.save();
+
+          await Notification.create({
+            userId: other.applicantId,
+            type: 'JOB_APPLICATION_STATUS',
+            message: `Your application for "${application.jobId.title}" has been rejected.`
+          });
+        }
+      }
+    }
+
+    await Notification.create({
+      userId: application.applicantId,
+      type: 'JOB_APPLICATION_STATUS',
+      message: `Your application for "${application.jobId.title}" has been ${status}.`
+    });
+
+    res.status(200).json({ message: `Application ${status}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const createJobOffer = async (req, res) => {
   try {
-    const { title, description, experienceLevel, jobType, location, salaryRange } = req.body;
+    const { title, description, experienceLevel, jobType, location, city, salaryRange ,requiredSkills} = req.body;
     const postedBy = req.body.postedBy;
 
     if (!title || !description || !experienceLevel || !jobType || !postedBy) {
@@ -71,7 +114,9 @@ const createJobOffer = async (req, res) => {
       experienceLevel,
       jobType,
       location,
+      city,
       salaryRange,
+      requiredSkills,
       postedBy
     });
 
@@ -119,7 +164,7 @@ const getJobOfferById = async (req, res) => {
 
 const updateJobOffer = async (req, res) => {
   try {
-    const { title, description, experienceLevel, jobType, location, salaryRange } = req.body;
+    const { title, description, experienceLevel, jobType, location, city,salaryRange,requiredSkills } = req.body;
     const currentUserId = req.body.userId;
 
     const jobOffer = await JobOffer.findById(req.params.id);
@@ -130,7 +175,7 @@ const updateJobOffer = async (req, res) => {
 
     const updatedJobOffer = await JobOffer.findByIdAndUpdate(
       req.params.id,
-      { title, description, experienceLevel, jobType, location, salaryRange },
+      { title, description, experienceLevel, jobType, location, city, salaryRange,requiredSkills },
       { new: true }
     ).populate('postedBy', 'username');
 
@@ -186,6 +231,39 @@ const getAllJobApplications = async (req, res) => {
   }
 };
 
+
+const getRecommendedJobsBySkills = async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // Vérifie que l'utilisateur existe
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Récupère les skills depuis UserSkill (et non User)
+    const userSkillsDocs = await UserSkill.find({ userId });
+    const userSkills = userSkillsDocs.map(skill => skill.skillId.toString());
+
+    // Récupère les offres de job ouvertes
+    const allJobs = await JobOffer.find({ status: { $ne: 'closed' } });
+
+    // Filtre les jobs dont requiredSkills matchent avec les skills du user
+    const matchedJobs = allJobs.filter(job => {
+      if (!Array.isArray(job.requiredSkills)) return false;
+      const matched = job.requiredSkills.filter(skill =>
+        userSkills.includes(skill.toString())
+      );
+      return matched.length > 0;
+    });
+
+    res.status(200).json(matchedJobs);
+  } catch (error) {
+    console.error('Error in AI job recommendation:', error);
+    res.status(500).json({ message: 'Error fetching recommended jobs' });
+  }
+};
+
+
 module.exports = {
   createJobOffer,
   getAllJobOffers,
@@ -193,5 +271,7 @@ module.exports = {
   updateJobOffer,
   deleteJobOffer,
   createJobApplication,
-  getAllJobApplications
+  getAllJobApplications,
+  updateApplicationStatus,
+  getRecommendedJobsBySkills
 };

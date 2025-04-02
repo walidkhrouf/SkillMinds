@@ -10,6 +10,7 @@ const jobOfferSchema = new Schema({
   experienceLevel: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], required: true },
   jobType: { type: String, enum: ['Full-Time', 'Part-Time', 'Freelance', 'Internship'], required: true },
   location: { type: String },
+  city: { type: String },
   salaryRange: { type: String },
   status: { type: String, enum: ['open', 'closed'], default: 'open' },
   createdAt: { type: Date, default: Date.now }
