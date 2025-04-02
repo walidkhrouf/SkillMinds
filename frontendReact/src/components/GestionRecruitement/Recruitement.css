@@ -548,6 +548,7 @@ form button:hover {
   overflow-y: auto;
   max-height: 83vh;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
 
 }
 
@@ -1116,4 +1117,11 @@ form button:hover {
   height: 18px;
   margin-right: 8px;
   opacity: 0.7;
+}
+
+
+.job-card p, .job-card h2, .job-card h4, .job-card div {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
 }

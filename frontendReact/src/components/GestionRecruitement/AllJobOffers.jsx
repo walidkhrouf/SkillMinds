@@ -140,6 +140,13 @@ const [showMyPostedJobs, setShowMyPostedJobs] = useState(false);
     setCurrentPage(selected);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Fonction pour changer la case et rediriger
+const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
+  setter(prev => !prev);
+  navigate(redirectPath);
+};
+
   
 
   return (
@@ -150,8 +157,13 @@ const [showMyPostedJobs, setShowMyPostedJobs] = useState(false);
   <input type="checkbox" checked={showFewerApplicants} onChange={() => handleCheckboxChanging(setShowFewerApplicants)} /> Jobs With Fewer Applicants
 </label>
 <label>
-  <input type="checkbox" checked={showRecommended} onChange={() => handleCheckboxChanging(setShowRecommended)} /> Recommended Jobs
+  <input 
+    type="checkbox" 
+    checked={showRecommended} 
+    onChange={() => handleCheckboxChangingWithRedirect(setShowRecommended, '/recommended-jobs')} 
+  /> Recommended Jobs
 </label>
+
 <label>
   <input type="checkbox" checked={showOpenJobs} onChange={() => handleCheckboxChanging(setShowOpenJobs)} /> Open Jobs
 </label>
