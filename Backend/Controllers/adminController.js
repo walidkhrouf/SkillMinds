@@ -1,6 +1,8 @@
 const Skill = require('../models/Skill');
 const User = require("../models/User"); // Ajout du modèle User
 const UserSkill = require("../models/UserSkill"); // Ajout du modèle UserSkill
+const JobOffer = require('../models/JobOffer');
+
 
 exports.addSkill = async (req, res) => {
   try {
@@ -14,6 +16,14 @@ exports.addSkill = async (req, res) => {
   } catch (error) {
     console.error("Error adding skill:", error);
     return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+exports.getTotalJobOffers = async (req, res) => {
+  try {
+    const totalJobOffers = await JobOffer.countDocuments();
+    res.status(200).json({ totalJobOffers });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la récupération du nombre total d\'offres d\'emploi' });
   }
 };
 

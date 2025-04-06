@@ -8,22 +8,24 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Cell,
   Legend,
   ResponsiveContainer,
 } from "recharts";
 import Header from "../common/header/Header";
 import Footer from "../common/footer/Footer";
 import "./AdminDashboard.css";
+import axios from 'axios';
+
+
+
 
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
   { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
 ];
 
-const dummyJobs = [
-  { id: 1, title: "Frontend Developer", company: "Tech Corp", location: "Remote" },
-  { id: 2, title: "Backend Developer", company: "Dev Solutions", location: "Onsite" },
-];
+
 
 const dummyGroups = [
   { id: 1, name: "React Enthusiasts", members: 120 },
@@ -53,6 +55,10 @@ const defaultStatsData = {
     total: 0,
     trending: [],
   },
+  jobs: {
+    total: 0,
+  },
+  
 };
 
 const Message = ({ message, type, onClose }) => {
@@ -84,26 +90,26 @@ const UserManager = () => {
   const [availableSkills, setAvailableSkills] = useState([]);
   const [assignedSkillIds, setAssignedSkillIds] = useState([]);
   const [message, setMessage] = useState(null);
-
   useEffect(() => {
     async function fetchUsers() {
       try {
         const response = await fetch("http://localhost:5000/api/users/all");
         if (response.ok) {
           const data = await response.json();
-          setUsers(data);
+          setUsers(data); // Vérifiez que 'data' contient bien les champs mentionnés
         }
       } catch (err) {
         console.error(err);
       }
     }
+    
     fetchUsers();
   }, []);
-
   const showMessage = (text, type = "success") => {
     setMessage({ text, type });
     setTimeout(() => setMessage(null), 5000);
   };
+  
 
   const handleRowClick = async (id) => {
     if (selectedUser && selectedUser._id === id) {
@@ -128,6 +134,28 @@ const UserManager = () => {
       console.error(err);
     }
   };
+  
+
+ 
+  useEffect(() => {
+    if (selectedUser) {
+      async function fetchUserSkills() {
+        try {
+          const response = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserSkills(data);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      fetchUserSkills();
+    }
+  }, [selectedUser]);
+
+ 
+  
 
   const startEditing = async (user) => {
     setEditingUserId(user._id);
@@ -393,7 +421,7 @@ const UserManager = () => {
           onClose={() => setMessage(null)}
         />
       )}
-      <table className="user-table">
+       <table className="user-table">
         <thead>
           <tr>
             <th>Username</th>
@@ -752,6 +780,36 @@ const SkillManager = () => {
   const handleEditingChange = (e) => {
     setEditingData({ ...editingData, [e.target.name]: e.target.value });
   };
+  const saveEditedUser = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingData),
+      });
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUsers(users.map((u) => (u._id === updatedUser._id ? updatedUser : u)));
+        setSelectedUser(updatedUser);
+  
+        const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`);
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          setUserSkills(skillsData);
+        }
+  
+        setEditingUserId(null);
+        showMessage("✅ User updated successfully");
+      } else {
+        showMessage("Error updating user", "error");
+      }
+    } catch (err) {
+      console.error("Error updating user:", err);
+      showMessage("Error updating user", "error");
+    }
+  };
+  
+  
 
   const saveEditedSkill = async (skillId) => {
     const tagsArray = editingData.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag);
@@ -780,6 +838,7 @@ const SkillManager = () => {
       showMessage("Error updating skill", "error");
     }
   };
+  
 
   return (
     <div className="skill-manager">
@@ -887,19 +946,80 @@ const SkillManager = () => {
 };
 
 const AdminDashboard = () => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
   const [statsData, setStatsData] = useState(defaultStatsData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [jobOffers, setJobOffers] = useState([]);
+const [jobLoading, setJobLoading] = useState(true);
+const [jobError, setJobError] = useState(null);
+const [selectedJob, setSelectedJob] = useState(null);
+const [applications, setApplications] = useState([]);
+const [skillsMap, setSkillsMap] = useState({});
+const [loadingSkills, setLoadingSkills] = useState(false);
+const [skillsData, setSkillsData] = useState([]);
+const [skillsError, setSkillsError] = useState(null);
 
-  useEffect(() => {
-    const storedDarkMode = localStorage.getItem("darkMode");
-    if (storedDarkMode === "true") {
-      setDarkMode(true);
-      document.body.classList.add("dark-mode");
+
+const fetchJobDetails = (jobId) => {
+  const url = currentUser.role === 'admin' 
+    ? `http://localhost:5000/api/recruitment/job-offers/${jobId}/applications` 
+    : `http://localhost:5000/api/recruitment/job-offers/${jobId}`;
+
+  axios.get(url, {
+    params: { userId: currentUser._id, role: currentUser.role }
+  })
+    .then(res => {
+      if (currentUser.role === 'admin') {
+        console.log('Admin applications response:', res.data);
+        setApplications(res.data.applications || []);
+      } else {
+        console.log('User job details response:', res.data);
+        setSelectedJob(res.data.jobOffer);
+        if (res.data.applications) setApplications(res.data.applications);
+      }
+    })
+    .catch(err => console.error('Error fetching job details:', err));
+};
+
+
+
+
+
+
+
+
+
+
+
+useEffect(() => {
+  async function fetchSkills() {
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/skills");
+      if (response.ok) {
+        const data = await response.json();
+        const map = {};
+        data.forEach(skill => {
+          map[skill._id] = skill.name;
+        });
+        setSkillsMap(map);
+      }
+    } catch (err) {
+      console.error("Error fetching skills:", err);
     }
-  }, []);
+  }
+  fetchSkills();
+}, []);
+const getSkillNames = (skills) => {
+  return skills?.map(id => skillsMap[id] || id).join(', ') || 'N/A';
+};
+
+
+
+
 
   useEffect(() => {
     async function fetchStats() {
@@ -949,18 +1069,141 @@ const AdminDashboard = () => {
     }
   }, [activeSection]);
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
-      localStorage.setItem("darkMode", newMode);
-      return newMode;
-    });
+  
+  const fetchJobOffers = async () => {
+    try {
+      setJobLoading(true);
+      const response = await fetch("http://localhost:5000/api/recruitment/job-offers");
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      if (!Array.isArray(data)) throw new Error("Data format error: Expected an array");
+      setJobOffers(data);
+      setStatsData((prevStats) => ({
+        ...prevStats,
+        jobs: {
+          total: data.length,
+          open: data.filter(job => job.status === "open").length,
+          closed: data.filter(job => job.status === "closed").length,
+        },
+      }));
+    } catch (err) {
+      console.error("Error fetching job offers:", err);
+      setJobError("An error occurred while fetching job offers.");
+    } finally {
+      setJobLoading(false);
+    }
   };
+  
+  
+  
+  useEffect(() => {
+    fetchJobOffers(); // Charger les jobs dès le montage
+  }, []);
+  useEffect(() => {
+    if (activeSection === "jobs" || activeSection === "statistics") {
+      fetchJobOffers(); // Actualiser les offres d'emploi si on est sur la page Jobs ou Statistics
+    }
+  }, [activeSection]);
+    
+  const fetchMostDemandedSkills = async () => {
+    try {
+      setLoadingSkills(true);
+      // Récupération des offres d'emploi
+      const response = await axios.get("http://localhost:5000/api/recruitment/job-offers");
+      if (response.status === 200) {
+        const jobOffers = response.data;
+  
+        const skillCounts = {};
+  
+        // Compter les occurrences des compétences
+        jobOffers.forEach((job) => {
+          job.requiredSkills.forEach((skill) => {
+            if (skillCounts[skill]) {
+              skillCounts[skill] += 1;
+            } else {
+              skillCounts[skill] = 1;
+            }
+          });
+        });
+  
+        // Obtenir les noms des compétences depuis les IDs
+        const skillIds = Object.keys(skillCounts);
+        const skillNamesResponse = await axios.get(`http://localhost:5000/api/admin/skills`);
+        
+        if (skillNamesResponse.status === 200) {
+          const skillNamesMap = {};
+          skillNamesResponse.data.forEach((skill) => {
+            skillNamesMap[skill._id] = skill.name;
+          });
+  
+          // Préparer les données pour le diagramme
+          const sortedSkills = Object.entries(skillCounts)
+            .map(([skillId, count]) => ({
+              name: skillNamesMap[skillId] || skillId,
+              value: count,
+            }))
+            .sort((a, b) => b.value - a.value);
+  
+          setSkillsData(sortedSkills);
+          setSkillsError(null);
+        } else {
+          setSkillsError("Erreur lors de la récupération des noms de compétences.");
+        }
+      } else {
+        setSkillsError("Erreur lors de la récupération des compétences.");
+      }
+    } catch (error) {
+      setSkillsError("Erreur lors de la récupération des compétences.");
+      console.error("Erreur lors de la récupération des compétences:", error);
+    } finally {
+      setLoadingSkills(false);
+    }
+  };
+  useEffect(() => {
+    if (activeSection === "statistics") {
+      fetchMostDemandedSkills();
+    }
+  }, [activeSection]);
+    
+  
+  const handleJobRowClick = async (id) => {
+    if (selectedJob && selectedJob._id === id) {
+        setSelectedJob(null);
+        setApplications([]); // Réinitialiser les applications
+        return;
+    }
+    try {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+        const response = await fetch(`http://localhost:5000/api/recruitment/job-offers/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            setSelectedJob(data.jobOffer);
+
+            // Vérifier si l'utilisateur connecté est l'admin ou celui qui a posté l'offre
+            if (currentUser.role === 'admin' || data.jobOffer.postedBy._id === currentUser._id) {
+                setApplications(data.applications || []);  // Récupération des candidatures
+            } else {
+                setApplications([]);  // Si l'utilisateur n'est pas autorisé
+            }
+        } else {
+            console.error("Error fetching job details:", response.statusText);
+        }
+    } catch (err) {
+        console.error("Error fetching job details:", err);
+    }
+};
+
+
+
+  
+  
 
   const renderSection = () => {
     switch (activeSection) {
@@ -988,6 +1231,57 @@ const AdminDashboard = () => {
                   </ResponsiveContainer>
                 </div>
                 <div className="stats-card">
+  <h3>Trending Skills in Job Offers</h3>
+  {loadingSkills ? (
+    <p>Loading trending skills...</p>
+  ) : skillsError ? (
+    <p className="error-message">{skillsError}</p>
+  ) : skillsData && skillsData.length > 0 ? (
+    <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+        <Pie
+          data={skillsData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+          fill="#8884d8"
+          label={({ name, value }) => `${name}: ${value}`}
+        >
+          {skillsData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={['#c2b280', '#6f4e37', '#cfa54b'][index % 3]} />
+          ))}
+        </Pie>
+        <Tooltip />
+      </PieChart>
+    </ResponsiveContainer>
+  ) : (
+    <p>No trending skills available.</p>
+  )}
+</div>
+
+
+
+                <div className="stats-card">
+                <h3>Jobs Overview</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={[
+                    { status: "Open", count: jobOffers.filter(job => job.status === "open").length },
+                    { status: "Closed", count: jobOffers.filter(job => job.status === "closed").length },
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="status" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#a6792e" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+                              
+                              
+                <div className="stats-card">
                   <h3>Course Categories</h3>
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
@@ -1005,6 +1299,7 @@ const AdminDashboard = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+                
                 <div className="stats-card metric-group">
                   <div className="metric-box">
                     <h4>Total Users</h4>
@@ -1018,6 +1313,35 @@ const AdminDashboard = () => {
                     <h4>Skills Available</h4>
                     <p className="metric-value">{statsData.skills.total}</p>
                   </div>
+                                <div 
+                className="job-counter" 
+                style={{ 
+                  textAlign: "center", 
+                  fontSize: "1.5rem", 
+                  fontWeight: "bold", 
+                  color: "#333", 
+                  margin: "20px", 
+                  lineHeight: "1.2"
+                }}
+              >
+                <div 
+                  style={{ 
+                    fontSize: "1.2rem", 
+                    marginBottom: "5px" 
+                  }}
+                >
+                  Total Jobs
+                </div>
+                <div 
+                  style={{ 
+                    fontSize: "2.5rem", 
+                    color: "#a6792e" 
+                  }}
+                >
+                  {jobOffers.length}
+                </div>
+              </div>
+
                 </div>
                 <div className="stats-card">
                   <h3>Trending Skills</h3>
@@ -1063,30 +1387,83 @@ const AdminDashboard = () => {
             </table>
           </div>
         );
-      case "jobs":
-        return (
-          <div className="section-content">
-            <h2>Jobs</h2>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Company</th>
-                  <th>Location</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dummyJobs.map((job) => (
-                  <tr key={job.id}>
-                    <td>{job.title}</td>
-                    <td>{job.company}</td>
-                    <td>{job.location}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        case "jobs":
+  return (
+    <div className="section-content">
+      <h2>Jobs</h2>
+      {jobLoading ? (
+        <p>Loading job offers...</p>
+      ) : jobError ? (
+        <p className="error-message">{jobError}</p>
+      ) : (
+        <>
+          {/* Compteur de jobs */}
+          <div className="job-counter">
+            <h3>Total Jobs: {jobOffers.length}</h3>
           </div>
-        );
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Posted By</th>
+                <th>Location</th>
+                <th>Date Posted</th>
+                <th>Status</th>
+                <th>Details (👇 Click to expand)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobOffers.length === 0 ? (
+                <tr>
+                  <td colSpan="6">No job offers found.</td>
+                </tr>
+              ) : (
+                jobOffers.map((job) => (
+                  <React.Fragment key={job._id}>
+                    <tr>
+                      <td>{job.title}</td>
+                      <td>{job.postedBy?.username || "Unknown"}</td>
+                      <td>{job.location || "N/A"}</td>
+                      <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                      <td>{job.status || "N/A"}</td>
+                      <td
+                        onClick={() => handleJobRowClick(job._id)}
+                        style={{ cursor: "pointer", color: "rgb(78, 49, 6)" }}
+                      >
+                        👇 Click to expand
+                      </td>
+                    </tr>
+                    {selectedJob && selectedJob._id === job._id && (
+                      <tr className="expanded">
+                        <td colSpan="6">
+                          <div className="expanded-job-details">
+                            <h2>{selectedJob.title}</h2>
+                            <p><strong>Description:</strong> {selectedJob.description}</p>
+                            <p><strong>Location:</strong> {selectedJob.location || 'N/A'}</p>
+                            <p><strong>City:</strong> {selectedJob.city || 'N/A'}</p>
+                            <p><strong>Experience Level:</strong> {selectedJob.experienceLevel}</p>
+                            <p><strong>Job Type:</strong> {selectedJob.jobType}</p>
+                            <p><strong>Salary Range:</strong> {selectedJob.salaryRange || 'N/A'}</p>
+                            <p><strong>Required Skills:</strong> {getSkillNames(selectedJob.requiredSkills)}</p>
+                            <p><strong>Posted By:</strong> {selectedJob.postedBy?.username || 'N/A'}</p>
+                            <p><strong>Status:</strong> {selectedJob.status || 'N/A'}</p>
+
+                            
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+
+        
       case "groups":
         return (
           <div className="section-content">
@@ -1170,11 +1547,12 @@ const AdminDashboard = () => {
                 📚 Courses
               </li>
               <li
-                className={activeSection === "jobs" ? "active" : ""}
-                onClick={() => setActiveSection("jobs")}
-              >
-                💼 Jobs
-              </li>
+  className={activeSection === "jobs" ? "active" : ""}
+  onClick={() => setActiveSection("jobs")}
+>
+  💼 Jobs
+</li>
+
               <li
                 className={activeSection === "groups" ? "active" : ""}
                 onClick={() => setActiveSection("groups")}

@@ -131,33 +131,260 @@ useEffect(() => {
     return R * c;
   };
 
+  // États pour la recherche
+const [searchValue, setSearchValue] = useState('');
+const [selectedFilter, setSelectedFilter] = useState('');
+
+// Fonction pour gérer le changement de la valeur de recherche
+const handleSearchChange = (e) => {
+  setSearchValue(e.target.value);
+  applyFilters();
+};
+
+const handleFilterChange = (e) => {
+  setSelectedFilter(e.target.value);
+  applyFilters();
+};
+
+const [selectedDateFilter, setSelectedDateFilter] = useState('all');
+const [selectedJobTypes, setSelectedJobTypes] = useState([]);
+const [selectedCountries, setSelectedCountries] = useState([]);
+const [uniqueCountries, setUniqueCountries] = useState([]);
+useEffect(() => {
+  axios.get('http://localhost:5000/api/admin/skills')
+    .then(res => {
+      const unique = [...new Set(res.data.map(skill => skill.location))];
+      setUniqueCountries(unique);
+    })
+    .catch(err => console.error('Error fetching skills:', err));
+}, []);
+const handleCheckboxChange = (value, type) => {
+  const updateState = (state, setState) => {
+    if (state.includes(value)) {
+      setState(state.filter(item => item !== value));
+    } else {
+      setState([...state, value]);
+    }
+  };
+
+  if (type === 'jobType') {
+    updateState(selectedJobTypes, setSelectedJobTypes);
+  } else if (type === 'country') {
+    updateState(selectedCountries, setSelectedCountries);
+  }
+};
+const handleCheckboxChanging = (setter) => {
+  setter((prev) => !prev);
+};
+
+
+const applyFilters = () => {
+  let filtered = [...recommendedJobs];
+
+  if (showFewerApplicants) {
+    filtered = filtered.filter(job => job.applicants?.length < 5);
+  }
+
+  if (showRecommended) {
+    filtered = filtered.filter(job => job.recommended); 
+  }
+
+  // Filtre des jobs ouverts
+  if (showOpenJobs) {
+    filtered = filtered.filter(job => job.status === 'open');
+  }
+
+  // Filtre des jobs postés par l'utilisateur
+  if (showMyPostedJobs) {
+    filtered = filtered.filter(job => job.postedBy._id === currentUser._id);
+  }
+
+  if (selectedDateFilter !== 'all') {
+    const daysAgo = parseInt(selectedDateFilter);
+    const cutoff = moment().subtract(daysAgo, 'days');
+    filtered = filtered.filter(job => moment(job.createdAt).isAfter(cutoff));
+  }
+
+  if (searchValue.trim() !== '') {
+    const value = searchValue.toLowerCase();
+    filtered = filtered.filter(job => {
+      if (selectedFilter === 'title') return job.title.toLowerCase().includes(value);
+      if (selectedFilter === 'location') return job.location?.toLowerCase().includes(value);
+      if (selectedFilter === 'salary') return job.salaryRange?.toLowerCase().includes(value);
+      return false;
+    });
+  }
+
+  if (selectedJobTypes.length > 0) {
+    filtered = filtered.filter(job => selectedJobTypes.includes(job.jobType));
+  }
+
+  if (selectedCountries.length > 0) {
+    filtered = filtered.filter(job => selectedCountries.includes(job.location));
+  }
+
+  setFilteredOffers(filtered);
+};
+
+useEffect(() => {
+  applyFilters();
+}, [searchValue, selectedFilter, selectedDateFilter, selectedJobTypes, selectedCountries]);
+
+
+useEffect(() => {
+  axios.get('http://localhost:5000/api/recruitment/job-offers')
+    .then(res => {
+      const locations = res.data.map(job => job.location?.trim()).filter(Boolean);
+      const unique = [...new Set(locations)];
+      setUniqueCountries(unique);
+    })
+    .catch(err => console.error('Error fetching job offers:', err));
+}, []);
+const [showFewerApplicants, setShowFewerApplicants] = useState(false);
+const [showRecommended, setShowRecommended] = useState(false);
+const [showOpenJobs, setShowOpenJobs] = useState(false);
+const [showMyPostedJobs, setShowMyPostedJobs] = useState(false);
+
+useEffect(() => {
+  applyFilters();
+}, [searchValue, selectedFilter, selectedDateFilter, selectedJobTypes, selectedCountries, showOpenJobs, showMyPostedJobs]);
+
+
   return (
     <div className="job-page-layout">
+      <aside className="job-filters">
+  <h3>Filters</h3>
+  
+<label>
+  <input 
+    type="checkbox" 
+    checked={showRecommended} 
+    onChange={() => handleCheckboxChangingWithRedirect(setShowRecommended, '/recommended-jobs')} 
+  /> Recommended Jobs
+</label>
+
+<label>
+  <input 
+    type="checkbox" 
+    checked={showOpenJobs} 
+    onChange={() => handleCheckboxChanging(setShowOpenJobs)} 
+  /> Open Jobs
+</label>
+<label>
+  <input 
+    type="checkbox" 
+    checked={showMyPostedJobs} 
+    onChange={() => handleCheckboxChanging(setShowMyPostedJobs)} 
+  /> My Posted Jobs
+</label>
+
+
+
+
+
+  <h3>Date Posted</h3>
+  <label><input type="radio" name="date" value="all" checked={selectedDateFilter === 'all'} onChange={(e) => setSelectedDateFilter(e.target.value)} /> All</label>
+  <label><input type="radio" name="date" value="30" checked={selectedDateFilter === '30'} onChange={(e) => setSelectedDateFilter(e.target.value)} /> Past 30 days</label>
+  <label><input type="radio" name="date" value="7" checked={selectedDateFilter === '7'} onChange={(e) => setSelectedDateFilter(e.target.value)} /> Past 7 days</label>
+  <label><input type="radio" name="date" value="1" checked={selectedDateFilter === '1'} onChange={(e) => setSelectedDateFilter(e.target.value)} /> Past 24 hours</label>
+
+  <h3>Job Type</h3>
+  {['Full-Time', 'Part-Time', 'Freelance', 'Internship'].map(type => (
+    <label key={type}>
+      <input type="checkbox" value={type} checked={selectedJobTypes.includes(type)} onChange={() => handleCheckboxChange(type, 'jobType')} />
+      {type}
+    </label>
+  ))}
+
+<h3>Country</h3>
+{uniqueCountries.length === 0 ? (
+  <p style={{ fontSize: '14px', color: '#777' }}>No countries found</p>
+) : (
+  uniqueCountries.map((country, idx) => (
+    <label key={idx}>
+      <input
+        type="checkbox"
+        value={country}
+        checked={selectedCountries.includes(country)}
+        onChange={() => handleCheckboxChange(country, 'country')}
+      />
+      {country}
+    </label>
+  ))
+)}
+
+</aside>
+
       <section className="job-results">
         <h1 className="section-title" style={{ textAlign: 'center', fontSize: '36px' }}>Recommended Jobs</h1>
+        <div className="top-search-bar">
+  <input
+    type="text"
+    className="search-text"
+    placeholder="Search jobs, skills, companies"
+    value={searchValue}
+    onChange={handleSearchChange}
+  />
+  <select
+    className="search-select"
+    value={selectedFilter}
+    onChange={handleFilterChange}
+  >
+    <option value="">Select Filter</option>
+    <option value="title">Title</option>
+    <option value="location">Location</option>
+    <option value="salary">Salary</option>
+  </select>
+  <button
+    className="search-btn"
+    onClick={() => {}}
+    disabled={!searchValue || !selectedFilter}
+  >
+    Find Jobs
+
+  </button>
+  
+
+</div>
+<p className="job-count">
+  {filteredOffers.length} job{filteredOffers.length !== 1 ? 's' : ''} found
+</p>
 
         <div className="job-offer-container">
+
           {filteredOffers.map(job => (
             <div key={job._id} className="job-card">
               <Link to={`/job-details/${job._id}`} className="job-title-link">
                 <h2>{job.title}</h2>
               </Link>
               <div className="job-location">
+                
                 <img src="/public/images/locations.png" alt="location" />
                 <p>{job.city || 'N/A'}, {job.location || 'N/A'}</p>
               </div>
               <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
               <p><strong>Description:</strong> {job.description || 'N/A'}</p>
               <h4>Status: {job.status || 'N/A'}</h4>
+              <div className="job-card-actions">
+      <Link to={`/job-details/${job._id}`} className="viewmore">View Details</Link>
+
+      {job.postedBy._id !== currentUser._id && job.status !== 'closed' && (
+        <Link to={`/apply-to-job/${job._id}`} className="viewmore">Apply</Link>
+      )}
+    </div>
+
+              
               <div style={{ textAlign: 'right', color: 'green', fontWeight: 'bold' }}>
                 {moment(job.createdAt).fromNow()}
               </div>
+              
             </div>
           ))}
         </div>
 
         {userLocation && (
           <div className="map-container" style={{ height: '400px', marginTop: '20px' }}>
+
             <MapContainer center={userLocation} zoom={10} style={{ height: '100%', width: '100%' }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <Marker position={userLocation}>
@@ -168,7 +395,10 @@ useEffect(() => {
                   <Popup>
                     <h3>{job.title}</h3>
                     <p>{job.city}, {job.location}</p>
-                    <Link to={`/job-details/${job._id}`}>View Details</Link>
+                    <Link to={`/job-details/${job._id}`}>View Details</Link> <br /> <br />
+                    <Link to={`/apply-to-job/${job._id}`} >Apply</Link>
+
+
                   </Popup>
                 </Marker>
               ))}

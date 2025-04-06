@@ -931,7 +931,7 @@ form button:hover {
 /* 🌟 Recommended Jobs Page Styles */
 
 .job-results {
-  max-width: 1200px;
+  max-width: 1250px;
   margin: 40px auto;
   padding: 20px;
   background-color:rgb(237, 237, 237);
@@ -1125,3 +1125,334 @@ form button:hover {
   word-break: break-word;
   white-space: pre-wrap;
 }
+
+
+
+
+/* === Dark Mode for General Containers === */
+body.dark-mode .job-page-layout,
+body.dark-mode .job-filters,
+body.dark-mode .job-results,
+body.dark-mode .job-card,
+body.dark-mode .apply-to-job,
+body.dark-mode .notification-dropdown,
+body.dark-mode .profile-dropdown,
+body.dark-mode .job-offer-form {
+  background-color: #181818;
+  color: #e0e0e0;
+}
+
+body.dark-mode .job-card:hover,
+body.dark-mode .apply-to-job:hover,
+body.dark-mode .job-offer-form:hover {
+  background-color: #252525;
+}
+
+/* === Dark Mode for Text Elements === */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode label {
+  color: #e0e0e0;
+}
+
+/* === Dark Mode for Inputs and Buttons === */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  background-color: #444;
+  border-color: #666;
+}
+
+body.dark-mode .viewmore,
+body.dark-mode .create-button,
+body.dark-mode .search-btn,
+body.dark-mode .edit-button,
+body.dark-mode .delete-button,
+body.dark-mode .logout-btn,
+body.dark-mode .certificate-btn {
+  background-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .viewmore:hover,
+body.dark-mode .search-btn:hover,
+body.dark-mode .edit-button:hover,
+body.dark-mode .delete-button:hover,
+body.dark-mode .logout-btn:hover,
+body.dark-mode .certificate-btn:hover {
+  background-color: #555;
+}
+
+/* === Dark Mode for Notifications === */
+body.dark-mode .notification-item {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .notification-item.unread {
+  background-color: #3a3a3a;
+}
+
+body.dark-mode .notification-item:hover {
+  background-color: #444;
+}
+
+/* === Dark Mode for Pagination === */
+body.dark-mode .pagination li {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .pagination li:hover {
+  background-color: #444;
+}
+
+body.dark-mode .pagination li.active {
+  background-color: #555;
+}
+
+/* === Dark Mode for Search Bar === */
+body.dark-mode .search-text,
+body.dark-mode .search-select {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .search-btn {
+  background-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .search-btn:hover {
+  background-color: #555;
+}
+
+/* === Dark Mode for Profile & Notification === */
+body.dark-mode .profile-photo {
+  border: 2px solid #555;
+}
+
+body.dark-mode .profile-details,
+body.dark-mode .notification-dropdown {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+/* === Dark Mode for Form Messages === */
+body.dark-mode .message.success {
+  background-color: #155724;
+  color: #d4edda;
+}
+
+body.dark-mode .message.error {
+  background-color: #721c24;
+  color: #f8d7da;
+}
+/* Dark Mode Adjustments for Create Job Offer */
+body.dark-mode .create-job-offer,
+body.dark-mode .create-job-offer input[type="text"],
+body.dark-mode .create-job-offer textarea,
+body.dark-mode .create-job-offer select {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .create-job-offer input[type="text"]::placeholder,
+body.dark-mode .create-job-offer textarea::placeholder {
+  color: #bbb;
+}
+
+body.dark-mode .create-job-offer h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .create-job-offer label {
+  color: #ccc;
+}
+
+body.dark-mode .create-job-offer button[type="submit"] {
+  background-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .create-job-offer button[type="submit"]:hover {
+  background-color: #666;
+}
+
+body.dark-mode .create-job-offer button[type="submit"]:active {
+  background-color: #777;
+}
+
+/* Improved Readability for Input Fields */
+body.dark-mode .create-job-offer input[type="text"]:focus,
+body.dark-mode .create-job-offer textarea:focus,
+body.dark-mode .create-job-offer select:focus {
+  background-color: #444;
+  color: #fff;
+  border-color: #777;
+}
+
+/* Adjustments for the Right Box (Background Image) */
+body.dark-mode .right-box1, 
+body.dark-mode .right-box2, 
+body.dark-mode .right-box3 {
+  background-color: #222;
+}
+
+
+/* Responsive Design for Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .signup-container1 {
+    flex-direction: column;
+    width: 90%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .left-box1, .right-box1 {
+    width: 100%;
+    padding: 30px;
+  }
+
+  .left-box1 {
+    height: auto;
+  }
+
+  .right-box1 {
+    display: block;
+    background-size: cover;
+  }
+
+  .create-job-offer {
+    width: 100%;
+    margin: 0;
+  }
+
+  .create-job-offer h2 {
+    font-size: 26px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    font-size: 18px;
+  }
+
+  .form-group input, 
+  .form-group textarea, 
+  .form-group select {
+    width: 100%;
+    font-size: 18px;
+    padding: 10px;
+  }
+
+  .pill-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .pill {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .auth-btn {
+    width: 100%;
+    font-size: 20px;
+    padding: 14px;
+  }
+
+  .message {
+    font-size: 16px;
+  }
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  .signup-container1 {
+    flex-direction: column;
+    width: 100%;
+    margin: 20px auto;
+    padding: 10px;
+  }
+
+  .left-box1, .right-box1 {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .left-box1 {
+    height: auto;
+  }
+
+  .right-box1 {
+    display: none; /* Hide right box on mobile */
+  }
+
+  .create-job-offer {
+    width: 100%;
+    margin: 0;
+  }
+
+  .create-job-offer h2 {
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 16px;
+  }
+
+  .form-group input, 
+  .form-group textarea, 
+  .form-group select {
+    width: 100%;
+    font-size: 16px;
+    padding: 8px;
+  }
+
+  .pill-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .pill {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .auth-btn {
+    width: 100%;
+    font-size: 18px;
+    padding: 12px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+}
+

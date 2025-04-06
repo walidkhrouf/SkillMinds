@@ -149,13 +149,12 @@ const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
 
   
 
+
   return (
     <div className="job-page-layout">
       <aside className="job-filters">
       <h3>Filters</h3>
-<label>
-  <input type="checkbox" checked={showFewerApplicants} onChange={() => handleCheckboxChanging(setShowFewerApplicants)} /> Jobs With Fewer Applicants
-</label>
+
 <label>
   <input 
     type="checkbox" 
