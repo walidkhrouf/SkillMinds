@@ -6,14 +6,32 @@ import './Recruitement.css';
 const JobOfferDetails = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+
   const [job, setJob] = useState(null);
   const [applications, setApplications] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
   const [skillsMap, setSkillsMap] = useState({});
+  const [currencySymbol, setCurrencySymbol] = useState('');
+
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
+  // ✅ Fonction pour récupérer le symbole de la monnaie
+  const fetchCurrencySymbol = async (countryName) => {
+    try {
+      const res = await axios.get(`https://restcountries.com/v3.1/name/${countryName}`);
+      const currencies = res.data[0]?.currencies;
+      if (currencies) {
+        const firstCurrencyKey = Object.keys(currencies)[0];
+        const symbol = currencies[firstCurrencyKey]?.symbol || '';
+        setCurrencySymbol(symbol);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la récupération de la monnaie :', err);
+    }
+  };
+
+  // ✅ Récupérer la map des skills
   useEffect(() => {
     axios.get('http://localhost:5000/api/admin/skills')
       .then(res => {
@@ -26,6 +44,7 @@ const JobOfferDetails = () => {
       .catch(err => console.error('Error fetching skills:', err));
   }, []);
 
+  // ✅ Récupérer les détails du job
   const fetchJobDetails = () => {
     axios.get(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
       params: { userId: currentUser._id }
@@ -40,6 +59,13 @@ const JobOfferDetails = () => {
   useEffect(() => {
     fetchJobDetails();
   }, [jobId]);
+
+  // ✅ Dès que le job est chargé, aller chercher le symbole monétaire
+  useEffect(() => {
+    if (job?.location) {
+      fetchCurrencySymbol(job.location);
+    }
+  }, [job]);
 
   const handleDownload = (applicationId) => {
     const link = document.createElement('a');
@@ -74,29 +100,29 @@ const JobOfferDetails = () => {
       <br />
       <br />
 
-      {/* ✅ Message stylé comme dans CreateJobOffer */}
       {success && (
         <p className={`message ${success.includes('accepted') ? 'success' : 'error'}`}>
-        {success}
-      </p>
+          {success}
+        </p>
       )}
       {error && <p className="message error">{error}</p>}
-<br /> <br />
+
+      <br /> <br />
+
       <h2>{job.title}</h2>
       <p><strong>Description:</strong> {job.description}</p>
       <p><strong>Location:</strong> {job.location || 'N/A'}</p>
       <p><strong>City:</strong> {job.city || 'N/A'}</p>
       <p><strong>Experience:</strong> {job.experienceLevel}</p>
       <p><strong>Job Type:</strong> {job.jobType}</p>
-      <p><strong>Salary Range:</strong> {job.salaryRange || 'N/A'}</p>
+      <p><strong>Salary Range:</strong> {job.salaryRange || 'N/A'} {currencySymbol} </p>
       <p><strong>Required Skills:</strong> {skillNames}</p>
       <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
-      <p><strong>Status:</strong> {job.status  || 'N/A'}</p>
-
-
+      <p><strong>Status:</strong> {job.status || 'N/A'}</p>
 
       {job.postedBy._id === currentUser._id && (
-        <> <br /> 
+        <>
+          <br />
           <h2>Applicants</h2>
           {applications.length === 0 ? (
             <p>No applications yet.</p>
@@ -138,6 +164,7 @@ const JobOfferDetails = () => {
           )}
         </>
       )}
+
       <button
         onClick={() => navigate('/all-job-offers')}
         style={{

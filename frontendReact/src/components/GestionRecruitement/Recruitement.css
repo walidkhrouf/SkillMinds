@@ -1456,3 +1456,39 @@ body.dark-mode .right-box3 {
   }
 }
 
+
+.weather-right {
+  display: flex;
+  padding-left: 30px; /* espace entre texte et bord */
+}
+
+.job-offer-intro {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  padding: 30px 150px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.job-offer-text h2 {
+  font-size: 2.5rem;
+  
+  line-height: 1.3;
+  color: #3e2b14;
+  font-family: 'Georgia', serif;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.job-offer-text h2 span {
+  color: #af7f3e;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.job-offer-image img {
+  max-width: 400px;
+  border-radius: 20px;
+  object-fit: cover;
+}

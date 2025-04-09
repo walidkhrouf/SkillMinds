@@ -6,9 +6,19 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import './Recruitement.css';
 
-const API_KEY = '2ecfb1fc13ce4bd29e2762610ddaf983'; // OpenCage API Key
 const MAX_DISTANCE = 50; // Distance maximale en km
 const ALT_DISTANCE = 100; // Distance alternative en km si aucun job à moins de 50 km
+function getWeatherIcon(code) {
+  if ([0].includes(code)) return "☀️";               // Clear sky
+  if ([1, 2].includes(code)) return "🌤️";            // Partly cloudy
+  if ([3].includes(code)) return "☁️";               // Overcast
+  if ([45, 48].includes(code)) return "🌫️";          // Fog
+  if ([51, 53, 55, 61, 63].includes(code)) return "🌦️"; // Light rain
+  if ([80, 81, 82].includes(code)) return "🌧️";       // Showers
+  if ([95].includes(code)) return "⛈️";              // Thunderstorm
+  return "❓";
+}
+
 
 const RecommendedJobs = () => {
   const [recommendedJobs, setRecommendedJobs] = useState([]);
@@ -18,6 +28,8 @@ const RecommendedJobs = () => {
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const navigate = useNavigate();
+  const [weatherData, setWeatherData] = useState({});
+
 
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -48,76 +60,83 @@ const RecommendedJobs = () => {
 
   async function getCoordinatesFromCity(city, country) {
     try {
-      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${city},${country}&key=${API_KEY}&limit=1`);
+      const response = await fetch(
+        `https://api.maptiler.com/geocoding/${encodeURIComponent(city + ', ' + country)}.json?key=HXejIQuQwjPLz6IguIxN`
+      );
       const data = await response.json();
-      if (data.results.length > 0) {
-        const { lat, lng } = data.results[0].geometry;
-        return [lat, lng];
+      if (data.features.length > 0) {
+        const [lon, lat] = data.features[0].geometry.coordinates;
+        return [lat, lon]; // lat d'abord car ton projet les utilise comme ça
       }
       return null;
     } catch (error) {
-      console.error("Error fetching coordinates:", error);
+      console.error("Error fetching coordinates from MapTiler:", error);
       return null;
     }
   }
+  
+  
 
   // Récupération des coordonnées des jobs et filtrage
-useEffect(() => {
-  async function fetchCoordinates() {
-    const jobsWithCoordinates = await Promise.all(
-      recommendedJobs.map(async (job) => {
-        if (!job.coordinates) {
-          const coords = await getCoordinatesFromCity(job.city, job.location);
-          if (coords) {
-            return { ...job, coordinates: coords };
+  useEffect(() => {
+    setFilteredOffers(recommendedJobs); // Affiche direct
+  
+    async function fetchCoordinates() {
+      const jobsWithCoordinates = await Promise.all(
+        recommendedJobs.map(async (job) => {
+          if (!job.coordinates) {
+            const coords = await getCoordinatesFromCity(job.city, job.location);
+            if (coords) {
+              await getWeather(coords[0], coords[1], job._id); // appel météo
+              return { ...job, coordinates: coords };
+            }
+          } else {
+            await getWeather(job.coordinates[0], job.coordinates[1], job._id); // fallback
           }
-        }
-        return job;
-      })
-    );
-    setFilteredOffers(jobsWithCoordinates);
-
-    // Filtrer les offres proches (<= 50 km)
-    const nearbyJobs = jobsWithCoordinates.filter(job => {
-      if (!job.coordinates || !userLocation) return false;
-      const distance = calculateDistance(
-        userLocation[0], userLocation[1],
-        job.coordinates[0], job.coordinates[1]
+          
+          return job;
+        })
       );
-      return distance <= MAX_DISTANCE;
-    });
-
-    // Si aucune offre n'est proche, récupérer la plus proche dans un rayon de 100 km
-    if (nearbyJobs.length === 0) {
-      let closestJob = null;
-      let minDistance = Infinity;
-
-      jobsWithCoordinates.forEach(job => {
-        if (job.coordinates) {
-          const distance = calculateDistance(
-            userLocation[0], userLocation[1],
-            job.coordinates[0], job.coordinates[1]
-          );
-          if (distance < minDistance) {
-            closestJob = job;
-            minDistance = distance;
-          }
-        }
+  
+      const nearbyJobs = jobsWithCoordinates.filter(job => {
+        if (!job.coordinates || !userLocation) return false;
+        const distance = calculateDistance(
+          userLocation[0], userLocation[1],
+          job.coordinates[0], job.coordinates[1]
+        );
+        return distance <= MAX_DISTANCE;
       });
-
-      if (closestJob) {
-        nearbyJobs.push(closestJob);
+  
+      if (nearbyJobs.length === 0) {
+        let closestJob = null;
+        let minDistance = Infinity;
+  
+        jobsWithCoordinates.forEach(job => {
+          if (job.coordinates) {
+            const distance = calculateDistance(
+              userLocation[0], userLocation[1],
+              job.coordinates[0], job.coordinates[1]
+            );
+            if (distance < minDistance) {
+              closestJob = job;
+              minDistance = distance;
+            }
+          }
+        });
+  
+        if (closestJob) {
+          nearbyJobs.push(closestJob);
+        }
       }
+  
+      setNearbyOffers(nearbyJobs);
     }
-
-    // Mise à jour des offres proches
-    setNearbyOffers(nearbyJobs);
-  }
-
-  if (recommendedJobs.length > 0) {
-    fetchCoordinates();
-  }
-}, [recommendedJobs, userLocation]);
+  
+    if (recommendedJobs.length > 0 && userLocation) {
+      fetchCoordinates(); // Map seulement
+    }
+  }, [recommendedJobs, userLocation]);
+  
 
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -249,6 +268,14 @@ useEffect(() => {
   applyFilters();
 }, [searchValue, selectedFilter, selectedDateFilter, selectedJobTypes, selectedCountries, showOpenJobs, showMyPostedJobs]);
 
+async function getWeather(lat, lon, jobId) {
+  try {
+    const response = await axios.get(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+    setWeatherData(prev => ({ ...prev, [jobId]: response.data.current_weather }));
+  } catch (err) {
+    console.error('Error fetching weather:', err);
+  }
+}
 
   return (
     <div className="job-page-layout">
@@ -317,6 +344,15 @@ useEffect(() => {
 
       <section className="job-results">
         <h1 className="section-title" style={{ textAlign: 'center', fontSize: '36px' }}>Recommended Jobs</h1>
+        <div className="job-offer-intro">
+  <div className="job-offer-text">
+    <h2>Find the job<br /><span>made for you</span></h2>
+  </div>
+  <div className="job-offer-image">
+    <img src="/images/recommnded.png" alt="Job illustration" />
+  </div>
+</div>
+
         <div className="top-search-bar">
   <input
     type="text"
@@ -346,9 +382,11 @@ useEffect(() => {
   
 
 </div>
+
 <p className="job-count">
   {filteredOffers.length} job{filteredOffers.length !== 1 ? 's' : ''} found
 </p>
+ 
 
         <div className="job-offer-container">
 
@@ -361,6 +399,8 @@ useEffect(() => {
                 
                 <img src="/public/images/locations.png" alt="location" />
                 <p>{job.city || 'N/A'}, {job.location || 'N/A'}</p>
+      
+
               </div>
               <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
               <p><strong>Description:</strong> {job.description || 'N/A'}</p>
@@ -395,6 +435,11 @@ useEffect(() => {
                   <Popup>
                     <h3>{job.title}</h3>
                     <p>{job.city}, {job.location}</p>
+                    {weatherData[job._id] && (
+  <div className="weather-right" style={{ fontWeight: 'bold' ,fontSize: '15px'}}>
+    {getWeatherIcon(weatherData[job._id].weathercode)} {weatherData[job._id].temperature}°C
+  </div>
+)} <br /> 
                     <Link to={`/job-details/${job._id}`}>View Details</Link> <br /> <br />
                     <Link to={`/apply-to-job/${job._id}`} >Apply</Link>
 
