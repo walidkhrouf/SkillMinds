@@ -22,14 +22,14 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm install
-        working-directory: frontendReact  
+        working-directory: frontendReact
 
       - name: Run frontend tests
         run: npm test
-        working-directory: frontendReact  
+        working-directory: frontendReact
 
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Changed to Ubuntu 22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,9 +39,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Configure and install backend dependencies
+      - name: Install system dependencies
         run: |
-          # Create jest-mongodb config file with a known working version
+          sudo apt-get update
+          sudo apt-get install -y libssl1.1
+
+      - name: Configure MongoDB for testing
+        run: |
           echo "module.exports = { 
             mongodbMemoryServerOptions: { 
               binary: { 
@@ -54,8 +58,10 @@ jobs:
               autoStart: false
             }
           };" > jest-mongodb-config.js
-          
-          npm install
+        working-directory: Backend
+
+      - name: Install backend dependencies
+        run: npm install
         working-directory: Backend
 
       - name: Run backend tests
