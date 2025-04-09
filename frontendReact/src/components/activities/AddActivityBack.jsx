@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, NavLink } from 'react-router-dom';
-import MapComponent from './MapComponent'; // Import the MapComponent
-import CalendlyWidget from './CalendlyWidget'; // Import the CalendlyWidget
-import DatePicker from 'react-datepicker'; // Import React Date Picker
-import 'react-datepicker/dist/react-datepicker.css'; // Import CSS for the date picker
+import MapComponent from './MapComponent';
+import CalendlyWidget from './CalendlyWidget';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import '../AdminDashboard/AdminDashboard.css';
 
 const AddActivityBack = ({ onAddActivity }) => {
@@ -13,7 +13,7 @@ const AddActivityBack = ({ onAddActivity }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: null, // Use null for React Date Picker
+    date: null,
     location: '',
     numberOfPlaces: '',
     category: '',
@@ -26,14 +26,13 @@ const AddActivityBack = ({ onAddActivity }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showCalendlyWidget, setShowCalendlyWidget] = useState(false);
+  const [imageGenerating, setImageGenerating] = useState(false);
 
-  // Function to disable weekends
   const isWeekday = (date) => {
     const day = date.getDay();
-    return day !== 0 && day !== 6; // Disable Sunday (0) and Saturday (6)
+    return day !== 0 && day !== 6;
   };
 
-  // Handle location selection from the map
   const handleMapLocationSelect = useCallback(async (coordinates) => {
     try {
       const response = await axios.get(
@@ -55,16 +54,16 @@ const AddActivityBack = ({ onAddActivity }) => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
-    setError('');
+    setError(''); // Clear error when user starts typing
     setSuccess('');
   };
 
   const handleDateChange = (date) => {
     setFormData({
       ...formData,
-      date: date,
+      date,
     });
-    setError('');
+    setError(''); // Clear error when date is changed
     setSuccess('');
   };
 
@@ -84,7 +83,54 @@ const AddActivityBack = ({ onAddActivity }) => {
     }
   };
 
-  const handleCalendlyDateSelect = ({ eventLink, selectedDate }) => {
+  const handleGenerateAIImage = async () => {
+    if (!formData.title) {
+      setError('Please enter a title before generating an image.');
+      return;
+    }
+
+    setImageGenerating(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/events/generate-image',
+        {
+          title: formData.title,
+          prompt: `Professional digital art of: ${formData.title}. High quality, detailed, trending on artstation, vibrant colors`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+          },
+        }
+      );
+
+      const { filename, data } = response.data;
+      const byteCharacters = atob(data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      const imageFile = new File([blob], filename, { type: 'image/png' });
+
+      setFormData((prev) => ({
+        ...prev,
+        eventImage: imageFile,
+      }));
+      setSuccess('AI image generated successfully!');
+    } catch (err) {
+      console.error('AI image generation error:', err);
+      setError(err.response?.data?.error || 'Failed to generate AI image. Please try again.');
+    } finally {
+      setImageGenerating(false);
+    }
+  };
+
+  const handleCalendlyDateSelect = ({ eventLink }) => {
     setFormData((prev) => ({
       ...prev,
       link: eventLink,
@@ -96,31 +142,58 @@ const AddActivityBack = ({ onAddActivity }) => {
     const { title, description, date, location, category, numberOfPlaces, isPaid, amount, link } = formData;
 
     if (step === 1) {
-      if (!title || !description) {
-        setError('Please fill all required fields in step 1.');
+      if (!title.trim()) {
+        setError('Title is required.');
+        return false;
+      }
+      if (title.length < 3) {
+        setError('Title must be at least 3 characters long.');
+        return false;
+      }
+      if (!description.trim()) {
+        setError('Description is required.');
+        return false;
+      }
+      if (description.length < 10) {
+        setError('Description must be at least 10 characters long.');
         return false;
       }
     }
+
     if (step === 2) {
-      if (!date || !location || numberOfPlaces === '') {
-        setError('Please fill all required fields in step 2.');
+      if (!date) {
+        setError('Please select a date.');
+        return false;
+      }
+      if (!location.trim()) {
+        setError('Location is required.');
+        return false;
+      }
+      if (location.length < 3) {
+        setError('Location must be at least 3 characters long.');
+        return false;
+      }
+      if (!numberOfPlaces || isNaN(numberOfPlaces) || numberOfPlaces <= 0) {
+        setError('Number of places must be a positive integer.');
         return false;
       }
     }
+
     if (step === 3) {
       if (!category) {
         setError('Please select a category.');
         return false;
       }
-      if (isPaid && !amount) {
-        setError('Amount is required for paid activities.');
+      if (isPaid && (!amount || isNaN(amount) || amount <= 0)) {
+        setError('Amount is required for paid activities and must be a positive number.');
         return false;
       }
-      if (category === 'Webinar' && !link) {
-        setError('Link is required for webinars.');
+      if (category === 'Webinar' && !link.trim()) {
+        setError('Webinar link is required.');
         return false;
       }
     }
+
     return true;
   };
 
@@ -132,6 +205,7 @@ const AddActivityBack = ({ onAddActivity }) => {
 
   const handleBack = () => {
     setStep((prev) => prev - 1);
+    setError(''); // Clear error when going back
   };
 
   const handleSubmit = async (e) => {
@@ -149,10 +223,10 @@ const AddActivityBack = ({ onAddActivity }) => {
     try {
       const dataToSubmit = new FormData();
       for (const key in formData) {
-        if (key === 'eventImage') {
+        if (key === 'eventImage' && formData.eventImage) {
           dataToSubmit.append('eventImage', formData.eventImage);
         } else if (key === 'date') {
-          dataToSubmit.append(key, formData.date.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
+          dataToSubmit.append(key, formData.date.toISOString().split('T')[0]);
         } else {
           dataToSubmit.append(key, formData[key]);
         }
@@ -165,7 +239,6 @@ const AddActivityBack = ({ onAddActivity }) => {
         },
       });
 
-      // Call the callback with the new activity
       onAddActivity(response.data);
 
       setSuccess('Activity added successfully!');
@@ -173,7 +246,6 @@ const AddActivityBack = ({ onAddActivity }) => {
         setSuccess('');
       }, 3000);
       setError('');
-      // Clear form data after success
       setFormData({
         title: '',
         description: '',
@@ -186,12 +258,12 @@ const AddActivityBack = ({ onAddActivity }) => {
         link: '',
         eventImage: null,
       });
-      setStep(1); // Reset to step 1
+      setStep(1);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred while adding the activity.');
       setSuccess('');
       if (err.response?.status === 401) {
-        navigate('/signin'); // Redirect to sign-in if token is invalid or expired
+        navigate('/signin');
       }
     } finally {
       setLoading(false);
@@ -213,7 +285,6 @@ const AddActivityBack = ({ onAddActivity }) => {
               placeholder="Enter activity title"
               value={formData.title}
               onChange={handleChange}
-            
             />
           </div>
           <div>
@@ -223,7 +294,6 @@ const AddActivityBack = ({ onAddActivity }) => {
               placeholder="Enter activity description"
               value={formData.description}
               onChange={handleChange}
-             
             />
           </div>
         </div>
@@ -235,12 +305,11 @@ const AddActivityBack = ({ onAddActivity }) => {
             <DatePicker
               selected={formData.date}
               onChange={handleDateChange}
-              filterDate={isWeekday} // Disable weekends
-              minDate={new Date()} // Disable past dates
-              dateFormat="yyyy-MM-dd" // Format the date
+              filterDate={isWeekday}
+              minDate={new Date()}
+              dateFormat="yyyy-MM-dd"
               placeholderText="Select a date"
               className="date-picker-input"
-             
             />
           </div>
           <div>
@@ -251,7 +320,6 @@ const AddActivityBack = ({ onAddActivity }) => {
               placeholder="Enter activity location"
               value={formData.location}
               onChange={handleChange}
-             
             />
             <div className="map-container">
               <MapComponent onLocationSelect={handleMapLocationSelect} />
@@ -265,17 +333,36 @@ const AddActivityBack = ({ onAddActivity }) => {
               placeholder="Enter number of places"
               value={formData.numberOfPlaces}
               onChange={handleChange}
-             
             />
           </div>
           <div>
-            <label>Upload Image</label>
-            <input
-              type="file"
-              name="eventImage"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
+            <label>Upload Image or Generate AI Image</label>
+            <div className="image-input-container">
+              <input
+                type="file"
+                name="eventImage"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              <button
+                type="button"
+                className="ai-generate-btn"
+                onClick={handleGenerateAIImage}
+                disabled={imageGenerating || !formData.title}
+              >
+                {imageGenerating ? 'Generating...' : 'Generate AI Image'}
+              </button>
+            </div>
+            {formData.eventImage && (
+              <div className="image-preview">
+                <img
+                  src={URL.createObjectURL(formData.eventImage)}
+                  alt="Event preview"
+                  className="preview-image"
+                />
+                <p className="image-filename">{formData.eventImage.name}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -287,7 +374,6 @@ const AddActivityBack = ({ onAddActivity }) => {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              
             >
               <option value="">Select category</option>
               <option value="Workshop">Workshop</option>
@@ -316,7 +402,6 @@ const AddActivityBack = ({ onAddActivity }) => {
                 placeholder="Enter amount"
                 value={formData.amount}
                 onChange={handleChange}
-               
               />
             </div>
           )}
@@ -368,7 +453,7 @@ const AddActivityBack = ({ onAddActivity }) => {
       {showCalendlyWidget && (
         <div className="calendly-modal">
           <CalendlyWidget
-            url="https://calendly.com/skillminds-team/activity-scheduling"
+            url="https://calendly.com/walidkhrouf9/30min"
             onDateSelect={handleCalendlyDateSelect}
           />
           <button

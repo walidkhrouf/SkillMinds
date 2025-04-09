@@ -15,8 +15,10 @@ import {
 } from "recharts";
 import Header from "../common/header/Header";
 import Footer from "../common/footer/Footer";
+import AddActivityBack from "../activities/AddActivityBack";
 import "./AdminDashboard.css";
 
+// Dummy data for sections that aren't yet integrated with the backend
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
   { id: 2, title: "Advanced Node.js", description: "Deep dive into Node.js." },
@@ -27,11 +29,7 @@ const dummyJobs = [
   { id: 2, title: "Backend Developer", company: "Dev Solutions", location: "Onsite" },
 ];
 
-const dummyEvents = [
-  { id: 1, name: "React Conference", date: "2023-12-01" },
-  { id: 2, name: "Node.js Meetup", date: "2023-11-15" },
-];
-
+// Default stats data in case API calls fail
 const defaultStatsData = {
   users: {
     total: 0,
@@ -62,8 +60,14 @@ const defaultStatsData = {
     avgEngagementPerPost: 0,
     topGroupsByMembers: [],
   },
+  activities: {
+    total: 0,
+    categories: [],
+    trending: [],
+  },
 };
 
+// Message Component for displaying success/error messages
 const Message = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
@@ -71,12 +75,14 @@ const Message = ({ message, type, onClose }) => {
   }, [onClose]);
 
   return (
-      <div className={`message ${type}`}>
+      <div className={`message ${type}`} role="alert" aria-live="assertive">
         {message}
+        <button onClick={onClose}>×</button>
       </div>
   );
 };
 
+// UserManager Component
 const UserManager = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -93,25 +99,36 @@ const UserManager = () => {
   const [availableSkills, setAvailableSkills] = useState([]);
   const [assignedSkillIds, setAssignedSkillIds] = useState([]);
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setLoading(true);
       try {
+        const token = localStorage.getItem("jwtToken");
+        if (!token) {
+          showMessage("Please log in to continue", "error");
+          return;
+        }
         const response = await fetch("http://localhost:5000/api/users/all", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
           const data = await response.json();
           setUsers(data);
+        } else {
+          showMessage("Failed to fetch users", "error");
         }
       } catch (err) {
         console.error(err);
         showMessage("Error fetching users", "error");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUsers();
-    const interval = setInterval(fetchUsers, 5000);
+    const interval = setInterval(fetchUsers, 30000); // Reduced polling frequency to 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -128,20 +145,23 @@ const UserManager = () => {
       return;
     }
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
         setSelectedUser(data);
         setEditingUserId(null);
         const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
           setUserSkills(skillsData);
         }
+      } else {
+        showMessage("Failed to fetch user details", "error");
       }
     } catch (err) {
       console.error(err);
@@ -160,12 +180,15 @@ const UserManager = () => {
       location: user.location || "",
     });
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch("http://localhost:5000/api/admin/skills", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const skillsData = await response.json();
         setAvailableSkills(skillsData);
+      } else {
+        showMessage("Failed to fetch skills", "error");
       }
     } catch (error) {
       console.error(error);
@@ -196,11 +219,12 @@ const UserManager = () => {
 
   const updateUserSkills = async (userId, skillsPayload) => {
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/users/userskills`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ userId, skills: skillsPayload }),
       });
@@ -220,19 +244,20 @@ const UserManager = () => {
 
   const verifyUserSkill = async (skillId) => {
     try {
+      const token = localStorage.getItem("jwtToken");
       const skillObj = userSkills.find((s) => s._id === skillId);
       const skillName = skillObj?.skillId?.name || "Skill";
       const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ verificationStatus: "verified" }),
       });
       if (response.ok) {
         const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
@@ -242,7 +267,7 @@ const UserManager = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             userId: selectedUser._id,
@@ -263,11 +288,12 @@ const UserManager = () => {
 
   const saveEditedUser = async (userId) => {
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(editingData),
       });
@@ -295,7 +321,7 @@ const UserManager = () => {
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
           const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+            headers: { Authorization: `Bearer ${token}` },
           });
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json();
@@ -316,16 +342,17 @@ const UserManager = () => {
   const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
+      const token = localStorage.getItem("jwtToken");
       const skillToDelete = userSkills.find((skill) => skill._id === skillId);
       const skillName = skillToDelete?.skillId?.name || "Unknown Skill";
 
-      const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
-      });
+ const response = await fetch(`http://localhost:5000/api/users/userskills/${skillId}`, {
+   method: "DELETE",
+   headers: { Authorization: `Bearer ${token}` },
+ });
       if (response.ok) {
         const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${selectedUser._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
@@ -336,7 +363,7 @@ const UserManager = () => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+                Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
                 userId: selectedUser._id,
@@ -360,9 +387,10 @@ const UserManager = () => {
   const deleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       if (response.ok) {
@@ -380,11 +408,12 @@ const UserManager = () => {
 
   const approveMentor = async (userId) => {
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ role: "mentor" }),
       });
@@ -402,7 +431,7 @@ const UserManager = () => {
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
           const skillsResponse = await fetch(`http://localhost:5000/api/users/userskills?userId=${userId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+            headers: { Authorization: `Bearer ${token}` },
           });
           if (skillsResponse.ok) {
             const skillsData = await skillsResponse.json();
@@ -412,7 +441,7 @@ const UserManager = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               userId: data._id,
@@ -447,199 +476,204 @@ const UserManager = () => {
                 onClose={() => setMessage(null)}
             />
         )}
-        <table className="user-table">
-          <thead>
-          <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role (👇 Click to expand)</th>
-          </tr>
-          </thead>
-          <tbody>
-          {users.map((userItem) => (
-              <React.Fragment key={userItem._id}>
-                <tr onClick={() => handleRowClick(userItem._id)}>
-                  <td>{userItem.username}</td>
-                  <td>{userItem.email}</td>
-                  <td>
-                    {userItem.role}{" "}
-                    {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
-                  </td>
-                </tr>
-                {selectedUser && selectedUser._id === userItem._id && (
-                    <tr className="expanded">
-                      <td colSpan="3">
-                        <div className="expanded-user-details">
-                          <div className="user-details-body">
-                            <div className="user-details-row">
-                              <span className="label">Username:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <input
-                                      type="text"
-                                      name="username"
-                                      value={editingData.username}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{selectedUser.username}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Email:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <input
-                                      type="text"
-                                      name="email"
-                                      value={editingData.email}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{selectedUser.email}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Role:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <select name="role" value={editingData.role} onChange={handleEditingChange}>
-                                    <option value="learner">Learner</option>
-                                    <option value="unverified mentor">Unverified Mentor</option>
-                                    <option value="mentor">Mentor</option>
-                                    <option value="admin">Admin</option>
-                                  </select>
-                              ) : (
-                                  <span className="value">{selectedUser.role}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Phone:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <input
-                                      type="text"
-                                      name="phoneNumber"
-                                      value={editingData.phoneNumber}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Bio:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <textarea
-                                      name="bio"
-                                      value={editingData.bio}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{selectedUser.bio || "N/A"}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Location:</span>
-                              {editingUserId === selectedUser._id ? (
-                                  <input
-                                      type="text"
-                                      name="location"
-                                      value={editingData.location}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{selectedUser.location || "N/A"}</span>
-                              )}
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Wants to Learn:</span>
-                              <ul className="user-skills-list wants-to-learn">
-                                {wantsToLearnSkills.length > 0 ? (
-                                    wantsToLearnSkills.map((skill) => (
-                                        <li key={skill._id} className="skill-item">
-                                  <span className="skill-name">
-                                    {skill.skillId ? skill.skillId.name : "Skill no longer available"}
-                                  </span>
-                                          <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <span className="value">No skills added</span>
-                                )}
-                              </ul>
-                            </div>
-                            <div className="user-details-row">
-                              <span className="label">Has:</span>
-                              <ul className="user-skills-list has-skills">
-                                {hasSkillsList.length > 0 ? (
-                                    hasSkillsList.map((skill, index) => (
-                                        <li key={skill._id} className="skill-item">
-                                          <div className="skill-card">
-                                            <div className="skill-header">
-                                      <span className="skill-name">
-                                        {skill.skillId ? skill.skillId.name : "Skill no longer available"}
-                                      </span>
-                                              <span className="verification-status">
-                                        ({skill.verificationStatus})
-                                      </span>
-                                            </div>
-                                            {selectedUser.certificateImage && selectedUser.certificateImage[index] && (
-                                                <div className="skill-certificate">
-                                                  <img
-                                                      src={`http://localhost:5000/api/files/${selectedUser.certificateImage[index].fileId}?t=${Date.now()}`}
-                                                      alt={selectedUser.certificateImage[index].filename}
-                                                  />
-                                                  <p>Certificate: {selectedUser.certificateImage[index].filename}</p>
-                                                </div>
-                                            )}
-                                            <div className="skill-actions">
-                                              {skill.verificationStatus !== "verified" && (
-                                                  <button className="verify-btn" onClick={() => verifyUserSkill(skill._id)}>✅ Verify</button>
-                                              )}
-                                              <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑 Delete</button>
-                                            </div>
-                                          </div>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <span className="value">No skills added</span>
-                                )}
-                              </ul>
-                            </div>
-                            {selectedUser.profileImage && (
-                                <div className="user-image-container">
-                                  <img
-                                      src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
-                                      alt={selectedUser.profileImage.filename}
-                                  />
-                                </div>
-                            )}
-                          </div>
-                          <div className="user-actions">
-                            {editingUserId !== selectedUser._id ? (
-                                <>
-                                  <button onClick={() => startEditing(selectedUser)}>✏️ Edit</button>
-                                  <button onClick={() => deleteUser(selectedUser._id)}>🗑 Delete</button>
-                                  {selectedUser.role === "unverified mentor" && (
-                                      <button onClick={() => approveMentor(selectedUser._id)}>✅ Approve Mentor</button>
-                                  )}
-                                </>
-                            ) : (
-                                <>
-                                  <button onClick={() => saveEditedUser(selectedUser._id)}>💾 Save</button>
-                                  <button onClick={cancelEditing}>❌ Cancel</button>
-                                </>
-                            )}
-                          </div>
-                        </div>
+        {loading ? (
+            <div className="loading">⏳ Loading users...</div>
+        ) : (
+            <table className="user-table">
+              <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role (👇 Click to expand)</th>
+              </tr>
+              </thead>
+              <tbody>
+              {users.map((userItem) => (
+                  <React.Fragment key={userItem._id}>
+                    <tr onClick={() => handleRowClick(userItem._id)}>
+                      <td>{userItem.username}</td>
+                      <td>{userItem.email}</td>
+                      <td>
+                        {userItem.role}{" "}
+                        {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
                       </td>
                     </tr>
-                )}
-              </React.Fragment>
-          ))}
-          </tbody>
-        </table>
+                    {selectedUser && selectedUser._id === userItem._id && (
+                        <tr className="expanded">
+                          <td colSpan="3">
+                            <div className="expanded-user-details">
+                              <div className="user-details-body">
+                                <div className="user-details-row">
+                                  <span className="label">Username:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <input
+                                          type="text"
+                                          name="username"
+                                          value={editingData.username}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{selectedUser.username}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Email:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <input
+                                          type="text"
+                                          name="email"
+                                          value={editingData.email}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{selectedUser.email}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Role:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                                        <option value="learner">Learner</option>
+                                        <option value="unverified mentor">Unverified Mentor</option>
+                                        <option value="mentor">Mentor</option>
+                                        <option value="admin">Admin</option>
+                                      </select>
+                                  ) : (
+                                      <span className="value">{selectedUser.role}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Phone:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <input
+                                          type="text"
+                                          name="phoneNumber"
+                                          value={editingData.phoneNumber}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Bio:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <textarea
+                                          name="bio"
+                                          value={editingData.bio}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{selectedUser.bio || "N/A"}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Location:</span>
+                                  {editingUserId === selectedUser._id ? (
+                                      <input
+                                          type="text"
+                                          name="location"
+                                          value={editingData.location}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{selectedUser.location || "N/A"}</span>
+                                  )}
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Wants to Learn:</span>
+                                  <ul className="user-skills-list wants-to-learn">
+                                    {wantsToLearnSkills.length > 0 ? (
+                                        wantsToLearnSkills.map((skill) => (
+                                            <li key={skill._id} className="skill-item">
+                                    <span className="skill-name">
+                                      {skill.skillId ? skill.skillId.name : "Skill no longer available"}
+                                    </span>
+                                              <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <span className="value">No skills added</span>
+                                    )}
+                                  </ul>
+                                </div>
+                                <div className="user-details-row">
+                                  <span className="label">Has:</span>
+                                  <ul className="user-skills-list has-skills">
+                                    {hasSkillsList.length > 0 ? (
+                                        hasSkillsList.map((skill, index) => (
+                                            <li key={skill._id} className="skill-item">
+                                              <div className="skill-card">
+                                                <div className="skill-header">
+                                        <span className="skill-name">
+                                          {skill.skillId ? skill.skillId.name : "Skill no longer available"}
+                                        </span>
+                                                  <span className="verification-status">
+                                          ({skill.verificationStatus})
+                                        </span>
+                                                </div>
+                                                {selectedUser.certificateImage && selectedUser.certificateImage[index] && (
+                                                    <div className="skill-certificate">
+                                                      <img
+                                                          src={`http://localhost:5000/api/files/${selectedUser.certificateImage[index].fileId}?t=${Date.now()}`}
+                                                          alt={selectedUser.certificateImage[index].filename}
+                                                      />
+                                                      <p>Certificate: {selectedUser.certificateImage[index].filename}</p>
+                                                    </div>
+                                                )}
+                                                <div className="skill-actions">
+                                                  {skill.verificationStatus !== "verified" && (
+                                                      <button className="verify-btn" onClick={() => verifyUserSkill(skill._id)}>✅ Verify</button>
+                                                  )}
+                                                  <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑 Delete</button>
+                                                </div>
+                                              </div>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <span className="value">No skills added</span>
+                                    )}
+                                  </ul>
+                                </div>
+                                {selectedUser.profileImage && (
+                                    <div className="user-image-container">
+                                      <img
+                                          src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                                          alt={selectedUser.profileImage.filename}
+                                      />
+                                    </div>
+                                )}
+                              </div>
+                              <div className="user-actions">
+                                {editingUserId !== selectedUser._id ? (
+                                    <>
+                                      <button onClick={() => startEditing(selectedUser)}>✏️ Edit</button>
+                                      <button onClick={() => deleteUser(selectedUser._id)}>🗑 Delete</button>
+                                      {selectedUser.role === "unverified mentor" && (
+                                          <button onClick={() => approveMentor(selectedUser._id)}>✅ Approve Mentor</button>
+                                      )}
+                                    </>
+                                ) : (
+                                    <>
+                                      <button onClick={() => saveEditedUser(selectedUser._id)}>💾 Save</button>
+                                      <button onClick={cancelEditing}>❌ Cancel</button>
+                                    </>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                    )}
+                  </React.Fragment>
+              ))}
+              </tbody>
+            </table>
+        )}
       </div>
   );
 };
 
+// SkillManager Component
 const SkillManager = () => {
   const [categories, setCategories] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -657,16 +691,19 @@ const SkillManager = () => {
     description: "",
     tags: "",
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCategoriesAndSkills = async () => {
+      setLoading(true);
       try {
+        const token = localStorage.getItem("jwtToken");
         const [categoriesResponse, skillsResponse] = await Promise.all([
           fetch("http://localhost:5000/api/admin/skillCategories", {
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("http://localhost:5000/api/admin/skills", {
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
@@ -676,19 +713,25 @@ const SkillManager = () => {
           if (data.length > 0 && !formData.category) {
             setFormData((prev) => ({ ...prev, category: data[0] }));
           }
+        } else {
+          showMessage("Failed to fetch skill categories", "error");
         }
         if (skillsResponse.ok) {
           const data = await skillsResponse.json();
           setSkills(data);
+        } else {
+          showMessage("Failed to fetch skills", "error");
         }
       } catch (err) {
         console.error("Error fetching skill data:", err);
         showMessage("Error fetching skills or categories", "error");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCategoriesAndSkills();
-    const interval = setInterval(fetchCategoriesAndSkills, 5000);
+    const interval = setInterval(fetchCategoriesAndSkills, 30000); // Reduced polling frequency
     return () => clearInterval(interval);
   }, []);
 
@@ -704,13 +747,18 @@ const SkillManager = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, category, description, tags } = formData;
+    if (!name.trim()) {
+      showMessage("Skill name is required", "error");
+      return;
+    }
     const tagsArray = tags.split(",").map((tag) => tag.trim()).filter((tag) => tag);
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch("http://localhost:5000/api/admin/skills", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name, category, description, tags: tagsArray }),
       });
@@ -736,13 +784,14 @@ const SkillManager = () => {
   const handleDeleteSkill = async (skillId) => {
     if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
+      const token = localStorage.getItem("jwtToken");
       const skillData = skills.find((skill) => skill._id === skillId);
       if (!skillData) throw new Error("Skill details not found in local state");
       const skillName = skillData.name;
 
       const usersWithSkillResponse = await fetch(
           `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` } }
+          { headers: { Authorization: `Bearer ${token}` } }
       );
       let usersWithSkill = [];
       if (usersWithSkillResponse.ok) {
@@ -755,7 +804,7 @@ const SkillManager = () => {
 
       const deleteSkillResponse = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!deleteSkillResponse.ok) {
         const deleteData = await deleteSkillResponse.json();
@@ -766,7 +815,7 @@ const SkillManager = () => {
           `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
           {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+            headers: { Authorization: `Bearer ${token}` },
           }
       );
       if (!deleteUserSkillsResponse.ok) {
@@ -782,7 +831,7 @@ const SkillManager = () => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+                Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
                 userId: userSkill.userId,
@@ -822,11 +871,12 @@ const SkillManager = () => {
   const saveEditedSkill = async (skillId) => {
     const tagsArray = editingData.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag);
     try {
+      const token = localStorage.getItem("jwtToken");
       const response = await fetch(`http://localhost:5000/api/admin/skills/${skillId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: editingData.name,
@@ -859,102 +909,109 @@ const SkillManager = () => {
                 onClose={() => setMessage(null)}
             />
         )}
-        <form onSubmit={handleSubmit} className="skill-form">
-          <div>
-            <label>Skill Name</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Category</label>
-            <select name="category" value={formData.category} onChange={handleChange} required>
-              {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label>Description</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Tags</label>
-            <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
-          </div>
-          <button type="submit">➕ Add Skill</button>
-        </form>
-        <h3>Skill List</h3>
-        <table className="skill-table">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Description</th>
-            <th>Tags</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-          {skills.map((skill) => (
-              <tr key={skill._id}>
-                <td>
-                  {editingSkillId === skill._id ? (
-                      <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
-                  ) : (
-                      skill.name
-                  )}
-                </td>
-                <td>
-                  {editingSkillId === skill._id ? (
-                      <select name="category" value={editingData.category} onChange={handleEditingChange}>
-                        {categories.map((cat) => (
-                            <option key={cat} value={cat}>
-                              {cat}
-                            </option>
-                        ))}
-                      </select>
-                  ) : (
-                      skill.category
-                  )}
-                </td>
-                <td>
-                  {editingSkillId === skill._id ? (
-                      <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
-                  ) : (
-                      skill.description
-                  )}
-                </td>
-                <td>
-                  {editingSkillId === skill._id ? (
-                      <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
-                  ) : (
-                      Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
-                  )}
-                </td>
-                <td>{new Date(skill.createdAt).toLocaleString()}</td>
-                <td>
-                  {editingSkillId === skill._id ? (
-                      <>
-                        <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
-                        <button onClick={cancelEditing}>❌</button>
-                      </>
-                  ) : (
-                      <>
-                        <button onClick={() => startEditing(skill)}>✏️</button>
-                        <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
-                      </>
-                  )}
-                </td>
-              </tr>
-          ))}
-          </tbody>
-        </table>
+        {loading ? (
+            <div className="loading">⏳ Loading skills...</div>
+        ) : (
+            <>
+              <form onSubmit={handleSubmit} className="skill-form">
+                <div>
+                  <label>Skill Name</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                </div>
+                <div>
+                  <label>Category</label>
+                  <select name="category" value={formData.category} onChange={handleChange} required>
+                    {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Description</label>
+                  <textarea name="description" value={formData.description} onChange={handleChange} required />
+                </div>
+                <div>
+                  <label>Tags</label>
+                  <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
+                </div>
+                <button type="submit">➕ Add Skill</button>
+              </form>
+              <h3>Skill List</h3>
+              <table className="skill-table">
+                <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Tags</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {skills.map((skill) => (
+                    <tr key={skill._id}>
+                      <td>
+                        {editingSkillId === skill._id ? (
+                            <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
+                        ) : (
+                            skill.name
+                        )}
+                      </td>
+                      <td>
+                        {editingSkillId === skill._id ? (
+                            <select name="category" value={editingData.category} onChange={handleEditingChange}>
+                              {categories.map((cat) => (
+                                  <option key={cat} value={cat}>
+                                    {cat}
+                                  </option>
+                              ))}
+                            </select>
+                        ) : (
+                            skill.category
+                        )}
+                      </td>
+                      <td>
+                        {editingSkillId === skill._id ? (
+                            <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
+                        ) : (
+                            skill.description
+                        )}
+                      </td>
+                      <td>
+                        {editingSkillId === skill._id ? (
+                            <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
+                        ) : (
+                            Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
+                        )}
+                      </td>
+                      <td>{new Date(skill.createdAt).toLocaleString()}</td>
+                      <td>
+                        {editingSkillId === skill._id ? (
+                            <>
+                              <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
+                              <button onClick={cancelEditing}>❌</button>
+                            </>
+                        ) : (
+                            <>
+                              <button onClick={() => startEditing(skill)}>✏️</button>
+                              <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                            </>
+                        )}
+                      </td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </>
+        )}
       </div>
   );
 };
 
+// GroupManager Component (from Code 1)
 const GroupManager = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -962,9 +1019,11 @@ const GroupManager = () => {
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [editingData, setEditingData] = useState({ name: "" });
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchGroups = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem("jwtToken");
         const response = await fetch("http://localhost:5000/api/admin/groups", {
@@ -974,17 +1033,18 @@ const GroupManager = () => {
           const data = await response.json();
           setGroups(data);
         } else {
-          console.error("Error fetching groups:", response.statusText);
           showMessage("Error fetching groups", "error");
         }
       } catch (err) {
         console.error("Error fetching groups:", err);
         showMessage("Error fetching groups", "error");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchGroups();
-    const interval = setInterval(fetchGroups, 5000);
+    const interval = setInterval(fetchGroups, 30000); // Reduced polling frequency
     return () => clearInterval(interval);
   }, []);
 
@@ -1117,134 +1177,589 @@ const GroupManager = () => {
                 onClose={() => setMessage(null)}
             />
         )}
-        <table className="data-table">
+        {loading ? (
+            <div className="loading">⏳ Loading groups...</div>
+        ) : (
+            <table className="data-table">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Members</th>
+                <th>Posts</th>
+                <th>Reports</th>
+                <th>Created By</th>
+                <th>Privacy</th>
+              </tr>
+              </thead>
+              <tbody>
+              {groups.map((group) => (
+                  <React.Fragment key={group._id}>
+                    <tr onClick={() => handleGroupClick(group._id)} className="group-row">
+                      <td>{group.name}</td>
+                      <td>{group.memberCount || 0}</td>
+                      <td>{group.postCount || 0}</td>
+                      <td>{group.reports?.length || 0}</td>
+                      <td>{group.createdBy?.username || "Unknown"}</td>
+                      <td>{group.privacy}</td>
+                    </tr>
+                    {selectedGroup && selectedGroup._id === group._id && (
+                        <tr className="expanded">
+                          <td colSpan="6">
+                            <div className="expanded-group-details">
+                              <div className="group-details-body">
+                                <div className="group-details-row">
+                                  <span className="label">Group Name:</span>
+                                  {editingGroupId === group._id ? (
+                                      <input
+                                          type="text"
+                                          name="name"
+                                          value={editingData.name}
+                                          onChange={handleEditingChange}
+                                      />
+                                  ) : (
+                                      <span className="value">{group.name}</span>
+                                  )}
+                                </div>
+                                <div className="group-details-row">
+                                  <span className="label">Description:</span>
+                                  <span className="value">{group.description || "N/A"}</span>
+                                </div>
+                                <div className="group-details-row">
+                                  <span className="label">Privacy:</span>
+                                  <span className="value">{group.privacy}</span>
+                                </div>
+                                <div className="group-details-row">
+                                  <span className="label">Created At:</span>
+                                  <span className="value">{new Date(group.createdAt).toLocaleString()}</span>
+                                </div>
+                                <div className="group-details-row">
+                                  <span className="label">Members ({group.memberCount || 0}):</span>
+                                  <div className="members-list">
+                                    {group.members && group.members.length > 0 ? (
+                                        group.members.map((member) => (
+                                            <span key={member.id} className="member-item">
+                                    {member.username || "Unknown"}
+                                  </span>
+                                        ))
+                                    ) : (
+                                        <span className="value">No members</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="group-details-row">
+                                  <span className="label">Posts ({group.postCount || 0}):</span>
+                                  <div className="posts-container">
+                                    {group.posts && group.posts.length > 0 ? (
+                                        group.posts.map((post) => (
+                                            <React.Fragment key={post._id}>
+                                              <div
+                                                  className="post-item"
+                                                  onClick={() => handlePostClick(post._id)}
+                                              >
+                                                <span className="post-title">{post.title}</span>
+                                                <span className="post-meta">
+                                        {post.likesCount} Likes • {post.commentsCount} Comments
+                                      </span>
+                                              </div>
+                                              {selectedPost && selectedPost._id === post._id && (
+                                                  <div className="post-details">
+                                                    <p><strong>Subject:</strong> {post.subject}</p>
+                                                    <p><strong>Content:</strong> {post.content}</p>
+                                                    <p><strong>Likes:</strong> {post.likesCount}</p>
+                                                    <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
+                                                    <p><strong>Comments:</strong> {post.commentsCount}</p>
+                                                    <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
+                                                    <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
+                                                    <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
+                                                    <button
+                                                        className="delete-btn"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          deleteGroupPost(group._id, post._id);
+                                                        }}
+                                                    >
+                                                      🗑 Delete
+                                                    </button>
+                                                  </div>
+                                              )}
+                                            </React.Fragment>
+                                        ))
+                                    ) : (
+                                        <span className="value">No posts yet</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="group-actions">
+                                {editingGroupId !== group._id ? (
+                                    <>
+                                      <button onClick={() => startEditing(group)}>✏️ Edit</button>
+                                      <button onClick={() => deleteGroup(group._id)}>🗑 Delete Group</button>
+                                    </>
+                                ) : (
+                                    <>
+                                      <button onClick={() => saveEditedGroup(group._id)}>💾 Save</button>
+                                      <button onClick={cancelEditing}>❌ Cancel</button>
+                                    </>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                    )}
+                  </React.Fragment>
+              ))}
+              </tbody>
+            </table>
+        )}
+      </div>
+  );
+};
+
+// ActivityManager Component (from Code 2, enhanced with Code 1 features)
+const ActivityManager = ({ activities, setActivities }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [viewMode, setViewMode] = useState("table");
+  const [editingActivityId, setEditingActivityId] = useState(null);
+  const [editingData, setEditingData] = useState({
+    title: "",
+    description: "",
+    category: "Workshop",
+    date: new Date().toISOString().split("T")[0],
+    location: "",
+    isPaid: false,
+    amount: 0,
+    link: "",
+    eventImage: null,
+  });
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const response = await fetch("http://localhost:5000/api/events", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch activities");
+        }
+
+        const data = await response.json();
+        setActivities(data);
+      } catch (err) {
+        setError({ text: "Failed to load activities", type: "error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+    const interval = setInterval(fetchActivities, 30000); // Reduced polling frequency
+    return () => clearInterval(interval);
+  }, [setActivities]);
+
+  const fetchActivityDetails = async (activityId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/events/${activityId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch activity details");
+      }
+
+      const data = await response.json();
+      setSelectedActivity(data);
+      setViewMode("details");
+    } catch (err) {
+      setError({ text: "Failed to load activity details", type: "error" });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        setActivities((prev) => prev.filter((activity) => activity._id !== id));
+        setError({ text: "🗑 Activity deleted successfully", type: "success" });
+      } else {
+        throw new Error("Failed to delete activity");
+      }
+    } catch (err) {
+      console.error("Error deleting activity:", err);
+      setError({ text: "Error deleting activity", type: "error" });
+    }
+  };
+
+  const startEditing = (activity) => {
+    setEditingActivityId(activity._id);
+    setEditingData({
+      title: activity.title,
+      description: activity.description,
+      category: activity.category,
+      date: new Date(activity.date).toISOString().split("T")[0],
+      location: activity.location,
+      isPaid: activity.isPaid,
+      amount: activity.amount || 0,
+      link: activity.link || "",
+      eventImage: null,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingActivityId(null);
+    setEditingData({
+      title: "",
+      description: "",
+      category: "Workshop",
+      date: new Date().toISOString().split("T")[0],
+      location: "",
+      isPaid: false,
+      amount: 0,
+      link: "",
+      eventImage: null,
+    });
+  };
+
+  const handleEditingChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    setEditingData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
+      ...(name === "isPaid" && !checked && { amount: 0 }),
+    }));
+  };
+
+  const saveEditedActivity = async (activityId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const formData = new FormData();
+      Object.keys(editingData).forEach((key) => {
+        if (key === "eventImage" && editingData[key]) {
+          formData.append("image", editingData[key]);
+        } else if (key !== "eventImage") {
+          formData.append(key, editingData[key]);
+        }
+      });
+
+      const url = activityId === "new"
+          ? "http://localhost:5000/api/events"
+          : `http://localhost:5000/api/events/${activityId}`;
+      const method = activityId === "new" ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setActivities((prev) => {
+          if (activityId === "new") {
+            return [data, ...prev];
+          } else {
+            return prev.map((a) => (a._id === data._id ? data : a));
+          }
+        });
+        setEditingActivityId(null);
+        setError({ text: activityId === "new" ? "➕ Activity created successfully" : "💾 Activity updated successfully", type: "success" });
+      } else {
+        throw new Error(data.message || "Error saving activity");
+      }
+    } catch (error) {
+      console.error("Error saving activity:", error);
+      setError({ text: "Error saving activity", type: "error" });
+    }
+  };
+
+  const showDetails = (activity) => {
+    fetchActivityDetails(activity._id);
+  };
+
+  const handleBackToList = () => {
+    setViewMode("table");
+    setSelectedActivity(null);
+  };
+
+  if (loading) {
+    return <div className="loading">⏳ Loading activities...</div>;
+  }
+
+  if (viewMode === "details" && selectedActivity) {
+    return (
+        <div className="activity-details-admin section-content">
+          <button onClick={handleBackToList} className="back-button">
+            ← Back to Activities
+          </button>
+          <h2>{selectedActivity.title}</h2>
+          <div className="activity-info skill-card">
+            <div className="detail-row">
+              <span className="detail-label">Description:</span>
+              <span className="detail-value">{selectedActivity.description}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Category:</span>
+              <span className="detail-value">{selectedActivity.category}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Date:</span>
+              <span className="detail-value">{new Date(selectedActivity.date).toLocaleDateString()}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Location:</span>
+              <span className="detail-value">{selectedActivity.location || "Virtual"}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Type:</span>
+              <span className="detail-value">
+              {selectedActivity.isPaid ? `Paid ($${selectedActivity.amount})` : "Free"}
+            </span>
+            </div>
+            {selectedActivity.link && (
+                <div className="detail-row">
+                  <span className="detail-label">Link:</span>
+                  <span className="detail-value">
+                <a href={selectedActivity.link} target="_blank" rel="noopener noreferrer">
+                  {selectedActivity.link}
+                </a>
+              </span>
+                </div>
+            )}
+            <div className="detail-row">
+              <span className="detail-label">Created By:</span>
+              <span className="detail-value">{selectedActivity.createdBy?.username || "Unknown"}</span>
+            </div>
+            <div className="participants-section">
+              <h3>Participants</h3>
+              {selectedActivity.participants?.length > 0 ? (
+                  <ul className="simple-list">
+                    {selectedActivity.participants.map((participant, index) => (
+                        <li key={index} className="list-item">
+                          {participant.username || "Anonymous"}
+                          {participant.email && (
+                              <span className="subtle-text"> ({participant.email})</span>
+                          )}
+                        </li>
+                    ))}
+                  </ul>
+              ) : (
+                  <p className="no-data">No participants yet</p>
+              )}
+            </div>
+            <div className="ratings-section">
+              <h3>Ratings</h3>
+              <p className="average-rating">
+                Average Rating: {selectedActivity.averageRating || "N/A"} ({selectedActivity.ratings.length} total)
+              </p>
+              {selectedActivity.ratings?.length > 0 ? (
+                  <ul className="simple-list">
+                    {selectedActivity.ratings.map((rating, index) => (
+                        <li key={index} className="list-item">
+                          <span>{rating.userId?.username || "Anonymous"}: {rating.rating}/5</span>
+                          <span className="subtle-text">
+                      {" "}— {new Date(rating.createdAt).toLocaleDateString()}
+                    </span>
+                        </li>
+                    ))}
+                  </ul>
+              ) : (
+                  <p className="no-data">No ratings yet</p>
+              )}
+            </div>
+            <div className="comments-section">
+              <h3>Comments</h3>
+              {selectedActivity.comments?.length > 0 ? (
+                  <ul className="simple-list">
+                    {selectedActivity.comments.map((comment, index) => (
+                        <li key={index} className="list-item">
+                    <span>
+                      <strong>{comment.userId?.username || "Anonymous"}:</strong> {comment.text}
+                    </span>
+                          <span className="subtle-text">
+                      {" "}— {new Date(comment.createdAt).toLocaleDateString()}
+                            {comment.updatedAt && ` (Edited: ${new Date(comment.updatedAt).toLocaleDateString()})`}
+                    </span>
+                        </li>
+                    ))}
+                  </ul>
+              ) : (
+                  <p className="no-data">No comments yet</p>
+              )}
+            </div>
+            {selectedActivity.eventImage?.filename && (
+                <div className="activity-image user-image-container">
+                  <img
+                      src={`http://localhost:5000/uploads/${selectedActivity.eventImage.filename}`}
+                      alt={selectedActivity.title}
+                  />
+                </div>
+            )}
+          </div>
+        </div>
+    );
+  }
+
+  return (
+      <div className="skill-manager">
+        {error && (
+            <Message
+                message={error.text}
+                type={error.type}
+                onClose={() => setError(null)}
+            />
+        )}
+        <h3>Activities List</h3>
+        <table className="skill-table">
           <thead>
           <tr>
-            <th>Name</th>
-            <th>Members</th>
-            <th>Posts</th>
-            <th>Reports</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Type</th>
             <th>Created By</th>
-            <th>Privacy</th>
+            <th>Participants</th>
+            <th>Actions</th>
           </tr>
           </thead>
           <tbody>
-          {groups.map((group) => (
-              <React.Fragment key={group._id}>
-                <tr onClick={() => handleGroupClick(group._id)} className="group-row">
-                  <td>{group.name}</td>
-                  <td>{group.memberCount || 0}</td>
-                  <td>{group.postCount || 0}</td>
-                  <td>{group.reports?.length || 0}</td>
-                  <td>{group.createdBy?.username || "Unknown"}</td>
-                  <td>{group.privacy}</td>
-                </tr>
-                {selectedGroup && selectedGroup._id === group._id && (
-                    <tr className="expanded">
-                      <td colSpan="6">
-                        <div className="expanded-group-details">
-                          <div className="group-details-body">
-                            <div className="group-details-row">
-                              <span className="label">Group Name:</span>
-                              {editingGroupId === group._id ? (
-                                  <input
-                                      type="text"
-                                      name="name"
-                                      value={editingData.name}
-                                      onChange={handleEditingChange}
-                                  />
-                              ) : (
-                                  <span className="value">{group.name}</span>
-                              )}
-                            </div>
-                            <div className="group-details-row">
-                              <span className="label">Description:</span>
-                              <span className="value">{group.description || "N/A"}</span>
-                            </div>
-                            <div className="group-details-row">
-                              <span className="label">Privacy:</span>
-                              <span className="value">{group.privacy}</span>
-                            </div>
-                            <div className="group-details-row">
-                              <span className="label">Created At:</span>
-                              <span className="value">{new Date(group.createdAt).toLocaleString()}</span>
-                            </div>
-                            <div className="group-details-row">
-                              <span className="label">Members ({group.memberCount || 0}):</span>
-                              <div className="members-list">
-                                {group.members && group.members.length > 0 ? (
-                                    group.members.map((member) => (
-                                        <span key={member.id} className="member-item">
-                                  {member.username}
-                                </span>
-                                    ))
-                                ) : (
-                                    <span className="value">No members</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="group-details-row">
-                              <span className="label">Posts ({group.postCount || 0}):</span>
-                              <div className="posts-container">
-                                {group.posts && group.posts.length > 0 ? (
-                                    group.posts.map((post) => (
-                                        <React.Fragment key={post._id}>
-                                          <div
-                                              className="post-item"
-                                              onClick={() => handlePostClick(post._id)}
-                                          >
-                                            <span className="post-title">{post.title}</span>
-                                            <span className="post-meta">
-                                      {post.likesCount} Likes • {post.commentsCount} Comments
-                                    </span>
-                                          </div>
-                                          {selectedPost && selectedPost._id === post._id && (
-                                              <div className="post-details">
-                                                <p><strong>Subject:</strong> {post.subject}</p>
-                                                <p><strong>Content:</strong> {post.content}</p>
-                                                <p><strong>Likes:</strong> {post.likesCount}</p>
-                                                <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
-                                                <p><strong>Comments:</strong> {post.commentsCount}</p>
-                                                <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
-                                                <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
-                                                <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      deleteGroupPost(group._id, post._id);
-                                                    }}
-                                                >
-                                                  🗑 Delete
-                                                </button>
-                                              </div>
-                                          )}
-                                        </React.Fragment>
-                                    ))
-                                ) : (
-                                    <span className="value">No posts yet</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="group-actions">
-                            {editingGroupId !== group._id ? (
-                                <>
-                                  <button onClick={() => startEditing(group)}>✏️ Edit</button>
-                                  <button onClick={() => deleteGroup(group._id)}>🗑 Delete Group</button>
-                                </>
-                            ) : (
-                                <>
-                                  <button onClick={() => saveEditedGroup(group._id)}>💾 Save</button>
-                                  <button onClick={cancelEditing}>❌ Cancel</button>
-                                </>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                )}
-              </React.Fragment>
+          {activities.map((activity) => (
+              <tr key={activity._id}>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <input
+                          type="text"
+                          name="title"
+                          value={editingData.title}
+                          onChange={handleEditingChange}
+                      />
+                  ) : (
+                      activity.title
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <select
+                          name="category"
+                          value={editingData.category}
+                          onChange={handleEditingChange}
+                      >
+                        {["Workshop", "Webinar", "Meetup", "Training"].map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                        ))}
+                      </select>
+                  ) : (
+                      activity.category
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <input
+                          type="date"
+                          name="date"
+                          value={editingData.date}
+                          onChange={handleEditingChange}
+                      />
+                  ) : (
+                      new Date(activity.date).toLocaleDateString()
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <input
+                          type="text"
+                          name="location"
+                          value={editingData.location}
+                          onChange={handleEditingChange}
+                      />
+                  ) : (
+                      activity.location || "Virtual"
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <>
+                        <label>
+                          <input
+                              type="checkbox"
+                              name="isPaid"
+                              checked={editingData.isPaid}
+                              onChange={handleEditingChange}
+                          />
+                          Paid
+                        </label>
+                        {editingData.isPaid && (
+                            <input
+                                type="number"
+                                name="amount"
+                                value={editingData.amount}
+                                onChange={handleEditingChange}
+                                min="0"
+                                step="0.01"
+                            />
+                        )}
+                      </>
+                  ) : (
+                      activity.isPaid ? `💰 $${activity.amount}` : "Free"
+                  )}
+                </td>
+                <td>
+                  {activity.createdBy?.username || "Unknown"}
+                </td>
+                <td>
+                  {activity.participants?.length > 0 ? (
+                      <ul className="participants-list">
+                        {activity.participants.slice(0, 3).map((participant, index) => (
+                            <li key={index}>{participant.username || "Anonymous"}</li>
+                        ))}
+                        {activity.participants.length > 3 && (
+                            <li>+{activity.participants.length - 3} more</li>
+                        )}
+                      </ul>
+                  ) : (
+                      "No participants"
+                  )}
+                </td>
+                <td>
+                  {editingActivityId === activity._id ? (
+                      <>
+                        <button onClick={() => saveEditedActivity(activity._id)}>💾</button>
+                        <button onClick={cancelEditing}>❌</button>
+                      </>
+                  ) : (
+                      <>
+                        <button onClick={() => startEditing(activity)}>✏️</button>
+                        <button onClick={() => handleDelete(activity._id)}>🗑</button>
+                        <button
+                            onClick={() => showDetails(activity)}
+                            className="details-button"
+                        >
+                          Details
+                        </button>
+                      </>
+                  )}
+                </td>
+              </tr>
           ))}
           </tbody>
         </table>
@@ -1252,10 +1767,12 @@ const GroupManager = () => {
   );
 };
 
+// Main AdminDashboard Component
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
   const [statsData, setStatsData] = useState(defaultStatsData);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -1269,30 +1786,33 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const [dashboardStatsResponse, groupStatsResponse] = await Promise.all([
+        const token = localStorage.getItem("jwtToken");
+        const [dashboardStatsResponse, groupStatsResponse, activityStatsResponse, trendingActivitiesResponse] = await Promise.all([
           fetch("http://localhost:5000/api/admin/dashboard-stats", {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("http://localhost:5000/api/admin/groups/stats", {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:5000/api/events/category-stats", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:5000/api/events/trending", {
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        if (!dashboardStatsResponse.ok) {
-          throw new Error("Failed to fetch dashboard statistics");
-        }
-        if (!groupStatsResponse.ok) {
-          throw new Error("Failed to fetch group statistics");
-        }
+        if (!dashboardStatsResponse.ok) throw new Error("Failed to fetch dashboard statistics");
+        if (!groupStatsResponse.ok) throw new Error("Failed to fetch group statistics");
+        if (!activityStatsResponse.ok) throw new Error("Failed to fetch activity statistics");
+        if (!trendingActivitiesResponse.ok) throw new Error("Failed to fetch trending activities");
 
         const dashboardData = await dashboardStatsResponse.json();
         const groupData = await groupStatsResponse.json();
+        const activityStatsData = await activityStatsResponse.json();
+        const trendingActivitiesData = await trendingActivitiesResponse.json();
 
         const cleanedData = {
           users: {
@@ -1327,6 +1847,11 @@ const AdminDashboard = () => {
             avgEngagementPerPost: groupData.avgEngagementPerPost,
             topGroupsByMembers: groupData.topGroupsByMembers,
           },
+          activities: {
+            total: activityStatsData.total,
+            categories: activityStatsData.categories,
+            trending: trendingActivitiesData.filter(activity => activity.averageRating > 0),
+          },
         };
 
         setStatsData(cleanedData);
@@ -1342,7 +1867,7 @@ const AdminDashboard = () => {
 
     if (activeSection === "statistics") {
       fetchStats();
-      const interval = setInterval(fetchStats, 5000);
+      const interval = setInterval(fetchStats, 30000); // Reduced polling frequency
       return () => clearInterval(interval);
     }
   }, [activeSection]);
@@ -1360,6 +1885,10 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleAddActivity = (newActivity) => {
+    setActivities((prevActivities) => [newActivity, ...prevActivities]);
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case "statistics":
@@ -1372,7 +1901,6 @@ const AdminDashboard = () => {
                   <p className="error-message">{error}</p>
               ) : (
                   <>
-                    {/* Existing Statistics */}
                     <div className="stats-grid">
                       <div className="stats-card">
                         <h3>Users Overview</h3>
@@ -1405,6 +1933,24 @@ const AdminDashboard = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
+                      <div className="stats-card">
+                        <h3>Activity Categories</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                                data={statsData.activities.categories}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={80}
+                                fill="var(--accent-color)"
+                                label
+                            />
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
                       <div className="stats-card metric-group">
                         <div className="metric-box">
                           <h4>Total Users</h4>
@@ -1418,6 +1964,10 @@ const AdminDashboard = () => {
                           <h4>Skills Available</h4>
                           <p className="metric-value">{statsData.skills.total}</p>
                         </div>
+                        <div className="metric-box">
+                          <h4>Total Activities</h4>
+                          <p className="metric-value">{statsData.activities.total}</p>
+                        </div>
                       </div>
                       <div className="stats-card">
                         <h3>Trending Skills</h3>
@@ -1430,12 +1980,20 @@ const AdminDashboard = () => {
                           ))}
                         </ul>
                       </div>
+                      <div className="stats-card">
+                        <h3>Trending Activities</h3>
+                        <ul className="trending-list">
+                          {statsData.activities.trending.map((activity, index) => (
+                              <li key={activity._id} className="trending-item">
+                                <span className="trending-rank">#{index + 1}</span>
+                                {activity.title} (Rating: {activity.averageRating})
+                              </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-
-                    {/* New Group Statistics */}
                     <h2 className="group-stats-header">Group Statistics</h2>
                     <div className="stats-grid">
-                      {/* Total Groups and Engagement Metrics */}
                       <div className="stats-card metric-group">
                         <div className="metric-box">
                           <h4>Total Groups</h4>
@@ -1450,8 +2008,6 @@ const AdminDashboard = () => {
                           <p className="metric-value">{statsData.groups.avgEngagementPerPost}</p>
                         </div>
                       </div>
-
-                      {/* Group Activity Over Time */}
                       <div className="stats-card">
                         <h3>Group Activity (Last 30 Days)</h3>
                         <ResponsiveContainer width="100%" height={250}>
@@ -1465,8 +2021,6 @@ const AdminDashboard = () => {
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
-
-                      {/* Group Privacy Distribution */}
                       <div className="stats-card">
                         <h3>Group Privacy Distribution</h3>
                         <ResponsiveContainer width="100%" height={250}>
@@ -1485,8 +2039,6 @@ const AdminDashboard = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-
-                      {/* Engagement Metrics */}
                       <div className="stats-card">
                         <h3>Engagement Metrics</h3>
                         <ResponsiveContainer width="100%" height={250}>
@@ -1506,8 +2058,6 @@ const AdminDashboard = () => {
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
-
-                      {/* Top Groups by Members */}
                       <div className="stats-card">
                         <h3>Top Groups by Members</h3>
                         <ul className="trending-list">
@@ -1560,23 +2110,23 @@ const AdminDashboard = () => {
               <table className="data-table">
                 <thead>
                 <tr>
-                  <th>Title</th>
+                 
                   <th>Company</th>
-                  <th>Location</th>
+                <th>Location</th>
                 </tr>
-                </thead>
-                <tbody>
-                {dummyJobs.map((job) => (
-                    <tr key={job.id}>
-                      <td>{job.title}</td>
-                      <td>{job.company}</td>
-                      <td>{job.location}</td>
-                    </tr>
-                ))}
-                </tbody>
-              </table>
-            </div>
-        );
+              </thead>
+              <tbody>
+              {dummyJobs.map((job) => (
+                  <tr key={job.id}>
+                    <td>{job.title}</td>
+                    <td>{job.company}</td>
+                    <td>{job.location}</td>
+                  </tr>
+              ))}
+              </tbody>
+            </table>
+      </div>
+      );
       case "groups":
         return (
             <div className="section-content">
@@ -1587,23 +2137,10 @@ const AdminDashboard = () => {
       case "events":
         return (
             <div className="section-content">
-              <h2>Events</h2>
-              <table className="data-table">
-                <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Date</th>
-                </tr>
-                </thead>
-                <tbody>
-                {dummyEvents.map((event) => (
-                    <tr key={event.id}>
-                      <td>{event.name}</td>
-                      <td>{event.date}</td>
-                    </tr>
-                ))}
-                </tbody>
-              </table>
+              <h2>Add New Activity</h2>
+              <AddActivityBack onAddActivity={handleAddActivity} />
+              <h2>Manage Activities</h2>
+              <ActivityManager activities={activities} setActivities={setActivities} />
             </div>
         );
       case "addSkill":
@@ -1660,7 +2197,7 @@ const AdminDashboard = () => {
                     className={activeSection === "events" ? "active" : ""}
                     onClick={() => setActiveSection("events")}
                 >
-                  🗓 Events
+                  🗓 Activities
                 </li>
                 <li
                     className={activeSection === "addSkill" ? "active" : ""}
@@ -1669,6 +2206,7 @@ const AdminDashboard = () => {
                   ➕ Skills
                 </li>
               </ul>
+            
             </aside>
             <main className="dashboard-content">{renderSection()}</main>
           </section>

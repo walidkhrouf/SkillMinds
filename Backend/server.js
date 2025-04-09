@@ -9,6 +9,7 @@ const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const adminRoutes = require("./Routes/adminRoute");
+const eventsRoutes = require('./Routes/eventsRoute');
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
@@ -153,6 +154,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/groups", groupeRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/uploads", express.static("uploads"));
 app.disable("etag");
 
 // Authentication Routes

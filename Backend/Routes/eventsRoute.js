@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createActivity, getActivities, getActivityById, updateActivity, deleteActivity, participateInActivity, confirmPayment, recommendActivities} = require('../Controllers/eventsController');
+const eventsController = require('../Controllers/eventsController');
 const multer = require('multer');
 const path = require('path');
 
-// Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -16,26 +15,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Create a new activity (with file upload)
-router.post('/', upload.single('eventImage'), createActivity);
-
-router.get('/recommend', recommendActivities);
-
-// Get all activities
-router.get('/', getActivities);
-
-// Get a specific activity by ID
-router.get('/:id', getActivityById);
-
-// Update an activity by ID (with optional file upload)
-router.put('/:id', upload.single('eventImage'), updateActivity);
-
-// Delete an activity by ID
-router.delete('/:id', deleteActivity);
-
-router.post('/:id/confirm-payment', confirmPayment);
-
-router.post('/:id/participate', participateInActivity); 
-
-
+router.post('/', upload.single('eventImage'), eventsController.createActivity);
+router.get('/recommend', eventsController.recommendActivities);
+router.get('/category-stats', eventsController.getActivityCategoryStats);
+router.get('/trending', eventsController.getTrendingActivities);
+router.get('/', eventsController.getActivities);
+router.post('/generate-image', eventsController.generateAIImage);
+router.get('/:id', eventsController.getActivityById);
+router.put('/:id', upload.single('eventImage'), eventsController.updateActivity);
+router.delete('/:id', eventsController.deleteActivity);
+router.post('/:id/confirm-payment', eventsController.confirmPayment);
+router.post('/:id/participate', eventsController.participateInActivity);
+router.post('/:id/rate', eventsController.submitRating);
+router.get('/:id/rating', eventsController.getUserRating);
+router.get('/:id/ratings', eventsController.getActivityRatings);
+router.post('/:id/comment', eventsController.submitComment);
+router.get('/:id/comments', eventsController.getActivityComments);
+router.put('/:id/comment/:commentId', eventsController.updateComment);
+router.delete('/:id/comment/:commentId', eventsController.deleteComment);
 module.exports = router;
