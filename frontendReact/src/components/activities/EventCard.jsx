@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import 
+   
+{ useNavigate, Link } from 'react-router-dom';
 import './EventCard.css';
 import axios from 'axios';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { toast } from 'react-toastify';
 
 const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRecommendedActivities, filterType }) => {
   const [activities, setActivities] = useState([]);
@@ -47,33 +50,39 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
     setActivities((prevActivities) => prevActivities.filter((activity) => activity._id !== id));
     try {
       await axios.delete(`http://localhost:5000/api/events/${id}`);
+      toast.success('Event deleted successfully!', { position: "top-center" });
     } catch (err) {
-      alert('Failed to delete event.');
+      toast.error('Failed to delete event.', { position: "top-center" });
     }
   };
 
-  const handleParticipate = async (id) => {
+  const handleParticipate = async (id, e) => {
+    e.stopPropagation();
     try {
       const jwtToken = localStorage.getItem('jwtToken');
       if (!jwtToken) {
-        alert("You must be logged in to participate.");
+        toast.warn('You must be logged in to participate.', { position: "top-center" });
         navigate('/signin');
         return;
       }
 
       const activity = activities.find((activity) => activity._id === id);
       if (!activity) {
-        alert("Activity not found.");
+        toast.error('Activity not found.', { position: "top-center" });
         return;
       }
 
-      if (activity.participants.includes(userId)) {
-        alert("You are already participating in this activity.");
+      const isParticipating = activity.participants.some(
+        participant => participant._id === userId || participant === userId
+      );
+      
+      if (isParticipating) {
+        toast.info('You are already participating in this activity.', { position: "top-center" });
         return;
       }
 
       if (activity.numberOfPlaces <= 0) {
-        alert("No available places for this activity.");
+        toast.warn('No available places for this activity.', { position: "top-center" });
         return;
       }
 
@@ -101,17 +110,18 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
           );
           setActivities(updatedActivities);
           setRecommendedActivities((prev) => prev.filter((rec) => rec._id !== id));
-          alert("Successfully joined the activity!");
+          toast.success('Successfully joined the activity!', { position: "top-center" });
         }
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to join the activity.');
+      toast.error(err.response?.data?.message || 'Failed to join the activity.', { position: "top-center" });
     }
   };
 
-  const handlePayment = async () => {
+  const handlePayment = async (e) => {
+    e.stopPropagation();
     if (!stripe || !elements || !clientSecret) {
-      alert("Stripe has not been initialized.");
+      toast.error('Stripe has not been initialized.', { position: "top-center" });
       return;
     }
 
@@ -120,7 +130,7 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
     });
 
     if (error) {
-      alert(`Payment failed: ${error.message}`);
+      toast.error(`Payment failed: ${error.message}`, { position: "top-center" });
       return;
     }
 
@@ -143,10 +153,10 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
           );
           setActivities(updatedActivities);
           setRecommendedActivities((prev) => prev.filter((rec) => rec._id !== selectedActivityId));
-          alert('Payment successful! You have joined the activity.');
+          toast.success('Payment successful! You have joined the activity.', { position: "top-center" });
         }
       } catch (err) {
-        alert(err.response?.data?.message || 'Failed to confirm payment.');
+        toast.error(err.response?.data?.message || 'Failed to confirm payment.', { position: "top-center" });
       } finally {
         setSelectedActivityId(null);
         setClientSecret('');
@@ -154,7 +164,6 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
     }
   };
 
-  // Apply filter based on filterType
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =
       activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,20 +175,26 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
     } else if (filterType === 'paid') {
       return matchesSearch && activity.isPaid;
     }
-    return matchesSearch; // 'all' case
+    return matchesSearch;
   });
 
-  // Filter recommended activities to exclude ones the user has participated in
   const filteredRecommendedActivities = recommendedActivities.filter(
-    (activity) => !activity.participants.includes(userId)
+    (activity) => !activity.participants.some(
+      participant => participant._id === userId || participant === userId
+    )
   );
+
+  const isUserParticipating = (activity) => {
+    return activity.participants.some(
+      participant => participant._id === userId || participant === userId
+    );
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="error">{error}</p>;
 
   return (
     <div className="event-cards-container">
-      {/* Recommended Activities Section */}
       {filteredRecommendedActivities.length > 0 && (
         <section className="recommended-activities">
           <h2>Recommended Activities</h2>
@@ -187,6 +202,63 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
             {filteredRecommendedActivities.map((activity) => (
               <div className="items shadow recommended-item" key={activity._id}>
                 <div className="img">
+                  <Link to={`/activity/${activity._id}`} className="image-link">
+                    {!imageErrors[activity._id] ? (
+                      <img
+                        src={
+                          activity.eventImage && activity.eventImage.filename
+                            ? `http://localhost:5000/uploads/${activity.eventImage.filename}`
+                            : ''
+                        }
+                        alt={activity.title}
+                        onError={() => handleImageError(activity._id)}
+                      />
+                    ) : (
+                      <h2>{activity.title}</h2>
+                    )}
+                  </Link>
+                </div>
+                <div className="text">
+                  <Link to={`/activity/${activity._id}`} className="text-link">
+                    <div className="admin flexSB">
+                      <span>
+                        <i className="fa fa-user"></i>
+                        <label>{activity.category}</label>
+                      </span>
+                      <span>
+                        <i className="fa fa-calendar-alt"></i>
+                        <label>{new Date(activity.date).toLocaleDateString()}</label>
+                      </span>
+                      <span>
+                        <i className="fa fa-map-marker-alt"></i>
+                        <label>{activity.location}</label>
+                      </span>
+                      <span>
+                        <i className="fa fa-users"></i>
+                        <label>{activity.numberOfPlaces || 'N/A'} Places</label>
+                      </span>
+                      <span>
+                        <i className="fa fa-dollar-sign"></i>
+                        <label>{activity.isPaid ? `${activity.amount || 'N/A'}` : 'Free'}</label>
+                      </span>
+                    </div>
+                    <h1>{activity.title}</h1>
+                    <p>{activity.description}</p>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="all-activities">
+        <h2>All Activities</h2>
+        <div className="all-activities-list">
+          {filteredActivities.map((activity) => (
+            <div className="items shadow" key={activity._id}>
+              <div className="img">
+                <Link to={`/activity/${activity._id}`} className="image-link">
                   {!imageErrors[activity._id] ? (
                     <img
                       src={
@@ -200,8 +272,10 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                   ) : (
                     <h2>{activity.title}</h2>
                   )}
-                </div>
-                <div className="text">
+                </Link>
+              </div>
+              <div className="text">
+                <Link to={`/activity/${activity._id}`} className="text-link">
                   <div className="admin flexSB">
                     <span>
                       <i className="fa fa-user"></i>
@@ -210,10 +284,6 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                     <span>
                       <i className="fa fa-calendar-alt"></i>
                       <label>{new Date(activity.date).toLocaleDateString()}</label>
-                    </span>
-                    <span>
-                      <i className="fa fa-map-marker-alt"></i>
-                      <label>{activity.location}</label>
                     </span>
                     <span>
                       <i className="fa fa-users"></i>
@@ -225,92 +295,44 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                     </span>
                   </div>
                   <h1>{activity.title}</h1>
-                  <p>{activity.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* All Activities Section */}
-      <section className="all-activities">
-        <h2>All Activities</h2>
-        <div className="all-activities-list">
-          {filteredActivities.map((activity) => (
-            <div className="items shadow" key={activity._id}>
-              <div className="img">
-                {!imageErrors[activity._id] ? (
-                  <img
-                    src={
-                      activity.eventImage && activity.eventImage.filename
-                        ? `http://localhost:5000/uploads/${activity.eventImage.filename}`
-                        : ''
-                    }
-                    alt={activity.title}
-                    onError={() => handleImageError(activity._id)}
-                  />
-                ) : (
-                  <h2>{activity.title}</h2>
-                )}
-              </div>
-              <div className="text">
-                <div className="admin flexSB">
-                  <span>
-                    <i className="fa fa-user"></i>
-                    <label>{activity.category}</label>
-                  </span>
-                  <span>
-                    <i className="fa fa-calendar-alt"></i>
-                    <label>{new Date(activity.date).toLocaleDateString()}</label>
-                  </span>
-                  <span>
-                    <i className="fa fa-map-marker-alt"></i>
-                    <label>{activity.location}</label>
-                  </span>
-                  <span>
-                    <i className="fa fa-users"></i>
-                    <label>{activity.numberOfPlaces || 'N/A'} Places</label>
-                  </span>
-                  <span>
-                    <i className="fa fa-dollar-sign"></i>
-                    <label>{activity.isPaid ? `${activity.amount || 'N/A'}` : 'Free'}</label>
-                  </span>
-                </div>
-                <h1>{activity.title}</h1>
-                <p>{activity.description}</p>
+                 
+                </Link>
+                
                 {activity.isPaid && selectedActivityId === activity._id && (
                   <div className="card-element">
                     <CardElement />
-                    <button onClick={handlePayment} className="pay-btn">
+                    <button onClick={(e) => handlePayment(e)} className="pay-btn">
                       Pay Now
                     </button>
                   </div>
                 )}
-                {isLoggedIn && !activity.isPaid && (
-                  <button onClick={() => handleParticipate(activity._id)} className="participate-btn">
-                    Participate
-                  </button>
-                )}
-                {isLoggedIn && activity.isPaid && selectedActivityId !== activity._id && (
-                  <button onClick={() => handleParticipate(activity._id)} className="participate-btn">
-                    Participate
-                  </button>
-                )}
-              </div>
-              {(userRole === 'admin' || userRole === 'mentor') && (
+                
                 <div className="action-buttons">
-                  <button
-                    className="update-btn"
-                    onClick={() => navigate(`/update-activity/${activity._id}`)}
-                  >
-                    ✏️
-                  </button>
-                  <button className="delete-btn" onClick={() => handleDelete(activity._id)}>
-                    🗑️
-                  </button>
+                  {(userRole === 'admin' || userRole === 'mentor') && (
+                    <>
+                      <button
+                        className="update-btn"
+                        onClick={() => navigate(`/update-activity/${activity._id}`)}
+                      >
+                        ✏️
+                      </button>
+                      <button className="update-btn" onClick={() => handleDelete(activity._id)}>
+                        🗑️
+                      </button>
+                    </>
+                  )}
+                  {isLoggedIn && 
+                   !isUserParticipating(activity) && 
+                   (activity.isPaid ? selectedActivityId !== activity._id : true) && (
+                    <button 
+                      onClick={(e) => handleParticipate(activity._id, e)} 
+                      className="participate-btn"
+                    >
+                      Participate
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>

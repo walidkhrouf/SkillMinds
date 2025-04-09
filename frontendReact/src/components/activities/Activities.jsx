@@ -13,11 +13,12 @@ function Activities() {
   const [userRole, setUserRole] = useState(null);
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [recommendedActivities, setRecommendedActivities] = useState([]);
   const [filterType, setFilterType] = useState('all');
   const navigate = useNavigate();
 
-  const isLoggedIn = !!localStorage.getItem('jwtToken'); // Check if user is logged in
+  const isLoggedIn = !!localStorage.getItem('jwtToken');
 
   useEffect(() => {
     const jwtToken = localStorage.getItem('jwtToken');
@@ -25,7 +26,6 @@ function Activities() {
       try {
         const payload = jwtToken.split('.')[1];
         const decodedToken = JSON.parse(atob(payload));
-        console.log('Decoded Token:', decodedToken);
         setUserRole(decodedToken.role);
         setUserId(decodedToken.userId || decodedToken.id);
       } catch (error) {
@@ -42,32 +42,38 @@ function Activities() {
   };
 
   const handleRecommendActivities = async () => {
-    try {
-      const jwtToken = localStorage.getItem('jwtToken');
-      if (!jwtToken) {
-        alert("You must be logged in to get recommendations.");
-        navigate('/signin');
-        return;
-      }
+    setIsWaiting(true); 
 
-      const response = await axios.get('http://localhost:5000/api/events/recommend', {
-        headers: { Authorization: `Bearer ${jwtToken}` },
-      });
+    setTimeout(async () => {
+      try {
+        const jwtToken = localStorage.getItem('jwtToken');
+        if (!jwtToken) {
+          alert("You must be logged in to get recommendations.");
+          navigate('/signin');
+          return;
+        }
 
-      setRecommendedActivities(response.data.recommendations);
-      if (response.data.recommendations.length === 0) {
-        alert("No activities available to recommend at this time.");
+        const response = await axios.get('http://localhost:5000/api/events/recommend', {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+        });
+
+        setRecommendedActivities(response.data.recommendations);
+        if (response.data.recommendations.length === 0) {
+          alert("No activities available to recommend at this time.");
+        }
+      } catch (err) {
+        console.error('Error fetching recommendations:', err);
+        if (err.response?.status === 401) {
+          alert(err.response.data.message || "Your session has expired. Please log in again.");
+          localStorage.removeItem('jwtToken');
+          navigate('/signin');
+        } else {
+          alert(err.response?.data?.message || 'Failed to fetch recommendations.');
+        }
+      } finally {
+        setIsWaiting(false); 
       }
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      if (err.response?.status === 401) {
-        alert(err.response.data.message || "Your session has expired. Please log in again.");
-        localStorage.removeItem('jwtToken');
-        navigate('/signin');
-      } else {
-        alert(err.response?.data?.message || 'Failed to fetch recommendations.');
-      }
-    }
+    }, 2000); 
   };
 
   const handleFilterChange = (type) => {
@@ -91,14 +97,14 @@ function Activities() {
           />
         </div>
         <div className="button-container">
-          {isLoggedIn && ( // Only show buttons if the user is logged in
+          {isLoggedIn && (
             <>
-              {(userRole === 'learner' || userRole === 'admin') && ( // Show button for learners and admins
+              {(userRole === 'learner' || userRole === 'admin') && (
                 <button onClick={handleRecommendActivities} className="recommend-btn">
-                  Recommend Activities with AI
+                  {isWaiting ? 'Generating Recommendations...' : 'Recommend Activities with AI'}
                 </button>
               )}
-              {userRole === 'admin' || 'mentor' && ( // Keep the add event button for admin
+              {(userRole === 'admin' || userRole === 'mentor') && (
                 <Link to="/add-activity" className="add-event-btn">
                   ADD EVENT <i className="fa fa-long-arrow-alt-right"></i>
                 </Link>
@@ -107,7 +113,7 @@ function Activities() {
           )}
         </div>
       </div>
-      {/* Filter Buttons */}
+
       <div className="filter-container">
         <button
           onClick={() => handleFilterChange('all')}
@@ -128,6 +134,7 @@ function Activities() {
           Paid Activities
         </button>
       </div>
+
       <div className="cards-container">
         <Elements stripe={stripePromise}>
           <EventCard

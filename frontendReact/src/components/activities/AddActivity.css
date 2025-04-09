@@ -1,7 +1,7 @@
 .activity-container {
   display: flex;
   width: 1000px;
-  height: 600px;
+  height: 800px;
   margin: 6.25rem auto;
   background-color: #f8f8f8;
   border-radius: 8px;
@@ -23,17 +23,55 @@
 }
 
 .activity-right-box {
-  background-image: url("/public/images/bgfinale.jpg");
+  background-image: url("/public/images/event.jpg");
   color: white;
   text-align: center;
-  height: 600px;
+  height: 800px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   background-size: cover;
   background-position: center;
 }
+/* Image Preview Styles */
 
+
+/* Image Preview Styles */
+.activity-image-preview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.activity-image-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  object-fit: contain; /* Ensures the image maintains aspect ratio */
+}
+
+.image-filename {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  word-break: break-all;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .activity-image-preview img {
+    max-width: 150px;
+    max-height: 150px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .preview-image {
+    max-height: 150px;
+  }
+}
 h1 {
   font-weight: bold;
   font-size: 4em;
@@ -257,6 +295,84 @@ h2 {
   margin-bottom: 15px;
   font-size: 16px;
   font-weight: bold;
+}
+
+/* Remove or adjust the old .activity-file-upload-label and .activity-ai-btn styles */
+/* Adjust the container to space the buttons nicely */
+.image-input-container {
+  display: flex;
+  flex-direction: row; /* Ensure horizontal layout */
+  align-items: center; /* Vertically align buttons */
+  gap: 10px; /* Space between the two buttons */
+  margin-top: 10px; /* Space above the container */
+}
+
+/* Style for both label and button */
+.activity-image-btn {
+  padding: 12px 20px; /* Consistent padding */
+  border-radius: 4px; /* 4px */
+  cursor: pointer;
+  font-size: 16px; /* Consistent font size */
+  background-color: #a47f18; /* Same background color as before */
+  color: white; /* Same text color as before */
+  border: none; /* No border for button, consistent for label */
+  transition: background-color 0.3s, transform 0.3s; /* Smooth transitions */
+  text-align: center; /* Center text */
+  flex: 0 0 auto; /* From your new design */
+  width: 180px; /* Fixed width from your new design */
+  height: 40px; /* Fixed height for consistency, matching previous design */
+  line-height: 1; /* Ensure text is vertically centered */
+  display: inline-flex; /* From your new design, works well */
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* From your new design */
+  box-sizing: border-box; /* Ensure padding doesn’t affect height */
+  margin: 0; /* Reset any default margins */
+}
+
+/* Hover effect */
+.activity-image-btn:hover {
+  background-color: #8a6a15; /* Darker shade on hover, matching previous design */
+  transform: scale(1.05); /* From your new design */
+}
+
+/* Disabled state for the button */
+.activity-image-btn:disabled {
+  background-color: #cccccc; /* Same disabled color as before */
+  cursor: not-allowed;
+  transform: none; /* Prevent scaling when disabled */
+}
+
+/* Ensure the file input remains hidden */
+.image-upload-input {
+  display: none;
+}
+
+/* Optional: Ensure label behaves exactly like button */
+.image-input-container label.activity-image-btn {
+  margin: 0; /* Reset label-specific margins */
+  padding: 12px 20px; /* Match button padding */
+  height: 40px; /* Match button height */
+  display: inline-flex; /* Match button display */
+  align-items: center; /* Match button alignment */
+  justify-content: center; /* Match button alignment */
+  color: white !important; /* Ensure white text */
+}
+
+/* Optional: Ensure button consistency */
+.image-input-container button.activity-image-btn {
+  margin: 0; /* Reset button margins */
+  padding: 12px 20px; /* Ensure exact padding match */
+  height: 40px; /* Match label height */
+}
+
+/* Spinner styling (if needed) */
+.spinner {
+  /* Add your spinner styles here, e.g., animation for loading */
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
 }
 
 .activity-switch-auth {

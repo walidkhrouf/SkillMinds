@@ -3,8 +3,8 @@ import axios from 'axios';
 import MapComponent from './MapComponent';
 import { useNavigate, NavLink } from 'react-router-dom';
 import CalendlyWidget from './CalendlyWidget';
-import DatePicker from 'react-datepicker'; // Import React Date Picker
-import 'react-datepicker/dist/react-datepicker.css'; // Import CSS for the date picker
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './AddActivity.css';
 
 const AddActivity = () => {
@@ -13,7 +13,7 @@ const AddActivity = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: null, // Use null for React Date Picker
+    date: null,
     numberOfPlaces: '',
     category: '',
     location: '',
@@ -26,14 +26,13 @@ const AddActivity = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showCalendlyWidget, setShowCalendlyWidget] = useState(false);
+  const [imageGenerating, setImageGenerating] = useState(false);
 
-  // Function to disable weekends
   const isWeekday = (date) => {
     const day = date.getDay();
-    return day !== 0 && day !== 6; // Disable Sunday (0) and Saturday (6)
+    return day !== 0 && day !== 6;
   };
 
-  // Handle location selection from the map
   const handleMapLocationSelect = useCallback(async (coordinates) => {
     try {
       const response = await axios.get(
@@ -55,16 +54,16 @@ const AddActivity = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
-    setError('');
+    setError(''); 
     setSuccess('');
   };
 
   const handleDateChange = (date) => {
     setFormData({
       ...formData,
-      date: date,
+      date,
     });
-    setError('');
+    setError(''); 
     setSuccess('');
   };
 
@@ -84,35 +83,109 @@ const AddActivity = () => {
     }
   };
 
+  const handleGenerateAIImage = async () => {
+    if (!formData.title) {
+      setError('Please enter a title before generating an image.');
+      return;
+    }
+
+    setImageGenerating(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/events/generate-image',
+        {
+          title: formData.title,
+          prompt: `Professional digital art of: ${formData.title}. High quality, detailed, trending on artstation, vibrant colors`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+          },
+        }
+      );
+
+      const { filename, data } = response.data;
+      const byteCharacters = atob(data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      const imageFile = new File([blob], filename, { type: 'image/png' });
+
+      setFormData((prev) => ({
+        ...prev,
+        eventImage: imageFile,
+      }));
+      setSuccess('AI image generated successfully!');
+    } catch (err) {
+      console.error('AI image generation error:', err);
+      setError(err.response?.data?.error || 'Failed to generate AI image. Please try again.');
+    } finally {
+      setImageGenerating(false);
+    }
+  };
+
   const validateStep = () => {
     const { title, description, date, numberOfPlaces, location, category, isPaid, amount, link } = formData;
 
     if (step === 1) {
-      if (!title || !description || !date || numberOfPlaces === '') {
-        setError('Please fill all required fields in step 1.');
+      if (!title.trim()) {
+        setError('Title is required.');
+        return false;
+      }
+      if (title.length < 3) {
+        setError('Title must be at least 3 characters long.');
+        return false;
+      }
+      if (!description.trim()) {
+        setError('Description is required.');
+        return false;
+      }
+      if (description.length < 10) {
+        setError('Description must be at least 10 characters long.');
+        return false;
+      }
+      if (!date) {
+        setError('Please select a date.');
+        return false;
+      }
+      if (!numberOfPlaces || isNaN(numberOfPlaces) || numberOfPlaces <= 0) {
+        setError('Number of places must be a positive integer.');
         return false;
       }
     }
+
     if (step === 2) {
-      if (!location) {
-        setError('Please fill all required fields in step 2.');
+      if (!location.trim()) {
+        setError('Location is required.');
+        return false;
+      }
+      if (location.length < 3) {
+        setError('Location must be at least 3 characters long.');
+        return false;
+      }
+      if (isPaid && (!amount || isNaN(amount) || amount <= 0)) {
+        setError('Amount is required for paid activities and must be a positive number.');
         return false;
       }
     }
+
     if (step === 3) {
       if (!category) {
         setError('Please select a category.');
         return false;
       }
-      if (isPaid && !amount) {
-        setError('Amount is required for paid activities.');
-        return false;
-      }
-      if (category === 'Webinar' && !link) {
-        setError('Link is required for webinars.');
+      if (category === 'Webinar' && !link.trim()) {
+        setError('Webinar link is required.');
         return false;
       }
     }
+
     return true;
   };
 
@@ -124,6 +197,7 @@ const AddActivity = () => {
 
   const handleBack = () => {
     setStep((prev) => prev - 1);
+    setError(''); 
   };
 
   const handleSubmit = async (e) => {
@@ -141,10 +215,10 @@ const AddActivity = () => {
     try {
       const dataToSubmit = new FormData();
       for (const key in formData) {
-        if (key === 'eventImage') {
+        if (key === 'eventImage' && formData.eventImage) {
           dataToSubmit.append('eventImage', formData.eventImage);
         } else if (key === 'date') {
-          dataToSubmit.append(key, formData.date.toISOString().split('T')[0]); // Format date as YYYY-MM-DD
+          dataToSubmit.append(key, formData.date.toISOString().split('T')[0]);
         } else {
           dataToSubmit.append(key, formData[key]);
         }
@@ -182,7 +256,7 @@ const AddActivity = () => {
     }
   };
 
-  const handleCalendlyDateSelect = ({ eventLink, selectedDate }) => {
+  const handleCalendlyDateSelect = ({ eventLink }) => {
     setFormData((prev) => ({
       ...prev,
       link: eventLink,
@@ -198,7 +272,7 @@ const AddActivity = () => {
           {error && <p className="activity-error">{error}</p>}
           {success && <p className="activity-success">{success}</p>}
           <form className="activity-auth-form" onSubmit={handleSubmit}>
-            {/* Step 1: Title, Description, Date, and Number of Places */}
+            {/* Step 1 */}
             <div className={`activity-form-step ${step === 1 ? 'active' : ''}`}>
               <div className="activity-form-group">
                 <label htmlFor="title">Title:</label>
@@ -226,9 +300,9 @@ const AddActivity = () => {
                 <DatePicker
                   selected={formData.date}
                   onChange={handleDateChange}
-                  filterDate={isWeekday} // Disable weekends
-                  minDate={new Date()} // Disable past dates
-                  dateFormat="yyyy-MM-dd" // Format the date
+                  filterDate={isWeekday}
+                  minDate={new Date()}
+                  dateFormat="yyyy-MM-dd"
                   placeholderText="Select a date"
                   className="date-picker-input"
                 />
@@ -246,7 +320,7 @@ const AddActivity = () => {
               </div>
             </div>
 
-            {/* Step 2: Location and Image Upload */}
+            {/* Step 2: Location */}
             <div className={`activity-form-step ${step === 2 ? 'active' : ''}`}>
               <div className="activity-form-group">
                 <label htmlFor="location">Location:</label>
@@ -262,35 +336,6 @@ const AddActivity = () => {
               <div className="activity-form-group">
                 <label>Map Preview:</label>
                 <MapComponent onLocationSelect={handleMapLocationSelect} />
-              </div>
-              <div className="activity-form-group">
-                <label htmlFor="image">Upload Image:</label>
-                <input
-                  type="file"
-                  id="eventImage"
-                  name="eventImage"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </div>
-            </div>
-
-            {/* Step 3: Category, Payment, and Link */}
-            <div className={`activity-form-step ${step === 3 ? 'active' : ''}`}>
-              <div className="activity-form-group">
-                <label htmlFor="category">Category:</label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                >
-                  <option value="">Select category</option>
-                  <option value="Workshop">Workshop</option>
-                  <option value="Webinar">Webinar</option>
-                  <option value="Meetup">Meetup</option>
-                  <option value="Training">Training</option>
-                </select>
               </div>
               <div className="activity-form-group">
                 <label>Paid Activity</label>
@@ -314,6 +359,25 @@ const AddActivity = () => {
                   />
                 </div>
               )}
+            </div>
+
+            {/* Step 3: Category, Paid, Link, and Image */}
+            <div className={`activity-form-step ${step === 3 ? 'active' : ''}`}>
+              <div className="activity-form-group">
+                <label htmlFor="category">Category:</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                >
+                  <option value="">Select category</option>
+                  <option value="Workshop">Workshop</option>
+                  <option value="Webinar">Webinar</option>
+                  <option value="Meetup">Meetup</option>
+                  <option value="Training">Training</option>
+                </select>
+              </div>
               {formData.category === 'Webinar' && !formData.link && (
                 <div className="activity-form-group">
                   <label htmlFor="link">Webinar Link:</label>
@@ -338,6 +402,46 @@ const AddActivity = () => {
                   />
                 </div>
               )}
+            <div className="activity-form-group">
+              <label htmlFor="eventImage">Upload Image or Generate AI Image:</label>
+              <div className="image-input-container">
+                <input
+                  type="file"
+                  id="eventImage"
+                  name="eventImage"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="image-upload-input"
+                />
+                <label htmlFor="eventImage" className="activity-image-btn">
+                  Upload Image
+                </label>
+                <button
+                  type="button"
+                  className="activity-image-btn"
+                  onClick={handleGenerateAIImage}
+                  disabled={imageGenerating || !formData.title}
+                >
+                  {imageGenerating ? (
+                    <>
+                      <span className="spinner"></span>
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate AI Image'
+                  )}
+                </button>
+              </div>
+              {formData.eventImage && (
+                <div className="activity-image-preview">
+                  <img
+                    src={URL.createObjectURL(formData.eventImage)}
+                    alt="Event Preview"
+                  />
+                  <p className="image-filename">{formData.eventImage.name}</p>
+                </div>
+              )}
+            </div>
             </div>
 
             {/* Navigation Buttons */}
@@ -371,7 +475,7 @@ const AddActivity = () => {
         {showCalendlyWidget && (
           <div className="activity-calendly-modal">
             <CalendlyWidget
-              url="https://calendly.com/skillminds-team/activity-scheduling"
+              url="https://calendly.com/walidkhrouf9/30min"
               onDateSelect={handleCalendlyDateSelect}
             />
             <button

@@ -97,6 +97,10 @@
 
 .event-cards-container .text {
   padding: 0.9375rem; /* 15px */
+  position: relative; /* Added to position buttons absolutely within */
+  min-height: 15rem; /* Ensure enough space for content and buttons */
+  display: flex;
+  flex-direction: column;
 }
 
 .event-cards-container .admin {
@@ -136,6 +140,36 @@
   -webkit-box-orient: vertical;
 }
 
+/* Link Styles */
+.text-link {
+  color: inherit; /* Inherits the color from parent */
+  text-decoration: none; /* Removes underline */
+}
+
+.text-link:hover {
+  color: inherit; /* Maintains the same color on hover */
+  text-decoration: none; /* Ensures no underline appears on hover */
+}
+
+.image-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.image-link:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* For the h2 that appears when image fails to load */
+.image-link h2 {
+  color: inherit; /* Inherits the color from parent */
+}
+
+.image-link:hover h2 {
+  color: inherit; /* Maintains the same color on hover */
+}
+
 /* Action Buttons */
 .event-cards-container .action-buttons {
   position: absolute;
@@ -143,6 +177,7 @@
   right: 0.625rem;
   display: flex;
   gap: 0.5rem;
+  align-items: center; /* Align all buttons vertically */
 }
 
 .event-cards-container .update-btn,
@@ -174,25 +209,40 @@
 }
 
 /* Participate and Pay Buttons */
-.participate-btn,
-.pay-btn {
-  padding: 0.5rem 1rem;
+.participate-btn {
+  padding: 0.25rem 0.75rem; /* Smaller padding to match other buttons */
   background-color: #28a745;
   color: white;
   border: none;
   border-radius: 0.3125rem;
   cursor: pointer;
-  margin-top: 0.625rem;
+  font-size: 0.875rem; /* Match other button sizes */
   transition: background-color 0.3s ease;
 }
 
-.participate-btn:hover,
+.participate-btn:hover {
+  background-color: #218838;
+}
+
+.pay-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 0.3125rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
 .pay-btn:hover {
   background-color: #218838;
 }
 
 .card-element {
-  margin-top: 0.625rem;
+  position: absolute;
+  bottom: 2.5rem; /* Position above the buttons */
+  width: calc(100% - 1.875rem); /* Account for padding */
 }
 
 /* Responsive Design */

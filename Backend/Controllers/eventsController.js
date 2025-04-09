@@ -1,5 +1,6 @@
 const Activity = require('../models/Activity');
 const jwt = require("jsonwebtoken");
+const axios = require('axios');
 const natural = require('natural');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -15,11 +16,11 @@ const createActivity = async (req, res) => {
   }
 
   try {
-    // Verify the token and get the user ID
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.userId || decoded.id;
 
-    // Handle the event image (if provided)
+  
     const eventImage = req.file
       ? {
           filename: req.file.filename,
@@ -29,7 +30,7 @@ const createActivity = async (req, res) => {
         }
       : null;
 
-    // Create the activity data
+    
     const activityData = {
       title: req.body.title,
       description: req.body.description,
@@ -41,20 +42,20 @@ const createActivity = async (req, res) => {
       numberOfPlaces: req.body.numberOfPlaces,
       amount: req.body.amount,
       link: req.body.link,
-      createdBy: userId, // Set the createdBy field to the user's ID
+      createdBy: userId, 
     };
 
-    // Save the activity to the database
+    
     const activity = new Activity(activityData);
     await activity.save();
 
-    // Populate the createdBy field with the user's details
+    
     const populatedActivity = await Activity.findById(activity._id).populate(
       'createdBy',
-      'username' // Include only the username field
+      'username' 
     );
 
-    // Send the response with the populated activity
+    
     res.status(201).json(populatedActivity);
   } catch (error) {
     console.error("Error creating activity:", error.message);
@@ -65,28 +66,35 @@ const createActivity = async (req, res) => {
   }
 };
 
-// Get all activities
+
 const getActivities = async (req, res) => {
   try {
     const activities = await Activity.find({ createdBy: { $exists: true } })
       .populate('createdBy', 'username')
-      .populate('participants', 'username'); // Populate participants' usernames
+      .populate('participants', 'username'); 
     res.status(200).json(activities);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get a specific activity by ID
+
 const getActivityById = async (req, res) => {
   try {
-    const activity = await Activity.findById(req.params.id);
+    const activity = await Activity.findById(req.params.id)
+      .populate('createdBy', 'username')          
+      .populate('participants', 'username')       
+      .populate('ratings.userId', 'username')     
+      .populate('comments.userId', 'username');   
+
     if (!activity) {
       return res.status(404).json({ message: 'Activity not found' });
     }
+
     res.status(200).json(activity);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching activity by ID:', error); // Add logging for debugging
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
@@ -105,8 +113,13 @@ const updateActivity = async (req, res) => {
     existingActivity.isPaid = req.body.isPaid || existingActivity.isPaid;
     existingActivity.numberOfPlaces = req.body.numberOfPlaces || existingActivity.numberOfPlaces;
 
-    // Handle the amount field correctly
-    existingActivity.amount = req.body.isPaid ? Number(req.body.amount) : null;
+    
+    if (req.body.isPaid) {
+      const amount = parseFloat(req.body.amount);
+      existingActivity.amount = isNaN(amount) ? null : amount; 
+    } else {
+      existingActivity.amount = null; 
+    }
 
     existingActivity.link = req.body.link || existingActivity.link;
 
@@ -129,7 +142,6 @@ const updateActivity = async (req, res) => {
   }
 };
 
-// Delete an activity by ID
 const deleteActivity = async (req, res) => {
   try {
     const activity = await Activity.findByIdAndDelete(req.params.id);
@@ -166,10 +178,10 @@ const participateInActivity = async (req, res) => {
       return res.status(400).json({ message: 'No available places for this activity.' });
     }
 
-    // If the activity is paid, create a PaymentIntent
+    
     if (activity.isPaid) {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: activity.amount * 100, // Amount in cents
+        amount: activity.amount * 100, 
         currency: 'usd',
         metadata: {
           activityId: activity._id.toString(),
@@ -179,11 +191,11 @@ const participateInActivity = async (req, res) => {
 
       return res.status(200).json({
         message: 'Payment required',
-        clientSecret: paymentIntent.client_secret, // Send client secret to the frontend
+        clientSecret: paymentIntent.client_secret, 
       });
     }
 
-    // If the activity is free, add the user to the participants list
+    
     activity.participants.push(userId);
     activity.numberOfPlaces -= 1;
     await activity.save();
@@ -204,7 +216,7 @@ const confirmPayment = async (req, res) => {
   try {
     console.log('Incoming Request:', req.body);
 
-    // Retrieve the payment intent from Stripe
+    
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     console.log('Payment Intent Status:', paymentIntent.status);
 
@@ -212,18 +224,18 @@ const confirmPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment not succeeded' });
     }
 
-    // Find the activity
+    
     const activity = await Activity.findById(activityId);
     if (!activity) {
       return res.status(404).json({ message: 'Activity not found' });
     }
 
-    // Check if the user is already participating
+    
     if (activity.participants.includes(userId)) {
       return res.status(400).json({ message: 'You are already participating in this activity.' });
     }
 
-    // Add the user to the participants list and decrease the number of places
+    
     activity.participants.push(userId);
     activity.numberOfPlaces -= 1;
     await activity.save();
@@ -232,7 +244,7 @@ const confirmPayment = async (req, res) => {
 
     res.status(200).json({
       message: 'Payment successful and joined the activity',
-      activity: activity, // Return the updated activity
+      activity: activity, 
     });
   } catch (error) {
     console.error('Payment Confirmation Error:', error);
@@ -240,77 +252,7 @@ const confirmPayment = async (req, res) => {
   }
 };
 
-const getActivityStatistics = async (req, res) => {
-  try {
-    // Get all activities
-    const activities = await Activity.find({});
 
-    // Statistics: Number of activities by category
-    const activitiesByCategory = activities.reduce((acc, activity) => {
-      const category = activity.category;
-      if (!acc[category]) {
-        acc[category] = 0;
-      }
-      acc[category] += 1;
-      return acc;
-    }, {});
-
-    // Format data for the bar chart
-    const categoryStats = Object.keys(activitiesByCategory).map((category) => ({
-      category,
-      count: activitiesByCategory[category],
-    }));
-
-    // Statistics: Number of participants per activity
-    const participantsPerActivity = activities.map((activity) => ({
-      title: activity.title,
-      participants: activity.participants.length,
-    }));
-
-    // Statistics: Paid vs. Free activities
-    const paidActivities = activities.filter((activity) => activity.isPaid).length;
-    const freeActivities = activities.length - paidActivities;
-
-    // Statistics: Activities over time (grouped by month)
-    const activitiesOverTime = activities.reduce((acc, activity) => {
-      const month = new Date(activity.createdAt).toLocaleString('default', { month: 'long' });
-      if (!acc[month]) {
-        acc[month] = 0;
-      }
-      acc[month] += 1;
-      return acc;
-    }, {});
-
-    const activitiesOverTimeStats = Object.keys(activitiesOverTime).map((month) => ({
-      month,
-      count: activitiesOverTime[month],
-    }));
-
-    // Statistics: Most popular activities (top 5 by participants)
-    const mostPopularActivities = activities
-      .sort((a, b) => b.participants.length - a.participants.length)
-      .slice(0, 5)
-      .map((activity) => ({
-        title: activity.title,
-        participants: activity.participants.length,
-      }));
-
-    // Return all statistics
-    res.status(200).json({
-      activitiesByCategory: categoryStats,
-      participantsPerActivity,
-      paidVsFree: {
-        paid: paidActivities,
-        free: freeActivities,
-      },
-      activitiesOverTime: activitiesOverTimeStats,
-      mostPopularActivities,
-    });
-  } catch (error) {
-    console.error('Error fetching activity statistics:', error);
-    res.status(500).json({ message: 'Failed to fetch activity statistics', error: error.message });
-  }
-};
 
 
 const recommendActivities = async (req, res) => {
@@ -331,15 +273,15 @@ const recommendActivities = async (req, res) => {
       .populate('createdBy', 'username')
       .populate('participants', 'username');
 
-    // Filter out activities the user is involved in
+    
     const availableActivities = allActivities.filter((activity) => {
       const isCreator = activity.createdBy && activity.createdBy._id
         ? activity.createdBy._id.toString() === userId
         : false;
       return (
-        !activity.participants.includes(userId) && // Exclude if user is a participant
-        !isCreator && // Exclude if user is the creator
-        activity.numberOfPlaces > 0 // Ensure places are available
+        !activity.participants.includes(userId) && 
+        !isCreator && 
+        activity.numberOfPlaces > 0 
       );
     });
 
@@ -347,7 +289,7 @@ const recommendActivities = async (req, res) => {
       return res.status(200).json({ message: 'No available activities to recommend', recommendations: [] });
     }
 
-    // Get user's past activities for title and location comparison
+    
     const userActivities = allActivities.filter((activity) => {
       const isCreator = activity.createdBy && activity.createdBy._id
         ? activity.createdBy._id.toString() === userId
@@ -355,31 +297,31 @@ const recommendActivities = async (req, res) => {
       return activity.participants.includes(userId) || isCreator;
     });
 
-    // If no user activities, return available activities with no scoring
+    
     if (userActivities.length === 0) {
-      const recommendations = availableActivities.slice(0, 5); // Limit to 5
+      const recommendations = availableActivities.slice(0, 5); 
       return res.status(200).json({
         message: 'Recommended activities (no user history)',
         recommendations: recommendations,
       });
     }
 
-    // Extract user activity titles and locations
+    
     const userTitles = userActivities.map((activity) => activity.title.toLowerCase());
     const userLocations = [...new Set(userActivities.map((activity) => activity.location))];
 
-    // Calculate recommendation scores based on title similarity and location
+    
     const recommendations = availableActivities.map((activity) => {
       let score = 0;
 
-      // Title similarity (using Jaro-Winkler distance)
+      
       const titleSimilarity = userTitles.reduce((maxSim, userTitle) => {
         const sim = natural.JaroWinklerDistance(userTitle, activity.title.toLowerCase());
         return Math.max(maxSim, sim);
       }, 0);
-      score += titleSimilarity * 50; // Weight: 50%
+      score += titleSimilarity * 50; 
 
-      // Location proximity (simple match)
+    
       if (userLocations.includes(activity.location)) {
         score += 30; // Weight: 30%
 
@@ -388,7 +330,7 @@ const recommendActivities = async (req, res) => {
       return { ...activity._doc, recommendationScore: score };
     });
 
-    // Sort by score and limit to top 5
+    
     const sortedRecommendations = recommendations
       .sort((a, b) => b.recommendationScore - a.recommendationScore)
       .slice(0, 5);
@@ -407,6 +349,443 @@ const recommendActivities = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+const generateAIImage = async (req, res) => {
+  const { title } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ message: 'Title is required' });
+  }
+
+  try {
+    
+    const response = await axios.post(
+      'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
+      {
+        text_prompts: [
+          {
+            text: `logo of: ${title}, high quality`,
+            weight: 1
+          }
+        ],
+        cfg_scale: 7,
+        height: 1024,
+        width: 1024,
+        steps: 30,
+        samples: 1,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        responseType: 'json'
+      }
+    );
+
+    
+    const imageData = response.data.artifacts[0].base64;
+    const filename = `${title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
+
+    res.json({
+      filename,
+      contentType: 'image/png',
+      data: imageData 
+    });
+
+  } catch (error) {
+    console.error('Stability AI error:', error.response?.data || error.message);
+    
+    
+    const errorMessage = error.response?.data?.message || 
+                        error.response?.data?.errors?.join(', ') || 
+                        error.message;
+    
+    res.status(500).json({
+      message: 'Failed to generate image',
+      error: errorMessage,
+      details: error.response?.data || null
+    });
+  }
+};
+
+
+const submitRating = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Authentication token required" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Token not provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+    const { rating } = req.body;
+    const { id: activityId } = req.params;
+
+    
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Please provide a valid rating between 1 and 5' });
+    }
+
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    
+    const existingRatingIndex = activity.ratings.findIndex(
+      r => r.userId.toString() === userId.toString()
+    );
+
+    if (existingRatingIndex >= 0) {
+      
+      activity.ratings[existingRatingIndex].rating = rating;
+    } else {
+      
+      activity.ratings.push({ userId, rating });
+    }
+
+    
+    activity.updateAverageRating();
+    await activity.save();
+
+    
+    const updatedActivity = await Activity.findById(activityId)
+      .populate('ratings.userId', 'username');
+
+    res.status(200).json({
+      message: 'Rating submitted successfully',
+      activity: updatedActivity,
+      averageRating: updatedActivity.averageRating,
+      userRating: rating
+    });
+  } catch (error) {
+    console.error("Error submitting rating:", error.message);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token", error: error.message });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const getUserRating = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Authentication token required" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Token not provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+    const { id: activityId } = req.params;
+
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    const userRating = activity.ratings.find(
+      r => r.userId.toString() === userId.toString()
+    );
+
+    res.status(200).json({
+      userRating: userRating ? userRating.rating : null,
+      averageRating: activity.averageRating,
+      totalRatings: activity.ratings.length
+    });
+  } catch (error) {
+    console.error("Error getting user rating:", error.message);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token", error: error.message });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+
+const getActivityRatings = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Authentication token required" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Token not provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+    
+    // Check if user is admin (you might need to adjust this based on your user model)
+    if (!decoded.isAdmin && decoded.role !== 'admin') {
+      return res.status(403).json({ message: "Admin privileges required" });
+    }
+
+    const { id: activityId } = req.params;
+
+    const activity = await Activity.findById(activityId)
+      .populate('ratings.userId', 'username email')
+      .select('ratings averageRating');
+
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    res.status(200).json({
+      averageRating: activity.averageRating,
+      totalRatings: activity.ratings.length,
+      ratings: activity.ratings
+    });
+  } catch (error) {
+    console.error("Error getting activity ratings:", error.message);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token", error: error.message });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const submitComment = async (req, res) => {
+  try {
+    const { text } = req.body;
+    const activityId = req.params.id;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authentication token required" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+
+    if (!text || text.trim() === "") {
+      return res.status(400).json({ message: "Comment text is required" });
+    }
+
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+      return res.status(404).json({ message: "Activity not found" });
+    }
+
+    const newComment = {
+      userId,
+      text,
+    };
+
+    activity.comments.push(newComment);
+    await activity.save();
+
+    const updatedActivity = await Activity.findById(activityId)
+      .populate('createdBy', 'username')
+      .populate('participants', 'username')
+      .populate({
+        path: 'comments.userId',
+        select: 'username profileImage',
+        populate: {
+          path: 'profileImage',
+          model: 'File'
+        }
+      });
+
+    res.status(201).json({
+      message: "Comment added successfully",
+      activity: updatedActivity
+    });
+  } catch (error) {
+    console.error("Error submitting comment:", error);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const getActivityComments = async (req, res) => {
+  try {
+    const activityId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const activity = await Activity.findById(activityId)
+      .populate({
+        path: 'comments.userId',
+        select: 'username profileImage',
+        populate: {
+          path: 'profileImage',
+          model: 'File'
+        }
+      });
+
+    if (!activity) {
+      return res.status(404).json({ message: "Activity not found" });
+    }
+
+    const totalComments = activity.comments.length;
+    const paginatedComments = activity.comments.slice(skip, skip + limit);
+
+    res.status(200).json({
+      comments: paginatedComments,
+      totalComments,
+      currentPage: page,
+      totalPages: Math.ceil(totalComments / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const { text } = req.body;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authentication token required" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+
+    if (!text || text.trim() === "") {
+      return res.status(400).json({ message: "Comment text is required" });
+    }
+
+    const activity = await Activity.findById(id);
+    if (!activity) {
+      return res.status(404).json({ message: "Activity not found" });
+    }
+
+    const comment = activity.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    if (comment.userId.toString() !== userId) {
+      return res.status(403).json({ message: "You can only edit your own comments" });
+    }
+
+    comment.text = text;
+    comment.updatedAt = Date.now();
+    await activity.save();
+
+    const updatedActivity = await Activity.findById(id)
+      .populate('createdBy', 'username')
+      .populate('participants', 'username')
+      .populate({
+        path: 'comments.userId',
+        select: 'username profileImage',
+        populate: { path: 'profileImage', model: 'File' }
+      });
+
+    res.status(200).json({
+      message: "Comment updated successfully",
+      activity: updatedActivity
+    });
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Authentication token required" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId || decoded.id;
+
+    const activity = await Activity.findById(id);
+    if (!activity) {
+      return res.status(404).json({ message: "Activity not found" });
+    }
+
+    const comment = activity.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    if (comment.userId.toString() !== userId) {
+      return res.status(403).json({ message: "You can only delete your own comments" });
+    }
+
+    activity.comments.id(commentId).deleteOne();
+    await activity.save();
+
+    res.status(200).json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const getActivityCategoryStats = async (req, res) => {
+  try {
+    const categoryStats = await Activity.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          value: '$count',
+          _id: 0
+        }
+      }
+    ]);
+
+    const totalActivities = await Activity.countDocuments();
+
+    res.status(200).json({
+      categories: categoryStats,
+      total: totalActivities
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching activity category statistics', error: error.message });
+  }
+};
+
+const getTrendingActivities = async (req, res) => {
+  try {
+    const trendingActivities = await Activity.find()
+      .sort({ averageRating: -1 }) 
+      .limit(5) 
+      .select('title averageRating'); 
+
+    res.status(200).json(trendingActivities);
+  } catch (error) {
+    console.error('Error fetching trending activities:', error);
+    res.status(500).json({
+      message: 'Error fetching trending activities',
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   createActivity,
   getActivities,
@@ -415,6 +794,15 @@ module.exports = {
   deleteActivity,
   participateInActivity,
   confirmPayment,
-  getActivityStatistics,
+  getActivityCategoryStats,
+  getTrendingActivities,
   recommendActivities,
+  generateAIImage,
+  getActivityRatings,
+  submitRating,
+  getUserRating,
+  submitComment,
+  getActivityComments,
+  updateComment,
+  deleteComment
 };

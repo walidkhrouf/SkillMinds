@@ -1,32 +1,32 @@
 import React, { useEffect, useRef } from 'react';
-import 'ol/ol.css'; // Import OpenLayers CSS
+import 'ol/ol.css'; 
 import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM'; // OpenStreetMap as the base layer
-import { fromLonLat, toLonLat } from 'ol/proj'; // For coordinate conversion
+import OSM from 'ol/source/OSM'; 
+import { fromLonLat, toLonLat } from 'ol/proj'; 
 
 const MapComponent = ({ onLocationSelect }) => {
-  const mapRef = useRef(null); // Reference to the map container
+  const mapRef = useRef(null); 
 
   useEffect(() => {
-    // Initialize the map
+    
     const map = new Map({
-      target: mapRef.current, // Attach the map to the DOM element
+      target: mapRef.current, 
       layers: [
         new TileLayer({
-          source: new OSM(), // Use OpenStreetMap as the base layer
+          source: new OSM(), 
         }),
       ],
       view: new View({
-        center: fromLonLat([0, 0]), // Initial center (longitude, latitude)
-        zoom: 2, // Initial zoom level
+        center: fromLonLat([9.5, 34]), 
+        zoom: 6, 
       }),
     });
 
-    // Add click event listener to the map
+    
     map.on('click', (event) => {
-      const coordinates = toLonLat(event.coordinate); // Convert coordinates to longitude/latitude
-      onLocationSelect(coordinates); // Pass coordinates to the parent component
+      const coordinates = toLonLat(event.coordinate); 
+      onLocationSelect(coordinates); 
     });
 
     // Cleanup on unmount

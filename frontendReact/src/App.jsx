@@ -19,6 +19,9 @@ import ForgetPassword from "./components/User/ForgetPassword.jsx";
 import Activities from "./components/activities/Activities.jsx";
 import AddActivity from "./components/activities/AddActivity.jsx";
 import UpdateActivity from "./components/activities/UpdateActivity.jsx";
+import ActivityDetails from "./components/activities/ActivityDetails.jsx";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
   if (!storedUser) {
@@ -56,6 +59,7 @@ const AppContent = () => {
         <Route path="/activities" element={<Activities />} />
         <Route path="/add-activity" element={<AddActivity />} />
         <Route path="/update-activity/:id" element={<UpdateActivity />} />
+        <Route path="/activity/:id" element={<ActivityDetails />} />
         <Route
           path="/admin"
           element={
@@ -68,6 +72,21 @@ const AppContent = () => {
         <Route path="/firstchoose" element={<SkillsList />} />
       </Routes>
       {!hideLayout && <Footer />}
+      <ToastContainer 
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{
+          zIndex: 9999,
+          marginTop: '4rem' // Adjust this value based on your header height
+        }}
+      />
     </>
   );
 };

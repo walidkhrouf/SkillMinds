@@ -889,6 +889,8 @@ const SkillManager = () => {
 const ActivityManager = ({ activities, setActivities }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [viewMode, setViewMode] = useState('table');
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [editingData, setEditingData] = useState({
     title: '',
@@ -928,8 +930,29 @@ const ActivityManager = ({ activities, setActivities }) => {
     fetchActivities();
   }, [setActivities]);
 
+  const fetchActivityDetails = async (activityId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/events/${activityId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity details');
+      }
+
+      const data = await response.json();
+      setSelectedActivity(data);
+      setViewMode('details');
+    } catch (err) {
+      setError({ text: 'Failed to load activity details', type: 'error' });
+    }
+  };
+
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this activity?')) return;
+
     try {
       const response = await fetch(`http://localhost:5000/api/events/${id}`, {
         method: 'DELETE',
@@ -1027,6 +1050,145 @@ const ActivityManager = ({ activities, setActivities }) => {
     }
   };
 
+  const showDetails = (activity) => {
+    fetchActivityDetails(activity._id); // Fetch fresh data instead of using local state
+  };
+
+  const handleBackToList = () => {
+    setViewMode('table');
+    setSelectedActivity(null);
+  };
+
+  if (loading) {
+    return <div className="loading">⏳ Loading activities...</div>;
+  }
+
+  if (viewMode === 'details' && selectedActivity) {
+    return (
+      <div className="activity-details-admin section-content">
+        <button onClick={handleBackToList} className="back-button">
+          ← Back to Activities
+        </button>
+  
+        <h2>{selectedActivity.title}</h2>
+  
+        <div className="activity-info skill-card">
+          <div className="detail-row">
+            <span className="detail-label">Description:</span>
+            <span className="detail-value">{selectedActivity.description}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Category:</span>
+            <span className="detail-value">{selectedActivity.category}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Date:</span>
+            <span className="detail-value">{new Date(selectedActivity.date).toLocaleDateString()}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Location:</span>
+            <span className="detail-value">{selectedActivity.location || 'Virtual'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Type:</span>
+            <span className="detail-value">
+              {selectedActivity.isPaid ? `Paid ($${selectedActivity.amount})` : 'Free'}
+            </span>
+          </div>
+         
+  
+          {selectedActivity.link && (
+            <div className="detail-row">
+              <span className="detail-label">Link:</span>
+              <span className="detail-value">
+                <a href={selectedActivity.link} target="_blank" rel="noopener noreferrer">
+                  {selectedActivity.link}
+                </a>
+              </span>
+            </div>
+          )}
+          <div className="detail-row">
+            <span className="detail-label">Created By:</span>
+            <span className="detail-value">{selectedActivity.createdBy?.username || 'Unknown'}</span>
+          </div>
+  
+          {/* Participants Section */}
+          <div className="participants-section">
+            <h3>Participants</h3>
+            {selectedActivity.participants?.length > 0 ? (
+              <ul className="simple-list">
+                {selectedActivity.participants.map((participant, index) => (
+                  <li key={index} className="list-item">
+                    {participant.username || 'Anonymous'}
+                    {participant.email && (
+                      <span className="subtle-text"> ({participant.email})</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-data">No participants yet</p>
+            )}
+          </div>
+  
+          {/* Ratings Section */}
+          <div className="ratings-section">
+            <h3>Ratings</h3>
+            <p className="average-rating">
+              Average Rating: {selectedActivity.averageRating || 'N/A'} ({selectedActivity.ratings.length} total)
+            </p>
+            {selectedActivity.ratings?.length > 0 ? (
+              <ul className="simple-list">
+                {selectedActivity.ratings.map((rating, index) => (
+                  <li key={index} className="list-item">
+                    <span>{rating.userId?.username || 'Anonymous'}: {rating.rating}/5</span>
+                    <span className="subtle-text">
+                      {' '}— {new Date(rating.createdAt).toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-data">No ratings yet</p>
+            )}
+          </div>
+  
+          {/* Comments Section */}
+          <div className="comments-section">
+            <h3>Comments</h3>
+            {selectedActivity.comments?.length > 0 ? (
+              <ul className="simple-list">
+                {selectedActivity.comments.map((comment, index) => (
+                  <li key={index} className="list-item">
+                    <span>
+                      <strong>{comment.userId?.username || 'Anonymous'}:</strong> {comment.text}
+                    </span>
+                    <span className="subtle-text">
+                      {' '}— {new Date(comment.createdAt).toLocaleDateString()}
+                      {comment.updatedAt && ` (Edited: ${new Date(comment.updatedAt).toLocaleDateString()})`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-data">No comments yet</p>
+            )}
+          </div>
+  
+          {/* Event Image */}
+          {selectedActivity.eventImage?.filename && (
+            <div className="activity-image user-image-container">
+              <img
+                src={`http://localhost:5000/uploads/${selectedActivity.eventImage.filename}`}
+                alt={selectedActivity.title}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="skill-manager">
       {error && (
@@ -1036,140 +1198,144 @@ const ActivityManager = ({ activities, setActivities }) => {
         </div>
       )}
       <h3>Activities List</h3>
-      {loading ? (
-        <div className="loading">⏳ Loading activities...</div>
-      ) : (
-        <table className="skill-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Date</th>
-              <th>Location</th>
-              <th>Type</th>
-              <th>Created By</th>
-              <th>Participants</th> {/* New column for participants */}
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activities.map((activity) => (
-              <tr key={activity._id}>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <input
-                      type="text"
-                      name="title"
-                      value={editingData.title}
-                      onChange={handleEditingChange}
-                    />
-                  ) : (
-                    activity.title
-                  )}
-                </td>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <select
-                      name="category"
-                      value={editingData.category}
-                      onChange={handleEditingChange}
+      <table className="skill-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>Created By</th>
+            <th>Participants</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activities.map((activity) => (
+            <tr key={activity._id}>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <input
+                    type="text"
+                    name="title"
+                    value={editingData.title}
+                    onChange={handleEditingChange}
+                  />
+                ) : (
+                  activity.title
+                )}
+              </td>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <select
+                    name="category"
+                    value={editingData.category}
+                    onChange={handleEditingChange}
+                  >
+                    {['Workshop', 'Webinar', 'Meetup', 'Training'].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  activity.category
+                )}
+              </td>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <input
+                    type="date"
+                    name="date"
+                    value={editingData.date}
+                    onChange={handleEditingChange}
+                  />
+                ) : (
+                  new Date(activity.date).toLocaleDateString()
+                )}
+              </td>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <input
+                    type="text"
+                    name="location"
+                    value={editingData.location}
+                    onChange={handleEditingChange}
+                  />
+                ) : (
+                  activity.location || 'Virtual'
+                )}
+              </td>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <>
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="isPaid"
+                        checked={editingData.isPaid}
+                        onChange={handleEditingChange}
+                      />
+                      Paid
+                    </label>
+                    {editingData.isPaid && (
+                      <input
+                        type="number"
+                        name="amount"
+                        value={editingData.amount}
+                        onChange={handleEditingChange}
+                        min="0"
+                        step="0.01"
+                      />
+                    )}
+                  </>
+                ) : (
+                  activity.isPaid ? `💰 $${activity.amount}` : 'Free'
+                )}
+              </td>
+              <td>
+                {activity.createdBy?.username || 'Unknown'}
+              </td>
+              <td>
+                {activity.participants?.length > 0 ? (
+                  <ul className="participants-list">
+                    {activity.participants.slice(0, 3).map((participant, index) => (
+                      <li key={index}>{participant.username || 'Anonymous'}</li>
+                    ))}
+                    {activity.participants.length > 3 && (
+                      <li>+{activity.participants.length - 3} more</li>
+                    )}
+                  </ul>
+                ) : (
+                  'No participants'
+                )}
+              </td>
+              <td>
+                {editingActivityId === activity._id ? (
+                  <>
+                    <button onClick={() => saveEditedActivity(activity._id)}>
+                      💾
+                    </button>
+                    <button onClick={cancelEditing}>❌</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => startEditing(activity)}>✏️</button>
+                    <button onClick={() => handleDelete(activity._id)}>🗑</button>
+                    <button 
+                      onClick={() => showDetails(activity)}
+                      className="details-button"
                     >
-                      {['Workshop', 'Webinar', 'Meetup', 'Training'].map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    activity.category
-                  )}
-                </td>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <input
-                      type="date"
-                      name="date"
-                      value={editingData.date}
-                      onChange={handleEditingChange}
-                    />
-                  ) : (
-                    new Date(activity.date).toLocaleDateString()
-                  )}
-                </td>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <input
-                      type="text"
-                      name="location"
-                      value={editingData.location}
-                      onChange={handleEditingChange}
-                    />
-                  ) : (
-                    activity.location || 'Virtual'
-                  )}
-                </td>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <>
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="isPaid"
-                          checked={editingData.isPaid}
-                          onChange={handleEditingChange}
-                        />
-                        Paid
-                      </label>
-                      {editingData.isPaid && (
-                        <input
-                          type="number"
-                          name="amount"
-                          value={editingData.amount}
-                          onChange={handleEditingChange}
-                          min="0"
-                          step="0.01"
-                        />
-                      )}
-                    </>
-                  ) : (
-                    activity.isPaid ? `💰 $${activity.amount}` : 'Free'
-                  )}
-                </td>
-                <td>
-                  {activity.createdBy?.username || 'Unknown'}
-                </td>
-                <td>
-                  {/* Display participants */}
-                  {activity.participants?.length > 0 ? (
-                    <ul className="participants-list">
-                      {activity.participants.map((participant, index) => (
-                        <li key={index}>{participant.username || 'Anonymous'}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    'No participants'
-                  )}
-                </td>
-                <td>
-                  {editingActivityId === activity._id ? (
-                    <>
-                      <button onClick={() => saveEditedActivity(activity._id)}>
-                        💾
-                      </button>
-                      <button onClick={cancelEditing}>❌</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => startEditing(activity)}>✏️</button>
-                      <button onClick={() => handleDelete(activity._id)}>🗑</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                      Details
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -1177,6 +1343,11 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
   const [activities, setActivities] = useState([]);
+  const [activityStats, setActivityStats] = useState({
+    categories: [],
+    total: 0
+  });
+  const [trendingActivities, setTrendingActivities] = useState([]); 
   useEffect(() => {
     console.log('Activities updated:', activities);
   }, [activities]);
@@ -1203,6 +1374,48 @@ const AdminDashboard = () => {
   const handleAddActivity = (newActivity) => {
     setActivities((prevActivities) => [newActivity, ...prevActivities]);
   };
+
+  useEffect(() => {
+    const fetchActivityStats = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/events/category-stats', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setActivityStats(data);
+      } catch (error) {
+        console.error('Error fetching activity stats:', error.message);
+      }
+    };
+
+    const fetchTrendingActivities = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/events/trending', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Filter out activities with averageRating of 0
+        const filteredActivities = data.filter(activity => activity.averageRating > 0);
+        setTrendingActivities(filteredActivities);
+      } catch (error) {
+        console.error('Error fetching trending activities:', error.message);
+      }
+    };
+
+    fetchActivityStats();
+    fetchTrendingActivities();
+  }, []);
+
   const renderSection = () => {
     switch (activeSection) {
       case "statistics":
@@ -1241,6 +1454,27 @@ const AdminDashboard = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+
+                {/* New Activity Categories Stats */}
+              <div className="stats-card">
+                <h3>Activity Categories</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={activityStats.categories}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="var(--accent-color)"
+                      label
+                    />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
                 <div className="stats-card metric-group">
                   <div className="metric-box">
                     <h4>Total Users</h4>
@@ -1266,6 +1500,17 @@ const AdminDashboard = () => {
                     ))}
                   </ul>
                 </div>
+                <div className="stats-card">
+                <h3>Trending Activities</h3>
+                <ul className="trending-list">
+                  {trendingActivities.map((activity, index) => (
+                    <li key={activity._id} className="trending-item">
+                      <span className="trending-rank">#{index + 1}</span>
+                      {activity.title} (Rating: {activity.averageRating})
+                    </li>
+                  ))}
+                </ul>
+              </div>
               </div>
             </div>
         );
