@@ -39,10 +39,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl1.1
+
       - name: Install backend dependencies
         run: npm install
         working-directory: Backend  
 
       - name: Run backend tests
         run: npm test
-        working-directory: Backend  
+        working-directory: Backend
