@@ -10,6 +10,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LineChart,
+  Line,
 } from "recharts";
 import Header from "../common/header/Header";
 import Footer from "../common/footer/Footer";
@@ -48,6 +50,18 @@ const defaultStatsData = {
     total: 0,
     trending: [],
   },
+  groups: {
+    totalGroups: 0,
+    totalPosts: 0,
+    totalComments: 0,
+    totalLikes: 0,
+    totalDislikes: 0,
+    groupActivityOverTime: [],
+    mostActiveGroups: [],
+    privacyDistribution: [],
+    avgEngagementPerPost: 0,
+    topGroupsByMembers: [],
+  },
 };
 
 const Message = ({ message, type, onClose }) => {
@@ -57,9 +71,9 @@ const Message = ({ message, type, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className={`message ${type}`}>
-      {message}
-    </div>
+      <div className={`message ${type}`}>
+        {message}
+      </div>
   );
 };
 
@@ -97,7 +111,7 @@ const UserManager = () => {
     };
 
     fetchUsers();
-    const interval = setInterval(fetchUsers, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchUsers, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -264,19 +278,19 @@ const UserManager = () => {
 
         const combinedPayload = [
           ...userSkills
-            .filter((skill) => skill.skillType === "has")
-            .map((skill) => ({
-              skillId: skill.skillId?._id,
-              skillType: "has",
-              verificationStatus: "unverified",
-            })),
+              .filter((skill) => skill.skillType === "has")
+              .map((skill) => ({
+                skillId: skill.skillId?._id,
+                skillType: "has",
+                verificationStatus: "unverified",
+              })),
           ...userSkills
-            .filter((skill) => skill.skillType === "wantsToLearn")
-            .map((skill) => ({
-              skillId: skill.skillId?._id,
-              skillType: "wantsToLearn",
-              verificationStatus: skill.verificationStatus || "pending",
-            })),
+              .filter((skill) => skill.skillType === "wantsToLearn")
+              .map((skill) => ({
+                skillId: skill.skillId?._id,
+                skillType: "wantsToLearn",
+                verificationStatus: skill.verificationStatus || "pending",
+              })),
         ];
         const skillsUpdated = await updateUserSkills(userId, combinedPayload);
         if (skillsUpdated) {
@@ -425,204 +439,204 @@ const UserManager = () => {
   const hasSkillsList = userSkills.filter((s) => s.skillType === "has");
 
   return (
-    <div className="user-manager">
-      {message && (
-        <Message
-          message={message.text}
-          type={message.type}
-          onClose={() => setMessage(null)}
-        />
-      )}
-      <table className="user-table">
-        <thead>
+      <div className="user-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        <table className="user-table">
+          <thead>
           <tr>
             <th>Username</th>
             <th>Email</th>
             <th>Role (👇 Click to expand)</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {users.map((userItem) => (
-            <React.Fragment key={userItem._id}>
-              <tr onClick={() => handleRowClick(userItem._id)}>
-                <td>{userItem.username}</td>
-                <td>{userItem.email}</td>
-                <td>
-                  {userItem.role}{" "}
-                  {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
-                </td>
-              </tr>
-              {selectedUser && selectedUser._id === userItem._id && (
-                <tr className="expanded">
-                  <td colSpan="3">
-                    <div className="expanded-user-details">
-                      <div className="user-details-body">
-                        <div className="user-details-row">
-                          <span className="label">Username:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="username"
-                              value={editingData.username}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.username}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Email:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="email"
-                              value={editingData.email}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.email}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Role:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <select name="role" value={editingData.role} onChange={handleEditingChange}>
-                              <option value="learner">Learner</option>
-                              <option value="unverified mentor">Unverified Mentor</option>
-                              <option value="mentor">Mentor</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          ) : (
-                            <span className="value">{selectedUser.role}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Phone:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="phoneNumber"
-                              value={editingData.phoneNumber}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Bio:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <textarea
-                              name="bio"
-                              value={editingData.bio}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.bio || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Location:</span>
-                          {editingUserId === selectedUser._id ? (
-                            <input
-                              type="text"
-                              name="location"
-                              value={editingData.location}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{selectedUser.location || "N/A"}</span>
-                          )}
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Wants to Learn:</span>
-                          <ul className="user-skills-list wants-to-learn">
-                            {wantsToLearnSkills.length > 0 ? (
-                              wantsToLearnSkills.map((skill) => (
-                                <li key={skill._id} className="skill-item">
+              <React.Fragment key={userItem._id}>
+                <tr onClick={() => handleRowClick(userItem._id)}>
+                  <td>{userItem.username}</td>
+                  <td>{userItem.email}</td>
+                  <td>
+                    {userItem.role}{" "}
+                    {selectedUser && selectedUser._id === userItem._id ? null : "👇 Click to expand"}
+                  </td>
+                </tr>
+                {selectedUser && selectedUser._id === userItem._id && (
+                    <tr className="expanded">
+                      <td colSpan="3">
+                        <div className="expanded-user-details">
+                          <div className="user-details-body">
+                            <div className="user-details-row">
+                              <span className="label">Username:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="username"
+                                      value={editingData.username}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.username}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Email:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="email"
+                                      value={editingData.email}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.email}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Role:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <select name="role" value={editingData.role} onChange={handleEditingChange}>
+                                    <option value="learner">Learner</option>
+                                    <option value="unverified mentor">Unverified Mentor</option>
+                                    <option value="mentor">Mentor</option>
+                                    <option value="admin">Admin</option>
+                                  </select>
+                              ) : (
+                                  <span className="value">{selectedUser.role}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Phone:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="phoneNumber"
+                                      value={editingData.phoneNumber}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.phoneNumber || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Bio:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <textarea
+                                      name="bio"
+                                      value={editingData.bio}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.bio || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Location:</span>
+                              {editingUserId === selectedUser._id ? (
+                                  <input
+                                      type="text"
+                                      name="location"
+                                      value={editingData.location}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{selectedUser.location || "N/A"}</span>
+                              )}
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Wants to Learn:</span>
+                              <ul className="user-skills-list wants-to-learn">
+                                {wantsToLearnSkills.length > 0 ? (
+                                    wantsToLearnSkills.map((skill) => (
+                                        <li key={skill._id} className="skill-item">
                                   <span className="skill-name">
                                     {skill.skillId ? skill.skillId.name : "Skill no longer available"}
                                   </span>
-                                  <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
-                                </li>
-                              ))
-                            ) : (
-                              <span className="value">No skills added</span>
-                            )}
-                          </ul>
-                        </div>
-                        <div className="user-details-row">
-                          <span className="label">Has:</span>
-                          <ul className="user-skills-list has-skills">
-                            {hasSkillsList.length > 0 ? (
-                              hasSkillsList.map((skill, index) => (
-                                <li key={skill._id} className="skill-item">
-                                  <div className="skill-card">
-                                    <div className="skill-header">
+                                          <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <span className="value">No skills added</span>
+                                )}
+                              </ul>
+                            </div>
+                            <div className="user-details-row">
+                              <span className="label">Has:</span>
+                              <ul className="user-skills-list has-skills">
+                                {hasSkillsList.length > 0 ? (
+                                    hasSkillsList.map((skill, index) => (
+                                        <li key={skill._id} className="skill-item">
+                                          <div className="skill-card">
+                                            <div className="skill-header">
                                       <span className="skill-name">
                                         {skill.skillId ? skill.skillId.name : "Skill no longer available"}
                                       </span>
-                                      <span className="verification-status">
+                                              <span className="verification-status">
                                         ({skill.verificationStatus})
                                       </span>
-                                    </div>
-                                    {selectedUser.certificateImage && selectedUser.certificateImage[index] && (
-                                      <div className="skill-certificate">
-                                        <img
-                                          src={`http://localhost:5000/api/files/${selectedUser.certificateImage[index].fileId}?t=${Date.now()}`}
-                                          alt={selectedUser.certificateImage[index].filename}
-                                        />
-                                        <p>Certificate: {selectedUser.certificateImage[index].filename}</p>
-                                      </div>
-                                    )}
-                                    <div className="skill-actions">
-                                      {skill.verificationStatus !== "verified" && (
-                                        <button className="verify-btn" onClick={() => verifyUserSkill(skill._id)}>✅ Verify</button>
-                                      )}
-                                      <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑 Delete</button>
-                                    </div>
-                                  </div>
-                                </li>
-                              ))
-                            ) : (
-                              <span className="value">No skills added</span>
+                                            </div>
+                                            {selectedUser.certificateImage && selectedUser.certificateImage[index] && (
+                                                <div className="skill-certificate">
+                                                  <img
+                                                      src={`http://localhost:5000/api/files/${selectedUser.certificateImage[index].fileId}?t=${Date.now()}`}
+                                                      alt={selectedUser.certificateImage[index].filename}
+                                                  />
+                                                  <p>Certificate: {selectedUser.certificateImage[index].filename}</p>
+                                                </div>
+                                            )}
+                                            <div className="skill-actions">
+                                              {skill.verificationStatus !== "verified" && (
+                                                  <button className="verify-btn" onClick={() => verifyUserSkill(skill._id)}>✅ Verify</button>
+                                              )}
+                                              <button className="delete-btn" onClick={() => handleDeleteSkill(skill._id)}>🗑 Delete</button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <span className="value">No skills added</span>
+                                )}
+                              </ul>
+                            </div>
+                            {selectedUser.profileImage && (
+                                <div className="user-image-container">
+                                  <img
+                                      src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
+                                      alt={selectedUser.profileImage.filename}
+                                  />
+                                </div>
                             )}
-                          </ul>
-                        </div>
-                        {selectedUser.profileImage && (
-                          <div className="user-image-container">
-                            <img
-                              src={`http://localhost:5000/api/files/${selectedUser.profileImage.fileId}?t=${Date.now()}`}
-                              alt={selectedUser.profileImage.filename}
-                            />
                           </div>
-                        )}
-                      </div>
-                      <div className="user-actions">
-                        {editingUserId !== selectedUser._id ? (
-                          <>
-                            <button onClick={() => startEditing(selectedUser)}>✏️ Edit</button>
-                            <button onClick={() => deleteUser(selectedUser._id)}>🗑 Delete</button>
-                            {selectedUser.role === "unverified mentor" && (
-                              <button onClick={() => approveMentor(selectedUser._id)}>✅ Approve Mentor</button>
+                          <div className="user-actions">
+                            {editingUserId !== selectedUser._id ? (
+                                <>
+                                  <button onClick={() => startEditing(selectedUser)}>✏️ Edit</button>
+                                  <button onClick={() => deleteUser(selectedUser._id)}>🗑 Delete</button>
+                                  {selectedUser.role === "unverified mentor" && (
+                                      <button onClick={() => approveMentor(selectedUser._id)}>✅ Approve Mentor</button>
+                                  )}
+                                </>
+                            ) : (
+                                <>
+                                  <button onClick={() => saveEditedUser(selectedUser._id)}>💾 Save</button>
+                                  <button onClick={cancelEditing}>❌ Cancel</button>
+                                </>
                             )}
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => saveEditedUser(selectedUser._id)}>💾 Save</button>
-                            <button onClick={cancelEditing}>❌ Cancel</button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                )}
+              </React.Fragment>
           ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
   );
 };
 
@@ -674,7 +688,7 @@ const SkillManager = () => {
     };
 
     fetchCategoriesAndSkills();
-    const interval = setInterval(fetchCategoriesAndSkills, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchCategoriesAndSkills, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -727,8 +741,8 @@ const SkillManager = () => {
       const skillName = skillData.name;
 
       const usersWithSkillResponse = await fetch(
-        `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` } }
+          `http://localhost:5000/api/users/userskills/bySkillId/${skillId}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` } }
       );
       let usersWithSkill = [];
       if (usersWithSkillResponse.ok) {
@@ -749,11 +763,11 @@ const SkillManager = () => {
       }
 
       const deleteUserSkillsResponse = await fetch(
-        `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
-        }
+          `http://localhost:5000/api/users/userskills/removeBySkillId/${skillId}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` },
+          }
       );
       if (!deleteUserSkillsResponse.ok) {
         console.warn("Error deleting UserSkill references:", deleteUserSkillsResponse.statusText);
@@ -764,18 +778,18 @@ const SkillManager = () => {
       const usersWithHasSkill = usersWithSkill.filter((userSkill) => userSkill.skillType === "has");
       if (usersWithHasSkill.length > 0) {
         const notificationPromises = usersWithHasSkill.map((userSkill) =>
-          fetch("http://localhost:5000/api/notifications", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
-            body: JSON.stringify({
-              userId: userSkill.userId,
-              type: "SKILL_REMOVAL",
-              message: `${skillName} is no longer available, check your profile`,
-            }),
-          })
+            fetch("http://localhost:5000/api/notifications", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+              },
+              body: JSON.stringify({
+                userId: userSkill.userId,
+                type: "SKILL_REMOVAL",
+                message: `${skillName} is no longer available, check your profile`,
+              }),
+            })
         );
         await Promise.all(notificationPromises);
       }
@@ -837,42 +851,42 @@ const SkillManager = () => {
   };
 
   return (
-    <div className="skill-manager">
-      {message && (
-        <Message
-          message={message.text}
-          type={message.type}
-          onClose={() => setMessage(null)}
-        />
-      )}
-      <form onSubmit={handleSubmit} className="skill-form">
-        <div>
-          <label>Skill Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Category</label>
-          <select name="category" value={formData.category} onChange={handleChange} required>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Description</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} required />
-        </div>
-        <div>
-          <label>Tags</label>
-          <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
-        </div>
-        <button type="submit">➕ Add Skill</button>
-      </form>
-      <h3>Skill List</h3>
-      <table className="skill-table">
-        <thead>
+      <div className="skill-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        <form onSubmit={handleSubmit} className="skill-form">
+          <div>
+            <label>Skill Name</label>
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+          </div>
+          <div>
+            <label>Category</label>
+            <select name="category" value={formData.category} onChange={handleChange} required>
+              {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>Description</label>
+            <textarea name="description" value={formData.description} onChange={handleChange} required />
+          </div>
+          <div>
+            <label>Tags</label>
+            <input type="text" name="tags" value={formData.tags} onChange={handleChange} />
+          </div>
+          <button type="submit">➕ Add Skill</button>
+        </form>
+        <h3>Skill List</h3>
+        <table className="skill-table">
+          <thead>
           <tr>
             <th>Name</th>
             <th>Category</th>
@@ -881,63 +895,63 @@ const SkillManager = () => {
             <th>Created At</th>
             <th>Actions</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {skills.map((skill) => (
-            <tr key={skill._id}>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
-                ) : (
-                  skill.name
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <select name="category" value={editingData.category} onChange={handleEditingChange}>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  skill.category
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
-                ) : (
-                  skill.description
-                )}
-              </td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
-                ) : (
-                  Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
-                )}
-              </td>
-              <td>{new Date(skill.createdAt).toLocaleString()}</td>
-              <td>
-                {editingSkillId === skill._id ? (
-                  <>
-                    <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
-                    <button onClick={cancelEditing}>❌</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => startEditing(skill)}>✏️</button>
-                    <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
-                  </>
-                )}
-              </td>
-            </tr>
+              <tr key={skill._id}>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <input type="text" name="name" value={editingData.name} onChange={handleEditingChange} />
+                  ) : (
+                      skill.name
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <select name="category" value={editingData.category} onChange={handleEditingChange}>
+                        {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                        ))}
+                      </select>
+                  ) : (
+                      skill.category
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <textarea name="description" value={editingData.description} onChange={handleEditingChange} />
+                  ) : (
+                      skill.description
+                  )}
+                </td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <input type="text" name="tags" value={editingData.tags} onChange={handleEditingChange} />
+                  ) : (
+                      Array.isArray(skill.tags) ? skill.tags.join(", ") : ""
+                  )}
+                </td>
+                <td>{new Date(skill.createdAt).toLocaleString()}</td>
+                <td>
+                  {editingSkillId === skill._id ? (
+                      <>
+                        <button onClick={() => saveEditedSkill(skill._id)}>💾</button>
+                        <button onClick={cancelEditing}>❌</button>
+                      </>
+                  ) : (
+                      <>
+                        <button onClick={() => startEditing(skill)}>✏️</button>
+                        <button onClick={() => handleDeleteSkill(skill._id)}>🗑</button>
+                      </>
+                  )}
+                </td>
+              </tr>
           ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
   );
 };
 
@@ -970,7 +984,7 @@ const GroupManager = () => {
     };
 
     fetchGroups();
-    const interval = setInterval(fetchGroups, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchGroups, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1072,15 +1086,15 @@ const GroupManager = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
-        setGroups(groups.map((g) => 
-          g._id === groupId 
-            ? { ...g, posts: g.posts.filter((p) => p._id !== postId), postCount: g.postCount - 1 }
-            : g
+        setGroups(groups.map((g) =>
+            g._id === groupId
+                ? { ...g, posts: g.posts.filter((p) => p._id !== postId), postCount: g.postCount - 1 }
+                : g
         ));
-        setSelectedGroup({ 
-          ...selectedGroup, 
+        setSelectedGroup({
+          ...selectedGroup,
           posts: selectedGroup.posts.filter((p) => p._id !== postId),
-          postCount: selectedGroup.postCount - 1 
+          postCount: selectedGroup.postCount - 1
         });
         setSelectedPost(null);
         showMessage("🗑 Post deleted successfully");
@@ -1095,16 +1109,16 @@ const GroupManager = () => {
   };
 
   return (
-    <div className="group-manager">
-      {message && (
-        <Message
-          message={message.text}
-          type={message.type}
-          onClose={() => setMessage(null)}
-        />
-      )}
-      <table className="data-table">
-        <thead>
+      <div className="group-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        <table className="data-table">
+          <thead>
           <tr>
             <th>Name</th>
             <th>Members</th>
@@ -1113,128 +1127,128 @@ const GroupManager = () => {
             <th>Created By</th>
             <th>Privacy</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {groups.map((group) => (
-            <React.Fragment key={group._id}>
-              <tr onClick={() => handleGroupClick(group._id)} className="group-row">
-                <td>{group.name}</td>
-                <td>{group.memberCount || 0}</td>
-                <td>{group.postCount || 0}</td>
-                <td>{group.reports?.length || 0}</td>
-                <td>{group.createdBy?.username || "Unknown"}</td>
-                <td>{group.privacy}</td>
-              </tr>
-              {selectedGroup && selectedGroup._id === group._id && (
-                <tr className="expanded">
-                  <td colSpan="6">
-                    <div className="expanded-group-details">
-                      <div className="group-details-body">
-                        <div className="group-details-row">
-                          <span className="label">Group Name:</span>
-                          {editingGroupId === group._id ? (
-                            <input
-                              type="text"
-                              name="name"
-                              value={editingData.name}
-                              onChange={handleEditingChange}
-                            />
-                          ) : (
-                            <span className="value">{group.name}</span>
-                          )}
-                        </div>
-                        <div className="group-details-row">
-                          <span className="label">Description:</span>
-                          <span className="value">{group.description || "N/A"}</span>
-                        </div>
-                        <div className="group-details-row">
-                          <span className="label">Privacy:</span>
-                          <span className="value">{group.privacy}</span>
-                        </div>
-                        <div className="group-details-row">
-                          <span className="label">Created At:</span>
-                          <span className="value">{new Date(group.createdAt).toLocaleString()}</span>
-                        </div>
-                        <div className="group-details-row">
-                          <span className="label">Members ({group.memberCount || 0}):</span>
-                          <div className="members-list">
-                            {group.members && group.members.length > 0 ? (
-                              group.members.map((member) => (
-                                <span key={member.id} className="member-item">
+              <React.Fragment key={group._id}>
+                <tr onClick={() => handleGroupClick(group._id)} className="group-row">
+                  <td>{group.name}</td>
+                  <td>{group.memberCount || 0}</td>
+                  <td>{group.postCount || 0}</td>
+                  <td>{group.reports?.length || 0}</td>
+                  <td>{group.createdBy?.username || "Unknown"}</td>
+                  <td>{group.privacy}</td>
+                </tr>
+                {selectedGroup && selectedGroup._id === group._id && (
+                    <tr className="expanded">
+                      <td colSpan="6">
+                        <div className="expanded-group-details">
+                          <div className="group-details-body">
+                            <div className="group-details-row">
+                              <span className="label">Group Name:</span>
+                              {editingGroupId === group._id ? (
+                                  <input
+                                      type="text"
+                                      name="name"
+                                      value={editingData.name}
+                                      onChange={handleEditingChange}
+                                  />
+                              ) : (
+                                  <span className="value">{group.name}</span>
+                              )}
+                            </div>
+                            <div className="group-details-row">
+                              <span className="label">Description:</span>
+                              <span className="value">{group.description || "N/A"}</span>
+                            </div>
+                            <div className="group-details-row">
+                              <span className="label">Privacy:</span>
+                              <span className="value">{group.privacy}</span>
+                            </div>
+                            <div className="group-details-row">
+                              <span className="label">Created At:</span>
+                              <span className="value">{new Date(group.createdAt).toLocaleString()}</span>
+                            </div>
+                            <div className="group-details-row">
+                              <span className="label">Members ({group.memberCount || 0}):</span>
+                              <div className="members-list">
+                                {group.members && group.members.length > 0 ? (
+                                    group.members.map((member) => (
+                                        <span key={member.id} className="member-item">
                                   {member.username}
                                 </span>
-                              ))
-                            ) : (
-                              <span className="value">No members</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="group-details-row">
-                          <span className="label">Posts ({group.postCount || 0}):</span>
-                          <div className="posts-container">
-                            {group.posts && group.posts.length > 0 ? (
-                              group.posts.map((post) => (
-                                <React.Fragment key={post._id}>
-                                  <div 
-                                    className="post-item"
-                                    onClick={() => handlePostClick(post._id)}
-                                  >
-                                    <span className="post-title">{post.title}</span>
-                                    <span className="post-meta">
+                                    ))
+                                ) : (
+                                    <span className="value">No members</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="group-details-row">
+                              <span className="label">Posts ({group.postCount || 0}):</span>
+                              <div className="posts-container">
+                                {group.posts && group.posts.length > 0 ? (
+                                    group.posts.map((post) => (
+                                        <React.Fragment key={post._id}>
+                                          <div
+                                              className="post-item"
+                                              onClick={() => handlePostClick(post._id)}
+                                          >
+                                            <span className="post-title">{post.title}</span>
+                                            <span className="post-meta">
                                       {post.likesCount} Likes • {post.commentsCount} Comments
                                     </span>
-                                  </div>
-                                  {selectedPost && selectedPost._id === post._id && (
-                                    <div className="post-details">
-                                      <p><strong>Subject:</strong> {post.subject}</p>
-                                      <p><strong>Content:</strong> {post.content}</p>
-                                      <p><strong>Likes:</strong> {post.likesCount}</p>
-                                      <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
-                                      <p><strong>Comments:</strong> {post.commentsCount}</p>
-                                      <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
-                                      <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
-                                      <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
-                                      <button 
-                                        className="delete-btn"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteGroupPost(group._id, post._id);
-                                        }}
-                                      >
-                                        🗑 Delete
-                                      </button>
-                                    </div>
-                                  )}
-                                </React.Fragment>
-                              ))
+                                          </div>
+                                          {selectedPost && selectedPost._id === post._id && (
+                                              <div className="post-details">
+                                                <p><strong>Subject:</strong> {post.subject}</p>
+                                                <p><strong>Content:</strong> {post.content}</p>
+                                                <p><strong>Likes:</strong> {post.likesCount}</p>
+                                                <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
+                                                <p><strong>Comments:</strong> {post.commentsCount}</p>
+                                                <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
+                                                <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
+                                                <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      deleteGroupPost(group._id, post._id);
+                                                    }}
+                                                >
+                                                  🗑 Delete
+                                                </button>
+                                              </div>
+                                          )}
+                                        </React.Fragment>
+                                    ))
+                                ) : (
+                                    <span className="value">No posts yet</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="group-actions">
+                            {editingGroupId !== group._id ? (
+                                <>
+                                  <button onClick={() => startEditing(group)}>✏️ Edit</button>
+                                  <button onClick={() => deleteGroup(group._id)}>🗑 Delete Group</button>
+                                </>
                             ) : (
-                              <span className="value">No posts yet</span>
+                                <>
+                                  <button onClick={() => saveEditedGroup(group._id)}>💾 Save</button>
+                                  <button onClick={cancelEditing}>❌ Cancel</button>
+                                </>
                             )}
                           </div>
                         </div>
-                      </div>
-                      <div className="group-actions">
-                        {editingGroupId !== group._id ? (
-                          <>
-                            <button onClick={() => startEditing(group)}>✏️ Edit</button>
-                            <button onClick={() => deleteGroup(group._id)}>🗑 Delete Group</button>
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => saveEditedGroup(group._id)}>💾 Save</button>
-                            <button onClick={cancelEditing}>❌ Cancel</button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
+                      </td>
+                    </tr>
+                )}
+              </React.Fragment>
           ))}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
   );
 };
 
@@ -1257,26 +1271,38 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5000/api/admin/dashboard-stats", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch statistics");
+        const [dashboardStatsResponse, groupStatsResponse] = await Promise.all([
+          fetch("http://localhost:5000/api/admin/dashboard-stats", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+            },
+          }),
+          fetch("http://localhost:5000/api/admin/groups/stats", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+            },
+          }),
+        ]);
+
+        if (!dashboardStatsResponse.ok) {
+          throw new Error("Failed to fetch dashboard statistics");
         }
-        const data = await response.json();
+        if (!groupStatsResponse.ok) {
+          throw new Error("Failed to fetch group statistics");
+        }
+
+        const dashboardData = await dashboardStatsResponse.json();
+        const groupData = await groupStatsResponse.json();
+
         const cleanedData = {
-          ...data,
           users: {
-            ...data.users,
-            roles: data.users.roles.map((role) => ({
+            total: dashboardData.users.total,
+            roles: dashboardData.users.roles.map((role) => ({
               ...role,
               count: Math.floor(role.count),
             })),
           },
           courses: {
-            ...data.courses,
             total: 0,
             categories: [
               { name: "Technical", value: 0 },
@@ -1285,7 +1311,24 @@ const AdminDashboard = () => {
               { name: "Other", value: 0 },
             ],
           },
+          skills: {
+            total: dashboardData.skills.total,
+            trending: dashboardData.skills.trending,
+          },
+          groups: {
+            totalGroups: groupData.totalGroups,
+            totalPosts: groupData.totalPosts,
+            totalComments: groupData.totalComments,
+            totalLikes: groupData.totalLikes,
+            totalDislikes: groupData.totalDislikes,
+            groupActivityOverTime: groupData.groupActivityOverTime,
+            mostActiveGroups: groupData.mostActiveGroups,
+            privacyDistribution: groupData.privacyDistribution,
+            avgEngagementPerPost: groupData.avgEngagementPerPost,
+            topGroupsByMembers: groupData.topGroupsByMembers,
+          },
         };
+
         setStatsData(cleanedData);
         setError(null);
       } catch (err) {
@@ -1299,7 +1342,7 @@ const AdminDashboard = () => {
 
     if (activeSection === "statistics") {
       fetchStats();
-      const interval = setInterval(fetchStats, 5000); // Poll every 5 seconds
+      const interval = setInterval(fetchStats, 5000);
       return () => clearInterval(interval);
     }
   }, [activeSection]);
@@ -1321,162 +1364,254 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "statistics":
         return (
-          <div className="section-content">
-            <h2>Overview Statistics</h2>
-            {loading ? (
-              <p>Loading statistics...</p>
-            ) : error ? (
-              <p className="error-message">{error}</p>
-            ) : (
-              <div className="stats-grid">
-                <div className="stats-card">
-                  <h3>Users Overview</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={statsData.users.roles}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="role" />
-                      <YAxis tickFormatter={(value) => Math.floor(value)} />
-                      <Tooltip formatter={(value) => Math.floor(value)} />
-                      <Legend />
-                      <Bar dataKey="count" fill="var(--primary-color)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="stats-card">
-                  <h3>Course Categories</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={statsData.courses.categories}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="var(--accent-color)"
-                        label={({ name, value }) => `${name}: ${Math.floor(value)}`}
-                      />
-                      <Tooltip formatter={(value) => Math.floor(value)} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="stats-card metric-group">
-                  <div className="metric-box">
-                    <h4>Total Users</h4>
-                    <p className="metric-value">{statsData.users.total}</p>
-                  </div>
-                  <div className="metric-box">
-                    <h4>Total Courses</h4>
-                    <p className="metric-value">{statsData.courses.total}</p>
-                  </div>
-                  <div className="metric-box">
-                    <h4>Skills Available</h4>
-                    <p className="metric-value">{statsData.skills.total}</p>
-                  </div>
-                </div>
-                <div className="stats-card">
-                  <h3>Trending Skills</h3>
-                  <ul className="trending-list">
-                    {statsData.skills.trending.map((skill, index) => (
-                      <li key={index} className="trending-item">
-                        <span className="trending-rank">#{index + 1}</span>
-                        {skill}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
+            <div className="section-content">
+              <h2>Overview Statistics</h2>
+              {loading ? (
+                  <p>Loading statistics...</p>
+              ) : error ? (
+                  <p className="error-message">{error}</p>
+              ) : (
+                  <>
+                    {/* Existing Statistics */}
+                    <div className="stats-grid">
+                      <div className="stats-card">
+                        <h3>Users Overview</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={statsData.users.roles}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="role" />
+                            <YAxis tickFormatter={(value) => Math.floor(value)} />
+                            <Tooltip formatter={(value) => Math.floor(value)} />
+                            <Legend />
+                            <Bar dataKey="count" fill="var(--primary-color)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="stats-card">
+                        <h3>Course Categories</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                                data={statsData.courses.categories}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={80}
+                                fill="var(--accent-color)"
+                                label={({ name, value }) => `${name}: ${Math.floor(value)}`}
+                            />
+                            <Tooltip formatter={(value) => Math.floor(value)} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="stats-card metric-group">
+                        <div className="metric-box">
+                          <h4>Total Users</h4>
+                          <p className="metric-value">{statsData.users.total}</p>
+                        </div>
+                        <div className="metric-box">
+                          <h4>Total Courses</h4>
+                          <p className="metric-value">{statsData.courses.total}</p>
+                        </div>
+                        <div className="metric-box">
+                          <h4>Skills Available</h4>
+                          <p className="metric-value">{statsData.skills.total}</p>
+                        </div>
+                      </div>
+                      <div className="stats-card">
+                        <h3>Trending Skills</h3>
+                        <ul className="trending-list">
+                          {statsData.skills.trending.map((skill, index) => (
+                              <li key={index} className="trending-item">
+                                <span className="trending-rank">#{index + 1}</span>
+                                {skill}
+                              </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* New Group Statistics */}
+                    <h2 className="group-stats-header">Group Statistics</h2>
+                    <div className="stats-grid">
+                      {/* Total Groups and Engagement Metrics */}
+                      <div className="stats-card metric-group">
+                        <div className="metric-box">
+                          <h4>Total Groups</h4>
+                          <p className="metric-value">{statsData.groups.totalGroups}</p>
+                        </div>
+                        <div className="metric-box">
+                          <h4>Total Posts</h4>
+                          <p className="metric-value">{statsData.groups.totalPosts}</p>
+                        </div>
+                        <div className="metric-box">
+                          <h4>Avg Engagement/Post</h4>
+                          <p className="metric-value">{statsData.groups.avgEngagementPerPost}</p>
+                        </div>
+                      </div>
+
+                      {/* Group Activity Over Time */}
+                      <div className="stats-card">
+                        <h3>Group Activity (Last 30 Days)</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <LineChart data={statsData.groups.groupActivityOverTime}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="_id" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line type="monotone" dataKey="posts" stroke="var(--primary-color)" name="Posts" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Group Privacy Distribution */}
+                      <div className="stats-card">
+                        <h3>Group Privacy Distribution</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                                data={statsData.groups.privacyDistribution}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={80}
+                                fill="var(--primary-color)"
+                                label={({ name, value }) => `${name}: ${value}`}
+                            />
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Engagement Metrics */}
+                      <div className="stats-card">
+                        <h3>Engagement Metrics</h3>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart
+                              data={[
+                                { name: "Likes", value: statsData.groups.totalLikes },
+                                { name: "Dislikes", value: statsData.groups.totalDislikes },
+                                { name: "Comments", value: statsData.groups.totalComments },
+                              ]}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="value" fill="var(--accent-color)" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Top Groups by Members */}
+                      <div className="stats-card">
+                        <h3>Top Groups by Members</h3>
+                        <ul className="trending-list">
+                          {statsData.groups.topGroupsByMembers.map((group, index) => (
+                              <li key={index} className="trending-item">
+                                <span className="trending-rank">#{index + 1}</span>
+                                {group.name} ({group.memberCount} members)
+                              </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </>
+              )}
+            </div>
         );
       case "users":
         return (
-          <div className="section-content">
-            <h2>Users</h2>
-            <UserManager />
-          </div>
+            <div className="section-content">
+              <h2>Users</h2>
+              <UserManager />
+            </div>
         );
       case "courses":
         return (
-          <div className="section-content">
-            <h2>Courses</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Courses</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Title</th>
                   <th>Description</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyCourses.map((course) => (
-                  <tr key={course.id}>
-                    <td>{course.title}</td>
-                    <td>{course.description}</td>
-                  </tr>
+                    <tr key={course.id}>
+                      <td>{course.title}</td>
+                      <td>{course.description}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "jobs":
         return (
-          <div className="section-content">
-            <h2>Jobs</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Jobs</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Title</th>
                   <th>Company</th>
                   <th>Location</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyJobs.map((job) => (
-                  <tr key={job.id}>
-                    <td>{job.title}</td>
-                    <td>{job.company}</td>
-                    <td>{job.location}</td>
-                  </tr>
+                    <tr key={job.id}>
+                      <td>{job.title}</td>
+                      <td>{job.company}</td>
+                      <td>{job.location}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "groups":
         return (
-          <div className="section-content">
-            <h2>Groups</h2>
-            <GroupManager />
-          </div>
+            <div className="section-content">
+              <h2>Groups</h2>
+              <GroupManager />
+            </div>
         );
       case "events":
         return (
-          <div className="section-content">
-            <h2>Events</h2>
-            <table className="data-table">
-              <thead>
+            <div className="section-content">
+              <h2>Events</h2>
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Name</th>
                   <th>Date</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {dummyEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td>{event.name}</td>
-                    <td>{event.date}</td>
-                  </tr>
+                    <tr key={event.id}>
+                      <td>{event.name}</td>
+                      <td>{event.date}</td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         );
       case "addSkill":
         return (
-          <div className="section-content">
-            <h2>Add New Skill</h2>
-            <SkillManager />
-          </div>
+            <div className="section-content">
+              <h2>Add New Skill</h2>
+              <SkillManager />
+            </div>
         );
       default:
         return <div>Select a section from the sidebar.</div>;
@@ -1484,62 +1619,62 @@ const AdminDashboard = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div className="admin-dashboard-container">
-        <section className="admin-dashboard">
-          <aside className="dashboard-sidebar">
-            <h1 className="logo">SkillMinds Admin</h1>
-            <ul>
-              <li
-                className={activeSection === "statistics" ? "active" : ""}
-                onClick={() => setActiveSection("statistics")}
-              >
-                📊 Statistics
-              </li>
-              <li
-                className={activeSection === "users" ? "active" : ""}
-                onClick={() => setActiveSection("users")}
-              >
-                👥 Users
-              </li>
-              <li
-                className={activeSection === "courses" ? "active" : ""}
-                onClick={() => setActiveSection("courses")}
-              >
-                📚 Courses
-              </li>
-              <li
-                className={activeSection === "jobs" ? "active" : ""}
-                onClick={() => setActiveSection("jobs")}
-              >
-                💼 Jobs
-              </li>
-              <li
-                className={activeSection === "groups" ? "active" : ""}
-                onClick={() => setActiveSection("groups")}
-              >
-                👥 Groups
-              </li>
-              <li
-                className={activeSection === "events" ? "active" : ""}
-                onClick={() => setActiveSection("events")}
-              >
-                🗓 Events
-              </li>
-              <li
-                className={activeSection === "addSkill" ? "active" : ""}
-                onClick={() => setActiveSection("addSkill")}
-              >
-                ➕ Skills
-              </li>
-            </ul>
-          </aside>
-          <main className="dashboard-content">{renderSection()}</main>
-        </section>
-      </div>
-      <Footer />
-    </>
+      <>
+        <Header />
+        <div className="admin-dashboard-container">
+          <section className="admin-dashboard">
+            <aside className="dashboard-sidebar">
+              <h1 className="logo">SkillMinds Admin</h1>
+              <ul>
+                <li
+                    className={activeSection === "statistics" ? "active" : ""}
+                    onClick={() => setActiveSection("statistics")}
+                >
+                  📊 Statistics
+                </li>
+                <li
+                    className={activeSection === "users" ? "active" : ""}
+                    onClick={() => setActiveSection("users")}
+                >
+                  👥 Users
+                </li>
+                <li
+                    className={activeSection === "courses" ? "active" : ""}
+                    onClick={() => setActiveSection("courses")}
+                >
+                  📚 Courses
+                </li>
+                <li
+                    className={activeSection === "jobs" ? "active" : ""}
+                    onClick={() => setActiveSection("jobs")}
+                >
+                  💼 Jobs
+                </li>
+                <li
+                    className={activeSection === "groups" ? "active" : ""}
+                    onClick={() => setActiveSection("groups")}
+                >
+                  👥 Groups
+                </li>
+                <li
+                    className={activeSection === "events" ? "active" : ""}
+                    onClick={() => setActiveSection("events")}
+                >
+                  🗓 Events
+                </li>
+                <li
+                    className={activeSection === "addSkill" ? "active" : ""}
+                    onClick={() => setActiveSection("addSkill")}
+                >
+                  ➕ Skills
+                </li>
+              </ul>
+            </aside>
+            <main className="dashboard-content">{renderSection()}</main>
+          </section>
+        </div>
+        <Footer />
+      </>
   );
 };
 

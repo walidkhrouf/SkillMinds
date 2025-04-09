@@ -264,15 +264,15 @@ const getGroupPostById = async (req, res) => {
     const userId = req.user.id;
 
     const post = await GroupPost.findOne({ groupId, _id: postId })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
     const comments = await GroupPostComment.find({ groupPostId: post._id })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
     const likes = await GroupPostLike.find({ groupPostId: post._id }).lean();
     const dislikes = await GroupPostDislike.find({ groupPostId: post._id }).lean();
     const group = await Group.findById(groupId).select("createdBy").lean();
@@ -280,11 +280,20 @@ const getGroupPostById = async (req, res) => {
     const hasLiked = likes.some((like) => like.userId.toString() === userId.toString());
     const hasDisliked = dislikes.some((dislike) => dislike.userId.toString() === userId.toString());
     const isGroupOwner = group.createdBy.toString() === userId.toString();
-    
+
+    // Map comments to include reportCount and exclude reports array
+    const commentsWithReportCount = comments.map((comment) => {
+      const reportCount = comment.reports ? comment.reports.length : 0;
+      const { reports, ...commentWithoutReports } = comment; // Exclude the reports array
+      return {
+        ...commentWithoutReports,
+        reportCount,
+      };
+    });
 
     res.status(200).json({
       ...post,
-      comments,
+      comments: commentsWithReportCount,
       likesCount: likes.length,
       dislikesCount: dislikes.length,
       hasLiked,
@@ -1246,7 +1255,7 @@ const recommendGroups = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Fetch user skills, separated by type
+
     const userSkillsHas = await UserSkill.find({ userId, skillType: "has" }).populate("skillId");
     const userSkillsWant = await UserSkill.find({ userId, skillType: "wantsToLearn" }).populate("skillId");
 
@@ -1257,11 +1266,11 @@ const recommendGroups = async (req, res) => {
       return res.status(400).json({ message: "You have no skills defined." });
     }
 
-    // Fetch all skills for vocabulary
+
     const allSkills = await Skill.find();
     const skillVocab = allSkills.map((skill) => skill._id.toString());
 
-    // User skill vectors
+
     const hasSkillIds = userSkillsHas.map((us) => us.skillId._id.toString());
     const wantSkillIds = userSkillsWant.map((us) => us.skillId._id.toString());
     const hasVector = skillVocab.map((skillId) => (hasSkillIds.includes(skillId) ? 1 : 0));
@@ -1270,7 +1279,7 @@ const recommendGroups = async (req, res) => {
     console.log("Has Skill IDs:", hasSkillIds);
     console.log("Want Skill IDs:", wantSkillIds);
 
-    // Fetch all groups
+
     const groups = await Group.find()
       .populate("createdBy", "username")
       .populate("skillId")
@@ -1281,13 +1290,13 @@ const recommendGroups = async (req, res) => {
 
     console.log("Groups:", groups.map(g => ({ name: g.name, skillId: g.skillId?._id })));
 
-    // Calculate recommendations for both categories
+
     const hasRecommendations = [];
     const wantRecommendations = [];
 
     await Promise.all(
       groups.map(async (group) => {
-        // Use group.skillId if present, otherwise infer from members
+
         let groupSkillIds = group.skillId
           ? [group.skillId._id.toString()]
           : await UserSkill.find({ userId: { $in: group.members || [] } })
@@ -1298,7 +1307,7 @@ const recommendGroups = async (req, res) => {
 
         const groupVector = skillVocab.map((skillId) => (groupSkillIds.includes(skillId) ? 1 : 0));
 
-        // Calculate similarity for "has" skills
+
         const hasSimilarity = cosineSimilarity(hasVector, groupVector);
         if (hasSimilarity > 0) {
           hasRecommendations.push({
@@ -1307,7 +1316,7 @@ const recommendGroups = async (req, res) => {
           });
         }
 
-        // Calculate similarity for "wantToLearn" skills
+
         const wantSimilarity = cosineSimilarity(wantVector, groupVector);
         if (wantSimilarity > 0) {
           wantRecommendations.push({
@@ -1321,7 +1330,7 @@ const recommendGroups = async (req, res) => {
     console.log("Has Recommendations:", hasRecommendations.map(r => ({ name: r.group.name, similarity: r.similarity })));
     console.log("Want Recommendations:", wantRecommendations.map(r => ({ name: r.group.name, similarity: r.similarity })));
 
-    // Sort and limit each to top 5
+
     const formatRecommendations = (recs) =>
       recs
         .sort((a, b) => b.similarity - a.similarity)
@@ -1348,6 +1357,111 @@ const recommendGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
+const getGroupById = async (req, res) => {
+  const { groupId } = req.params;
+
+
+  if (!objectIdRegex.test(groupId)) {
+    return res.status(400).json({ message: "Invalid groupId format" });
+  }
+
+  try {
+    const userId = req.user.id;
+
+
+    const group = await Group.findById(groupId)
+        .populate("createdBy", "_id username")
+        .lean();
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+
+    if (group.privacy === "private" && group.createdBy._id.toString() !== userId.toString()) {
+      const isMember = await GroupMember.findOne({ groupId, userId });
+      if (!isMember) {
+        return res.status(403).json({ message: "You must be a member to view this private group" });
+      }
+    }
+
+
+    const memberCount = await GroupMember.countDocuments({ groupId });
+    const postCount = await GroupPost.countDocuments({ groupId });
+
+    res.status(200).json({
+      ...group,
+      memberCount,
+      postCount,
+    });
+  } catch (error) {
+    console.error("Error fetching group:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const reportComment = async (req, res) => {
+  const { groupId, postId, commentId } = req.params;
+  const { reason, details } = req.body;
+  const userId = req.user.id;
+
+  if (!objectIdRegex.test(groupId) || !objectIdRegex.test(postId) || !objectIdRegex.test(commentId)) {
+    return res.status(400).json({ message: "Invalid groupId, postId, or commentId format" });
+  }
+
+  try {
+    // Find the post
+    const post = await GroupPost.findOne({ _id: postId, groupId });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Find the comment
+    const comment = await GroupPostComment.findOne({ _id: commentId, groupPostId: postId });
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Check if the user is trying to report their own comment
+    if (comment.userId.toString() === userId.toString()) {
+      return res.status(400).json({ message: "You cannot report your own comment" });
+    }
+
+    // Check if the user has already reported this comment
+    if (comment.reports.some((r) => r.userId.toString() === userId.toString())) {
+      return res.status(400).json({ message: "You have already reported this comment" });
+    }
+
+    // Validate the reason
+    const validReasons = ["Inappropriate Content", "Spam", "Off-Topic", "Harassment", "Other"];
+    if (!validReasons.includes(reason)) {
+      return res.status(400).json({ message: "Invalid report reason" });
+    }
+
+    // Add the report to the comment
+    comment.reports.push({ userId, reason, details });
+    await comment.save();
+
+    // Send a notification to the post owner (if they are not the commenter)
+    if (post.userId.toString() !== userId.toString()) {
+      const notification = new Notification({
+        userId: post.userId,
+        type: "GROUP_ACTIVITY",
+        message: `A comment on your post "${post.title}" has been reported for "${reason}".`,
+        metadata: { groupId, postId, commentId },
+      });
+      await notification.save();
+    }
+
+    res.status(201).json({ message: "Comment reported successfully" });
+  } catch (error) {
+    console.error("Error reporting comment:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+
 
 module.exports = {
   getAllGroups,
@@ -1377,5 +1491,7 @@ module.exports = {
   removeGroupMember,
   leaveGroup,
   checkMembership,
-  recommendGroups
+  recommendGroups,
+  getGroupById,
+  reportComment
 };

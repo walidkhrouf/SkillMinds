@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -6,129 +7,189 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser"); 
+const cookieParser = require("cookie-parser");
 const adminRoutes = require("./Routes/adminRoute");
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
-const User = require("./models/User"); // Add User model
+const User = require("./models/User");
 require("dotenv").config({ path: __dirname + "/.env" });
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-  console.log("Using fallback JWT_SECRET");
-}
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 require("./config/databaseConnection");
 
 const app = express();
+
+if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+    console.warn("Warning: Using fallback JWT_SECRET. Please set JWT_SECRET in your .env file.");
+}
+
+
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 console.log("AZURE_TTS_KEY:", process.env.AZURE_TTS_KEY);
 console.log("AZURE_TTS_REGION:", process.env.AZURE_TTS_REGION);
+
 app.use(morgan("dev"));
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-}));
-app.use(cookieParser()); 
 app.use(
-  session({
-    secret: process.env.JWT_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } 
-  })
+    cors({
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        credentials: true,
+    })
+);
+app.use(cookieParser());
+app.use(
+    session({
+        secret: process.env.JWT_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            sameSite: "lax",
+        },
+    })
 );
 
+// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
 
+// Attach a dummy user for testing
+if (process.env.NODE_ENV === "test") {
+    app.use((req, res, next) => {
+        // Use a valid-looking ObjectId string (24 hex characters)
+        req.user = { id: "507f1f77bcf86cd799439011" };
+        next();
+    });
+}
 
+// Passport Strategies
 passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:5173/auth/google/callback",
-    },
-    (accessToken, refreshToken, profile, done) => {
-      return done(null, profile);
-    }
-  )
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "http://localhost:5000/auth/google/callback",
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                if (!profile) {
+                    return done(new Error("Profile fetch failed"));
+                }
+
+                // Find or create user in the database
+                let user = await User.findOne({ googleId: profile.id });
+                if (!user) {
+                    user = await User.create({
+                        googleId: profile.id,
+                        email: profile.emails?.[0]?.value || null,
+                        displayName: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`.trim(),
+                    });
+                }
+
+                return done(null, user);
+            } catch (error) {
+                return done(error, null);
+            }
+        }
+    )
 );
 
-
 passport.use(
-  new LinkedInStrategy(
-    {
-      clientID: process.env.LINKEDIN_CLIENT_ID,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-      callbackURL: "http://localhost:5000/linkedin-callback",
-      scope: ['openid', 'profile', 'email'],
-    },
-    (accessToken, refreshToken, profile, done) => {
-      console.log('Access Token:', accessToken);
-      console.log('Refresh Token:', refreshToken);
-      console.log('Profile:', profile);
-      if (!profile) {
-        return done(new Error('Profile fetch failed'));
-      }
-      const linkedinUser = {
-        id: profile.id,
-        displayName: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`.trim(),
-        email: profile.emails?.[0]?.value || null,
-      };
-      return done(null, linkedinUser);
-    }
-  )
+    new LinkedInStrategy(
+        {
+            clientID: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+            callbackURL: "http://localhost:5000/linkedin-callback",
+            scope: ["openid", "profile", "email"],
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                console.log("Access Token:", accessToken);
+                console.log("Refresh Token:", refreshToken);
+                console.log("Profile:", profile);
+
+                if (!profile) {
+                    return done(new Error("Profile fetch failed"));
+                }
+
+                // Find or create user in the database
+                let user = await User.findOne({ linkedinId: profile.id });
+                if (!user) {
+                    user = await User.create({
+                        linkedinId: profile.id,
+                        email: profile.emails?.[0]?.value || null,
+                        displayName: profile.displayName || `${profile.name.givenName} ${profile.name.familyName}`.trim(),
+                    });
+                }
+
+                return done(null, user);
+            } catch (error) {
+                return done(error, null);
+            }
+        }
+    )
 );
 
+// Passport serialization
 passport.serializeUser((user, done) => {
-  done(null, user);
+    done(null, user.id); // Serialize only the user ID
 });
 
-passport.deserializeUser((obj, done) => {
-  done(null, obj);
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (error) {
+        done(error, null);
+    }
 });
 
+// Routes
 app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/groups", groupeRoutes);
 app.disable("etag");
 
+// Authentication Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
-    const token = generateToken(req.user);
-    res.redirect(`http://localhost:5173/auth/google/callback?token=${token}`);
-
-    res.send(`
-      <script type="javascript">
-        window.opener.postMessage({ token: '${token}' }, '*');
-        window.close();
-      </script>
-    `);
-  }
+    "/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "http://localhost:5173/login" }),
+    (req, res) => {
+        try {
+            const token = generateToken(req.user);
+            // Redirect to frontend with token in query parameter
+            res.redirect(`http://localhost:5173/auth/google/callback?token=${token}`);
+        } catch (error) {
+            console.error("Error in Google callback:", error);
+            res.redirect("http://localhost:5173/login?error=auth_failed");
+        }
+    }
 );
 
-app.get('/auth/linkedin', require('./Controllers/UserController').linkedinLogin);
-app.get('/linkedin-callback', require('./Controllers/UserController').linkedinCallback);
+app.get("/auth/linkedin", require("./Controllers/UserController").linkedinLogin);
+app.get("/linkedin-callback", require("./Controllers/UserController").linkedinCallback);
 
+// Token Generation Function
 function generateToken(user) {
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    if (!user || !user.id) {
+        throw new Error("User or user ID not provided for token generation");
+    }
+    return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 }
 
-app.use("/api/groups", groupeRoutes);
+// Start the server (only if not in a test environment)
+if (process.env.NODE_ENV !== "test") {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log("******************************************");
-  console.log(`Express server running on port ${PORT}`);
-  console.log("******************************************");
-  console.log("User routes loaded");
-});
+module.exports = app;
