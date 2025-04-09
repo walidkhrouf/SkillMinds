@@ -63,31 +63,31 @@ const createGroup = async (req, res) => {
 const getAllGroups = async (req, res) => {
   try {
     const groups = await Group.find()
-      .populate("createdBy", "_id username")
-      .lean();
+        .populate("createdBy", "_id username")
+        .lean();
 
     const groupDetails = await Promise.all(
-      groups.map(async (group) => {
-        const posts = await GroupPost.find({ groupId: group._id })
-          .populate("userId", "username")
-          .lean();
+        groups.map(async (group) => {
+          const posts = await GroupPost.find({ groupId: group._id })
+              .populate("userId", "username")
+              .lean();
 
-        const enrichedPosts = await Promise.all(
-          posts.map(async (post) => ({
-            ...post,
-            likesCount: await GroupPostLike.countDocuments({ groupPostId: post._id }),
-            dislikesCount: await GroupPostDislike.countDocuments({ groupPostId: post._id }),
-            commentsCount: await GroupPostComment.countDocuments({ groupPostId: post._id }),
-          }))
-        );
+          const enrichedPosts = await Promise.all(
+              posts.map(async (post) => ({
+                ...post,
+                likesCount: await GroupPostLike.countDocuments({ groupPostId: post._id }),
+                dislikesCount: await GroupPostDislike.countDocuments({ groupPostId: post._id }),
+                commentsCount: await GroupPostComment.countDocuments({ groupPostId: post._id }),
+              }))
+          );
 
-        return {
-          ...group,
-          memberCount: group.memberCount || 0,
-          postCount: posts.length,
-          posts: enrichedPosts,
-        };
-      })
+          return {
+            ...group,
+            memberCount: group.memberCount || 0,
+            postCount: posts.length,
+            posts: enrichedPosts,
+          };
+        })
     );
 
     res.status(200).json(groupDetails);
@@ -152,23 +152,28 @@ const createGroupPost = async (req, res) => {
   try {
     const userId = req.user.id;
     const media = [];
+
     if (mediaFiles && mediaFiles.length > 0) {
+      // Use the native MongoDB driver's GridFSBucket directly
+      const db = mongoose.connection.db;
+      const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: 'uploads' });
+
       for (const file of mediaFiles) {
+        const uploadStream = bucket.openUploadStream(file.originalname, {
+          contentType: file.mimetype
+        });
+
         const fileUpload = await new Promise((resolve, reject) => {
-          const uploadStream = gfs.openUploadStream(file.originalname, {
+          uploadStream.on('error', reject);
+          uploadStream.on('finish', () => resolve({
+            filename: file.originalname,
             contentType: file.mimetype,
-          });
-          uploadStream.on("error", (error) => reject(error));
-          uploadStream.on("finish", () => {
-            resolve({
-              filename: file.originalname,
-              contentType: file.mimetype,
-              length: file.size,
-              fileId: uploadStream.id,
-            });
-          });
+            length: file.size,
+            fileId: uploadStream.id
+          }));
           uploadStream.end(file.buffer);
         });
+
         media.push(fileUpload);
       }
     }
@@ -183,6 +188,7 @@ const createGroupPost = async (req, res) => {
     });
 
     await newPost.save();
+
 
     const group = await Group.findById(groupId).select("createdBy name").lean();
     if (!group) {
@@ -246,8 +252,8 @@ const getGroupPosts = async (req, res) => {
     }
 
     const posts = await GroupPost.find({ groupId })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
     res.status(200).json(posts);
   } catch (error) {
     console.error("Error fetching group posts:", error.message);
@@ -343,8 +349,8 @@ const createGroupPostComment = async (req, res) => {
     }
 
     const updatedComments = await GroupPostComment.find({ groupPostId: post._id })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
 
     res.status(201).json({ message: "Comment added successfully", comment: newComment, comments: updatedComments });
   } catch (error) {
@@ -401,8 +407,8 @@ const deleteGroupPostComment = async (req, res) => {
     }
 
     const updatedComments = await GroupPostComment.find({ groupPostId: post._id })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
 
     res.status(200).json({
       message: "Comment deleted successfully",
@@ -457,8 +463,8 @@ const editGroupPostComment = async (req, res) => {
     }
 
     const updatedComments = await GroupPostComment.find({ groupPostId: post._id })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
 
     res.status(200).json({
       message: "Comment updated successfully",
@@ -914,8 +920,8 @@ const getGroupRequests = async (req, res) => {
     }
 
     const requests = await GroupRequest.find({ groupId, status: "pending" })
-      .populate("userId", "username")
-      .lean();
+        .populate("userId", "username")
+        .lean();
     res.status(200).json(requests);
   } catch (error) {
     console.error("Error fetching group requests:", error.message);
@@ -1141,8 +1147,8 @@ const getGroupMembers = async (req, res) => {
     }
 
     const members = await GroupMember.find({ groupId })
-      .populate("userId", "username _id")
-      .lean();
+        .populate("userId", "username _id")
+        .lean();
 
     res.status(200).json({
       message: "Group members retrieved successfully",
@@ -1281,9 +1287,9 @@ const recommendGroups = async (req, res) => {
 
 
     const groups = await Group.find()
-      .populate("createdBy", "username")
-      .populate("skillId")
-      .lean();
+        .populate("createdBy", "username")
+        .populate("skillId")
+        .lean();
     if (!groups.length) {
       return res.status(404).json({ message: "No groups available." });
     }
@@ -1295,36 +1301,36 @@ const recommendGroups = async (req, res) => {
     const wantRecommendations = [];
 
     await Promise.all(
-      groups.map(async (group) => {
+        groups.map(async (group) => {
 
-        let groupSkillIds = group.skillId
-          ? [group.skillId._id.toString()]
-          : await UserSkill.find({ userId: { $in: group.members || [] } })
-              .distinct("skillId")
-              .then((ids) => ids.map((id) => id.toString()));
+          let groupSkillIds = group.skillId
+              ? [group.skillId._id.toString()]
+              : await UserSkill.find({ userId: { $in: group.members || [] } })
+                  .distinct("skillId")
+                  .then((ids) => ids.map((id) => id.toString()));
 
-        console.log(`Group ${group.name} Skill IDs:`, groupSkillIds);
+          console.log(`Group ${group.name} Skill IDs:`, groupSkillIds);
 
-        const groupVector = skillVocab.map((skillId) => (groupSkillIds.includes(skillId) ? 1 : 0));
-
-
-        const hasSimilarity = cosineSimilarity(hasVector, groupVector);
-        if (hasSimilarity > 0) {
-          hasRecommendations.push({
-            group,
-            similarity: hasSimilarity,
-          });
-        }
+          const groupVector = skillVocab.map((skillId) => (groupSkillIds.includes(skillId) ? 1 : 0));
 
 
-        const wantSimilarity = cosineSimilarity(wantVector, groupVector);
-        if (wantSimilarity > 0) {
-          wantRecommendations.push({
-            group,
-            similarity: wantSimilarity,
-          });
-        }
-      })
+          const hasSimilarity = cosineSimilarity(hasVector, groupVector);
+          if (hasSimilarity > 0) {
+            hasRecommendations.push({
+              group,
+              similarity: hasSimilarity,
+            });
+          }
+
+
+          const wantSimilarity = cosineSimilarity(wantVector, groupVector);
+          if (wantSimilarity > 0) {
+            wantRecommendations.push({
+              group,
+              similarity: wantSimilarity,
+            });
+          }
+        })
     );
 
     console.log("Has Recommendations:", hasRecommendations.map(r => ({ name: r.group.name, similarity: r.similarity })));
@@ -1332,18 +1338,18 @@ const recommendGroups = async (req, res) => {
 
 
     const formatRecommendations = (recs) =>
-      recs
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 5)
-        .map((rec) => ({
-          _id: rec.group._id,
-          name: rec.group.name,
-          description: rec.group.description,
-          privacy: rec.group.privacy,
-          createdBy: { username: rec.group.createdBy?.username || "Unknown" },
-          memberCount: rec.group.memberCount || 0,
-          similarity: rec.similarity,
-        }));
+        recs
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 5)
+            .map((rec) => ({
+              _id: rec.group._id,
+              name: rec.group.name,
+              description: rec.group.description,
+              privacy: rec.group.privacy,
+              createdBy: { username: rec.group.createdBy?.username || "Unknown" },
+              memberCount: rec.group.memberCount || 0,
+              similarity: rec.similarity,
+            }));
 
     const hasGroups = formatRecommendations(hasRecommendations);
     const wantGroups = formatRecommendations(wantRecommendations);

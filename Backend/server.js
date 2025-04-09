@@ -12,6 +12,7 @@ const adminRoutes = require("./Routes/adminRoute");
 const eventsRoutes = require('./Routes/eventsRoute');
 const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
+const coursesRoutes = require('./Routes/CoursesRoute');
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
 const User = require("./models/User");
 require("dotenv").config({ path: __dirname + "/.env" });
@@ -155,6 +156,7 @@ app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/groups", groupeRoutes);
 app.use("/api/events", eventsRoutes);
+app.use('/api/courses', coursesRoutes);
 app.use("/uploads", express.static("uploads"));
 app.disable("etag");
 

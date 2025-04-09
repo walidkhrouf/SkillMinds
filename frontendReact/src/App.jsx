@@ -27,6 +27,11 @@ import GroupRequests from "./components/Gestion_groupe/GroupRequests";
 import EditGroup from "./components/Gestion_groupe/EditGroup.jsx";
 import GroupMembers from "./components/Gestion_groupe/GroupMembers.jsx";
 import AIRecommendation from "./components/Gestion_groupe/AIRecommendation.jsx";
+import CoursesCard from "./components/allcourses/CoursesCard.jsx";
+import CreateCourse from "./components/Courses/CreateCourse.jsx";
+import CourseDetails from "./components/Courses/CourseDetails.jsx";
+import AllCourses from "./components/Courses/AllCourses.jsx";
+import UpdateCourse from "./components/Courses/UpdateCourse.jsx";
 
 
 import ActivityDetails from "./components/activities/ActivityDetails.jsx";
@@ -75,6 +80,13 @@ const AppContent = () => {
         <Route path="/groups/:groupId/post" element={<CreateGroupPost />} />
         <Route path="/groups/:groupId/members" element={<GroupMembers />} />
         <Route path="/ai-recommendation" element={<AIRecommendation />} />
+        
+        <Route path="/courses" element={<CoursesCard />} />
+        <Route path="/create-course" element={<CreateCourse />} />
+        <Route path="/course-details/:id" element={<CourseDetails />} />
+        <Route path="/all-courses" element={<AllCourses />} />
+        <Route path="/update-course/:id" element={<UpdateCourse />} />
+        
         
         <Route path="/activities" element={<Activities />} />
         <Route path="/add-activity" element={<AddActivity />} />

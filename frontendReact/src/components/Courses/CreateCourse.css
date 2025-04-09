@@ -1,0 +1,128 @@
+.create-course-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .create-course-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-family: 'Inter', Arial, sans-serif;
+  }
+  
+  .create-course-container .error {
+    color: #dc3545;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .create-course-container .success {
+    color: #28a745;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .create-course-container .create-course-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .create-course-container .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .create-course-container .form-group label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  
+  .create-course-container .form-group input,
+  .create-course-container .form-group textarea,
+  .create-course-container .form-group select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .create-course-container .form-group textarea {
+    height: 100px;
+    resize: vertical;
+  }
+  
+  .create-course-container .form-group select {
+    background-color: white;
+    cursor: pointer;
+  }
+  
+  .create-course-container .form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+  
+  .create-course-container .video-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+  }
+  
+  .create-course-container .video-section h3 {
+    margin: 0 0 15px;
+    color: #007bff;
+    font-size: 18px;
+  }
+  
+  .create-course-container .remove-btn {
+    padding: 8px 15px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .create-course-container .remove-btn:hover {
+    background-color: #c82333;
+  }
+  
+  .create-course-container .add-section-btn {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: center;
+  }
+  
+  .create-course-container .add-section-btn:hover {
+    background-color: #218838;
+  }
+  
+  .create-course-container .submit-btn {
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    align-self: center;
+  }
+  
+  .create-course-container .submit-btn:hover {
+    background-color: #0069d9;
+  }
