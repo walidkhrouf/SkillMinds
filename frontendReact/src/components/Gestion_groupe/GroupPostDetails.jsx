@@ -22,7 +22,7 @@ const GroupPostDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
-  const [reportModal, setReportModal] = useState({ open: false, groupId: null, postId: null, type: null });
+  const [reportModal, setReportModal] = useState({ open: false, groupId: null, postId: null, commentId: null, type: null });
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -57,11 +57,10 @@ const GroupPostDetails = () => {
     const jwtToken = localStorage.getItem("jwtToken");
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/groups/posts/${groupId}/${postId}`,
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          `http://localhost:5000/api/groups/posts/${groupId}/${postId}`,
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       const data = response.data;
-      console.log("API Response:", data);
 
       if (!prevPostRef.current || JSON.stringify(prevPostRef.current) !== JSON.stringify(data)) {
         setPost(data);
@@ -76,7 +75,6 @@ const GroupPostDetails = () => {
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load post.");
-      console.error("Fetch Error:", err);
       if (err.response?.status === 401) navigate("/signin");
     }
   };
@@ -95,60 +93,43 @@ const GroupPostDetails = () => {
   }, [groupId, postId, navigate]);
 
   const handleTogglePlay = () => {
-    console.log("handleTogglePlay called, isPlaying:", isPlaying);
-
     if (!isPlaying) {
       if (!post || !post.content) {
         setToastMessage("No content available to read.");
-        console.log("No content to read");
         return;
       }
 
       const parser = new DOMParser();
       const doc = parser.parseFromString(post.content, "text/html");
       const plainText = doc.body.textContent || "";
-      console.log("Plain Text to Synthesize:", `"${plainText}"`);
-
       if (!plainText.trim()) {
         setToastMessage("No readable text found in post.");
-        console.log("Empty plain text");
         return;
       }
 
       const detectedLang = franc(plainText, { minLength: 10 });
       const langCode = languageVoiceMap[detectedLang] || "en-US";
-      console.log("Detected Language:", detectedLang, "Selected Voice Lang:", langCode);
 
       const utterance = new SpeechSynthesisUtterance(plainText);
       utterance.lang = langCode;
       utteranceRef.current = utterance;
 
-      utterance.onstart = () => {
-        console.log("TTS started");
-        setIsPlaying(true);
-      };
+      utterance.onstart = () => setIsPlaying(true);
       utterance.onend = () => {
-        console.log("TTS playback completed naturally");
         setIsPlaying(false);
         utteranceRef.current = null;
       };
       utterance.onerror = (event) => {
-        console.error("TTS Error:", event.error);
         setToastMessage("TTS stopped!");
         setIsPlaying(false);
         utteranceRef.current = null;
       };
-      utterance.onboundary = (event) => {
-        console.log("Word boundary:", event.name, "at", event.elapsedTime, "ms");
-      };
 
       window.speechSynthesis.speak(utterance);
     } else {
-      console.log("Stopping TTS...");
       window.speechSynthesis.cancel();
       setIsPlaying(false);
       utteranceRef.current = null;
-      console.log("TTS stopped successfully.");
     }
   };
 
@@ -165,9 +146,9 @@ const GroupPostDetails = () => {
     setComments((prev) => [...prev, tempComment]);
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment`,
-        { content: newComment },
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment`,
+          { content: newComment },
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       setComments(response.data.comments);
       setNewComment("");
@@ -181,8 +162,8 @@ const GroupPostDetails = () => {
     const jwtToken = localStorage.getItem("jwtToken");
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment/${commentId}`,
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment/${commentId}`,
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       setComments(response.data.comments);
       setToastMessage("Comment deleted successfully.");
@@ -205,9 +186,9 @@ const GroupPostDetails = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment/${commentId}`,
-        { content: editedCommentContent },
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment/${commentId}`,
+          { content: editedCommentContent },
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       setComments(response.data.comments);
       setEditingCommentId(null);
@@ -280,23 +261,28 @@ const GroupPostDetails = () => {
   const handleReportSubmit = async (e) => {
     e.preventDefault();
     const jwtToken = localStorage.getItem("jwtToken");
-    const { groupId, postId, type } = reportModal;
-    const url =
-      type === "group"
-        ? `http://localhost:5000/api/groups/${groupId}/report`
-        : `http://localhost:5000/api/groups/posts/${groupId}/${postId}/report`;
+    const { groupId, postId, commentId, type } = reportModal;
+    let url;
+    if (type === "group") {
+      url = `http://localhost:5000/api/groups/${groupId}/report`;
+    } else if (type === "post") {
+      url = `http://localhost:5000/api/groups/posts/${groupId}/${postId}/report`;
+    } else if (type === "comment") {
+      url = `http://localhost:5000/api/groups/posts/${groupId}/${postId}/comment/${commentId}/report`;
+    }
+
     try {
       await axios.post(
-        url,
-        { reason: reportReason, details: reportDetails },
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          url,
+          { reason: reportReason, details: reportDetails },
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
-      setToastMessage(`${type === "group" ? "Group" : "Post"} reported successfully.`);
-      setReportModal({ open: false, groupId: null, postId: null, type: null });
+      setToastMessage(`${type === "group" ? "Group" : type === "post" ? "Post" : "Comment"} reported successfully.`);
+      setReportModal({ open: false, groupId: null, postId: null, commentId: null, type: null });
       setReportReason("");
       setReportDetails("");
     } catch (err) {
-      setToastMessage(err.response?.data?.message || `Failed to report ${type === "group" ? "group" : "post"}.`);
+      setToastMessage(err.response?.data?.message || `Failed to report ${type === "group" ? "group" : type === "post" ? "post" : "comment"}.`);
     }
   };
 
@@ -327,13 +313,12 @@ const GroupPostDetails = () => {
     };
 
     html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .catch((err) => {
-        console.error("PDF generation error:", err);
-        setToastMessage("Failed to generate PDF.");
-      });
+        .set(opt)
+        .from(element)
+        .save()
+        .catch((err) => {
+          setToastMessage("Failed to generate PDF.");
+        });
   };
 
   const renderContent = (htmlContent) => {
@@ -347,297 +332,303 @@ const GroupPostDetails = () => {
       const elements = Array.from(doc.body.childNodes);
 
       const rendered = elements
-        .map((node, index) => {
-          if (node.nodeName === "P") {
-            return (
-              <p key={index} className="group-post-details__paragraph">
-                {node.textContent || node.innerText}
-              </p>
-            );
-          }
+          .map((node, index) => {
+            if (node.nodeName === "P") {
+              return (
+                  <p key={index} className="group-post-details__paragraph">
+                    {node.textContent || node.innerText}
+                  </p>
+              );
+            }
 
-          if (node.nodeName === "PRE" && node.className.includes("ql-syntax")) {
-            const codeContent = node.textContent || node.innerText || "";
-            const languageMatch = node.className.match(/language-(\w+)/);
-            const language = languageMatch ? languageMatch[1] : "text";
-            return (
-              <SyntaxHighlighter
-                key={index}
-                style={vscDarkPlus}
-                language={language}
-                PreTag="div"
-                className="group-post-details__code-block"
-              >
-                {codeContent}
-              </SyntaxHighlighter>
-            );
-          }
+            if (node.nodeName === "PRE" && node.className.includes("ql-syntax")) {
+              const codeContent = node.textContent || node.innerText || "";
+              const languageMatch = node.className.match(/language-(\w+)/);
+              const language = languageMatch ? languageMatch[1] : "text";
+              return (
+                  <SyntaxHighlighter
+                      key={index}
+                      style={vscDarkPlus}
+                      language={language}
+                      PreTag="div"
+                      className="group-post-details__code-block"
+                  >
+                    {codeContent}
+                  </SyntaxHighlighter>
+              );
+            }
 
-          if (node.nodeName === "#text" && node.textContent.trim()) {
-            return (
-              <p key={index} className="group-post-details__paragraph">
-                {node.textContent}
-              </p>
-            );
-          }
+            if (node.nodeName === "#text" && node.textContent.trim()) {
+              return (
+                  <p key={index} className="group-post-details__paragraph">
+                    {node.textContent}
+                  </p>
+              );
+            }
 
-          return null;
-        })
-        .filter(Boolean);
+            return null;
+          })
+          .filter(Boolean);
 
       return rendered.length > 0 ? rendered : <p>No renderable content found.</p>;
     } catch (err) {
-      console.error("Rendering Error:", err);
       return <p>Error rendering content: {err.message}</p>;
     }
   };
-
-
 
   if (loading) return <p>Loading post...</p>;
   if (error) return <p className="group-form__error">{error}</p>;
   if (!post)
     return (
-      <>
-        {toastMessage && <div className="toast-message">{toastMessage}</div>}
-        <p>Post not found.</p>
-      </>
+        <>
+          {toastMessage && <div className="toast-message">{toastMessage}</div>}
+          <p>Post not found.</p>
+        </>
     );
 
   const isPostAuthor = post.userId?.id === currentUserId || post.userId?._id === currentUserId;
 
   return (
-    <>
-      <Back title="Post Details" />
-      <section className="group-section">
-        <div className="group-post-details">
-          <div className="group-post-details__content">
-            <h1 className="group-post-details__title">{post.title}</h1>
-            <h2 className="group-post-details__subject">{post.subject}</h2>
-            <div className="group-post-details__text">{renderContent(post.content)}</div>
-            <div className="group-post-details__meta-info">
+      <>
+        <Back title="Post Details" />
+        <section className="group-section">
+          <div className="group-post-details">
+            <div className="group-post-details__content">
+              <h1 className="group-post-details__title">{post.title}</h1>
+              <h2 className="group-post-details__subject">{post.subject}</h2>
+              <div className="group-post-details__text">{renderContent(post.content)}</div>
+              <div className="group-post-details__meta-info">
               <span className="group-post-details__meta">
                 Posted by: <label>{post.userId?.username || "Unknown"}</label>
               </span>
-              <span className="group-post-details__meta">
+                <span className="group-post-details__meta">
                 Created: <label>{new Date(post.createdAt).toLocaleString()}</label>
               </span>
-            </div>
-            {post.media && post.media.length > 0 && (
-              <div className="group-post-details__media">
-                <h4>Media</h4>
-                {post.media.map((media, index) => (
-                  <div key={media.fileId || index} className="group-post-details__media-item">
-                    {media.contentType?.startsWith("image/") ? (
-                      <img
-                        src={`http://localhost:5000/api/groups/media/${media.fileId}`}
-                        alt={media.filename}
-                        className="media-image"
-                        onError={(e) => (e.target.src = "/fallback-image.jpg")}
-                      />
-                    ) : media.contentType?.startsWith("video/") ? (
-                      <video
-                        controls
-                        className="media-video"
-                        src={`http://localhost:5000/api/groups/media/${media.fileId}`}
-                        onError={(e) => console.error("Video failed to load:", e)}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    ) : (
-                      <a
-                        href={`http://localhost:5000/api/groups/media/${media.fileId}`}
-                        download={media.filename}
-                        className="media-link"
-                      >
-                        Download {media.filename} ({(media.length / 1024).toFixed(2)} KB)
-                      </a>
-                    )}
-                    <p>
-                      {media.filename} ({media.contentType}, {media.length} bytes)
-                    </p>
-                  </div>
-                ))}
               </div>
-            )}
-            <div className="group-post-details__interaction">
-              <div className="group-post-details__actions">
-                <button
-                  className={`group-post-details__like-btn ${hasLiked ? "active" : ""}`}
-                  onClick={handleLikeToggle}
-                >
-                  <i className={`fas ${hasLiked ? "fa-thumbs-up" : "fa-thumbs-o-up"}`}></i>
-                  <span>{hasLiked ? "Unlike" : "Like"} ({likesCount})</span>
-                </button>
-                <button
-                  className={`group-post-details__dislike-btn ${hasDisliked ? "active" : ""}`}
-                  onClick={handleDislikeToggle}
-                >
-                  <i className={`fas ${hasDisliked ? "fa-thumbs-down" : "fa-thumbs-o-down"}`}></i>
-                  <span>{hasDisliked ? "Undislike" : "Dislike"} ({dislikesCount})</span>
-                </button>
-                <button
-                  className={`group-post-details__read-btn ${isPlaying ? "playing" : ""}`}
-                  onClick={handleTogglePlay}
-                >
-                  <i className={`fas ${isPlaying ? "fa-stop" : "fa-play"}`}></i>
-                  <span>{isPlaying ? "Stop Playing" : "Read Post"}</span>
-                </button>
-                <button className="group-post-details__print-btn" onClick={handlePrintPDF}>
-                  <i className="fas fa-print"></i>
-                  <span>Print PDF</span>
-                </button>
-
-          
-
-                  
-                {(isPostAuthor || isGroupOwner) && (
-                  <button
-                    className="group-button group-post-details__delete-btn"
-                    onClick={handleDeletePost}
-                  >
-                    Delete Post
-                  </button>
-                )}
-                {!isPostAuthor && (
-                  <button
-                    className="group-button group-post-details__report-btn"
-                    onClick={() => setReportModal({ open: true, groupId, postId, type: "post" })}
-                  >
-                    Report Post
-                  </button>
-                )}
-              </div>
-              <form onSubmit={handleAddComment} className="group-post-details__comment-form">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="group-form__textarea group-post-details__comment-input"
-                />
-                <button type="submit" className="group-button">
-                  Comment
-                </button>
-              </form>
-              <div className="group-post-details__comments">
-                <h4>Comments ({comments.length})</h4>
-                {comments.length > 0 ? (
-                  comments.map((comment) => (
-                    <div key={comment._id} className="group-post-details__comment">
-                      {editingCommentId === comment._id ? (
-                        <div>
-                          <textarea
-                            value={editedCommentContent}
-                            onChange={(e) => setEditedCommentContent(e.target.value)}
-                            className="group-form__textarea group-post-details__comment-input"
-                          />
-                          <button
-                            className="group-button"
-                            onClick={() => handleSaveEditComment(comment._id)}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="group-button group-post-details__delete-comment-btn"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
+              {post.media && post.media.length > 0 && (
+                  <div className="group-post-details__media">
+                    <h4>Media</h4>
+                    {post.media.map((media, index) => (
+                        <div key={media.fileId || index} className="group-post-details__media-item">
+                          {media.contentType?.startsWith("image/") ? (
+                              <img
+                                  src={`http://localhost:5000/api/groups/media/${media.fileId}`}
+                                  alt={media.filename}
+                                  className="media-image"
+                                  onError={(e) => (e.target.src = "/fallback-image.jpg")}
+                              />
+                          ) : media.contentType?.startsWith("video/") ? (
+                              <video
+                                  controls
+                                  className="media-video"
+                                  src={`http://localhost:5000/api/groups/media/${media.fileId}`}
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                          ) : (
+                              <a
+                                  href={`http://localhost:5000/api/groups/media/${media.fileId}`}
+                                  download={media.filename}
+                                  className="media-link"
+                              >
+                                Download {media.filename} ({(media.length / 1024).toFixed(2)} KB)
+                              </a>
+                          )}
+                          <p>
+                            {media.filename} ({media.contentType}, {media.length} bytes)
+                          </p>
                         </div>
-                      ) : (
-                        <>
-                          <p>{comment.content}</p>
-                          <span className="group-post-details__comment-meta">
-                            By: <label>{comment.userId?.username || "Unknown"}</label> |{" "}
-                            {new Date(comment.createdAt).toLocaleString()}
-                            {((comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) || isPostAuthor) && (
-                              <>
-                                {(comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) && (
+                    ))}
+                  </div>
+              )}
+              <div className="group-post-details__interaction">
+                <div className="group-post-details__actions">
+                  <button
+                      className={`group-post-details__like-btn ${hasLiked ? "active" : ""}`}
+                      onClick={handleLikeToggle}
+                  >
+                    <i className={`fas ${hasLiked ? "fa-thumbs-up" : "fa-thumbs-o-up"}`}></i>
+                    <span>{hasLiked ? "Unlike" : "Like"} ({likesCount})</span>
+                  </button>
+                  <button
+                      className={`group-post-details__dislike-btn ${hasDisliked ? "active" : ""}`}
+                      onClick={handleDislikeToggle}
+                  >
+                    <i className={`fas ${hasDisliked ? "fa-thumbs-down" : "fa-thumbs-o-down"}`}></i>
+                    <span>{hasDisliked ? "Undislike" : "Dislike"} ({dislikesCount})</span>
+                  </button>
+                  <button
+                      className={`group-post-details__read-btn ${isPlaying ? "playing" : ""}`}
+                      onClick={handleTogglePlay}
+                  >
+                    <i className={`fas ${isPlaying ? "fa-stop" : "fa-play"}`}></i>
+                    <span>{isPlaying ? "Stop Playing" : "Read Post"}</span>
+                  </button>
+                  <button className="group-post-details__print-btn" onClick={handlePrintPDF}>
+                    <i className="fas fa-print"></i>
+                    <span>Print PDF</span>
+                  </button>
+                  {(isPostAuthor || isGroupOwner) && (
+                      <button
+                          className="group-button group-post-details__delete-btn"
+                          onClick={handleDeletePost}
+                      >
+                        Delete Post
+                      </button>
+                  )}
+                  {!isPostAuthor && (
+                      <button
+                          className="group-button group-post-details__report-btn"
+                          onClick={() => setReportModal({ open: true, groupId, postId, commentId: null, type: "post" })}
+                      >
+                        Report Post
+                      </button>
+                  )}
+                </div>
+                <form onSubmit={handleAddComment} className="group-post-details__comment-form">
+                <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="group-form__textarea group-post-details__comment-input"
+                />
+                  <button type="submit" className="group-button">
+                    Comment
+                  </button>
+                </form>
+                <div className="group-post-details__comments">
+                  <h4>Comments ({comments.length})</h4>
+                  {comments.length > 0 ? (
+                      comments.map((comment) => (
+                          <div key={comment._id} className="group-post-details__comment">
+                            {editingCommentId === comment._id ? (
+                                <div>
+                          <textarea
+                              value={editedCommentContent}
+                              onChange={(e) => setEditedCommentContent(e.target.value)}
+                              className="group-form__textarea group-post-details__comment-input"
+                          />
                                   <button
-                                    className="group-post-details__edit-comment-btn"
-                                    onClick={() => handleEditComment(comment._id, comment.content)}
+                                      className="group-button"
+                                      onClick={() => handleSaveEditComment(comment._id)}
                                   >
-                                    Edit
+                                    Save
                                   </button>
-                                )}
-                                <button
-                                  className="group-post-details__delete-comment-btn"
-                                  onClick={() => handleDeleteComment(comment._id)}
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
+                                  <button
+                                      className="group-button group-post-details__delete-comment-btn"
+                                      onClick={handleCancelEdit}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                            ) : (
+                                <>
+                                  <p>{comment.content}</p>
+                                  <span className="group-post-details__comment-meta">
+                            By: <label>{comment.userId?.username || "Unknown"}</label> |{" "}
+                                    {new Date(comment.createdAt).toLocaleString()}
+                                    {/* Show report count to post owner */}
+                                    {isPostAuthor && (
+                                        <span className="group-post-details__report-count">
+                                | Reports: <label>{comment.reportCount || 0}</label>
+                              </span>
+                                    )}
+                                    {((comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) || isPostAuthor) && (
+                                        <>
+                                          {(comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) && (
+                                              <button
+                                                  className="group-post-details__edit-comment-btn"
+                                                  onClick={() => handleEditComment(comment._id, comment.content)}
+                                              >
+                                                Edit
+                                              </button>
+                                          )}
+                                          <button
+                                              className="group-post-details__delete-comment-btn"
+                                              onClick={() => handleDeleteComment(comment._id)}
+                                          >
+                                            Delete
+                                          </button>
+                                        </>
+                                    )}
+                                    {(comment.userId?.id !== currentUserId && comment.userId?._id !== currentUserId) && (
+                                        <button
+                                            className="group-post-details__report-comment-btn"
+                                            onClick={() => setReportModal({ open: true, groupId, postId, commentId: comment._id, type: "comment" })}
+                                        >
+                                          Report
+                                        </button>
+                                    )}
                           </span>
-                        </>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p>No comments yet.</p>
-                )}
-              </div>
-              <div className="navigation-buttons">
-                <button className="group-button" onClick={() => navigate("/groups")}>
-                  Group List
-                </button>
-                <button className="group-button" onClick={() => navigate(`/groups/${groupId}`)}>
-                  Back to Posts
-                </button>
+                                </>
+                            )}
+                          </div>
+                      ))
+                  ) : (
+                      <p>No comments yet.</p>
+                  )}
+                </div>
+                <div className="navigation-buttons">
+                  <button className="group-button" onClick={() => navigate("/groups")}>
+                    Group List
+                  </button>
+                  <button className="group-button" onClick={() => navigate(`/groups/${groupId}`)}>
+                    Back to Posts
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      {reportModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Report {reportModal.type === "group" ? "Group" : "Post"}</h2>
-            <form onSubmit={handleReportSubmit} className="group-form">
-              <div className="group-form__group">
-                <label htmlFor="reason">Reason</label>
-                <select
-                  id="reason"
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  <option value="Inappropriate Content">Inappropriate Content</option>
-                  <option value="Spam">Spam</option>
-                  <option value="Off-Topic">Off-Topic</option>
-                  <option value="Harassment">Harassment</option>
-                  <option value="Other">Other</option>
-                </select>
+        </section>
+        {reportModal.open && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <h2>Report {reportModal.type === "group" ? "Group" : reportModal.type === "post" ? "Post" : "Comment"}</h2>
+                <form onSubmit={handleReportSubmit} className="group-form">
+                  <div className="group-form__group">
+                    <label htmlFor="reason">Reason</label>
+                    <select
+                        id="reason"
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        required
+                    >
+                      <option value="">Select a reason</option>
+                      <option value="Inappropriate Content">Inappropriate Content</option>
+                      <option value="Spam">Spam</option>
+                      <option value="Off-Topic">Off-Topic</option>
+                      <option value="Harassment">Harassment</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="group-form__group">
+                    <label htmlFor="details">Details (optional)</label>
+                    <textarea
+                        id="details"
+                        value={reportDetails}
+                        onChange={(e) => setReportDetails(e.target.value)}
+                        placeholder="Provide more details..."
+                        maxLength="500"
+                    />
+                  </div>
+                  <div className="modal-actions">
+                    <button type="submit" className="group-button">
+                      Submit Report
+                    </button>
+                    <button
+                        type="button"
+                        className="group-button group-card__delete-btn"
+                        onClick={() => setReportModal({ open: false, groupId: null, postId: null, commentId: null, type: null })}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="group-form__group">
-                <label htmlFor="details">Details (optional)</label>
-                <textarea
-                  id="details"
-                  value={reportDetails}
-                  onChange={(e) => setReportDetails(e.target.value)}
-                  placeholder="Provide more details..."
-                  maxLength="500"
-                />
-              </div>
-              <div className="modal-actions">
-                <button type="submit" className="group-button">
-                  Submit Report
-                </button>
-                <button
-                  type="button"
-                  className="group-button group-card__delete-btn"
-                  onClick={() => setReportModal({ open: false, groupId: null, postId: null, type: null })}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {toastMessage && <div className="toast-message">{toastMessage}</div>}
-    </>
+            </div>
+        )}
+        {toastMessage && <div className="toast-message">{toastMessage}</div>}
+      </>
   );
 };
 

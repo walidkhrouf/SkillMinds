@@ -11,8 +11,8 @@ const GroupPosts = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [isMember, setIsMember] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(""); // New: Search state
-  const [sortOrder, setSortOrder] = useState("newest"); // New: Sort state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const { groupId } = useParams();
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");

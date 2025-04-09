@@ -75,7 +75,6 @@ router.get("/:id", getUserById);
 router.put("/:id", upload.single("profileImage"), updateUser);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
-
 router.delete("/userskills/:skillId", deleteUserSkill);
 router.get('/userskills/bySkillId/:skillId', getUserSkillsBySkillId);
 router.delete("/userskills/removeBySkillId/:skillId", removeUserSkillsBySkillId);

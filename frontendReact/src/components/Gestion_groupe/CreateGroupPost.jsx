@@ -23,6 +23,7 @@ const CreateGroupPost = () => {
   const [recognizedText, setRecognizedText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [isCheckingBadWords, setIsCheckingBadWords] = useState(false);
+  const [groupName, setGroupName] = useState("");
   const { groupId } = useParams();
   const navigate = useNavigate();
   const recognizerRef = useRef(null);
@@ -33,16 +34,14 @@ const CreateGroupPost = () => {
   const AZURE_CONTENT_SAFETY_ENDPOINT = import.meta.env.VITE_AZURE_CONTENT_SAFETY_ENDPOINT || "https://badwordsdetection.cognitiveservices.azure.com/";
   const BACKEND_URL = "http://localhost:5001/generate-content";
 
-  // Local bad words list
   const localBadWords = [
     "racism",
     "hate",
     "violence",
     "sexism",
     "discrimination",
-    "merde", // Add more words or phrases as needed
+    "merde",
   ];
-
 
   const hasLocalBadWords = (text) => {
     const badWordPatterns = localBadWords.map((word) => new RegExp(`\\b${word}\\b`, "i"));
@@ -53,6 +52,26 @@ const CreateGroupPost = () => {
     const jwtToken = localStorage.getItem("jwtToken");
     if (!jwtToken) navigate("/signin");
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchGroupName = async () => {
+      try {
+        const jwtToken = localStorage.getItem("jwtToken");
+        const response = await axios.get(`http://localhost:5000/api/groups/${groupId}`, {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        });
+        setGroupName(response.data.name);
+      } catch (error) {
+        console.error("Failed to fetch group name:", error);
+        setGroupName("Unknown Group");
+        if (error.response?.status === 401) navigate("/signin");
+      }
+    };
+
+    fetchGroupName();
+  }, [groupId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,8 +110,6 @@ const CreateGroupPost = () => {
     }
   };
 
-  
-
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Title is required.";
@@ -110,18 +127,18 @@ const CreateGroupPost = () => {
     }
     try {
       const response = await axios.post(
-        `${AZURE_CONTENT_SAFETY_ENDPOINT}/contentsafety/text:analyze?api-version=2023-10-01`,
-        {
-          text,
-          categories: ["Hate", "Sexual", "SelfHarm", "Violence"],
-          outputType: "FourSeverityLevels",
-        },
-        {
-          headers: {
-            "Ocp-Apim-Subscription-Key": AZURE_CONTENT_SAFETY_KEY,
-            "Content-Type": "application/json",
+          `${AZURE_CONTENT_SAFETY_ENDPOINT}/contentsafety/text:analyze?api-version=2023-10-01`,
+          {
+            text,
+            categories: ["Hate", "Sexual", "SelfHarm", "Violence"],
+            outputType: "FourSeverityLevels",
           },
-        }
+          {
+            headers: {
+              "Ocp-Apim-Subscription-Key": AZURE_CONTENT_SAFETY_KEY,
+              "Content-Type": "application/json",
+            },
+          }
       );
       const analysis = response.data;
       const hasBadWords = analysis.categoriesAnalysis.some((category) => category.severity > 0);
@@ -138,21 +155,17 @@ const CreateGroupPost = () => {
     }
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     const textToCheck = `${formData.title} ${formData.subject} ${formData.content.replace(/<[^>]+>/g, " ")}`;
 
-    
     if (hasLocalBadWords(textToCheck)) {
       setSubmitError("Inappropriate language detected! Please revise your content.");
       return;
     }
 
-    
     setIsCheckingBadWords(true);
     setSubmitError("Checking for inappropriate language...");
 
@@ -164,7 +177,6 @@ const CreateGroupPost = () => {
       return;
     }
 
-    
     const jwtToken = localStorage.getItem("jwtToken");
     const postData = new FormData();
     postData.append("title", formData.title);
@@ -201,21 +213,21 @@ const CreateGroupPost = () => {
     if (isRecording) {
       if (recognizerRef.current) {
         recognizerRef.current.stopContinuousRecognitionAsync(
-          () => {
-            recognizerRef.current.close();
-            recognizerRef.current = null;
-            setIsRecording(false);
-            setInterimText("");
-            console.log("Recording stopped.");
-          },
-          (error) => {
-            console.error("Stop Recognition Error:", error);
-            setSubmitError("Failed to stop recording.");
-            recognizerRef.current.close();
-            recognizerRef.current = null;
-            setIsRecording(false);
-            setInterimText("");
-          }
+            () => {
+              recognizerRef.current.close();
+              recognizerRef.current = null;
+              setIsRecording(false);
+              setInterimText("");
+              console.log("Recording stopped.");
+            },
+            (error) => {
+              console.error("Stop Recognition Error:", error);
+              setSubmitError("Failed to stop recording.");
+              recognizerRef.current.close();
+              recognizerRef.current = null;
+              setIsRecording(false);
+              setInterimText("");
+            }
         );
       }
       return;
@@ -237,9 +249,9 @@ const CreateGroupPost = () => {
         const finalText = e.result.text;
         setRecognizedText((prevText) => {
           const updatedText =
-            prevText === "" || prevText === "<p><br></p>"
-              ? `<p>${finalText}</p>`
-              : `${prevText}<p>${finalText}</p>`;
+              prevText === "" || prevText === "<p><br></p>"
+                  ? `<p>${finalText}</p>`
+                  : `${prevText}<p>${finalText}</p>`;
           setFormData((prevFormData) => ({
             ...prevFormData,
             content: updatedText,
@@ -269,17 +281,17 @@ const CreateGroupPost = () => {
     };
 
     recognizerRef.current.startContinuousRecognitionAsync(
-      () => {
-        console.log("Continuous recognition started.");
-      },
-      (error) => {
-        console.error("Start Recognition Error:", error);
-        setSubmitError("Failed to start recording.");
-        recognizerRef.current.close();
-        recognizerRef.current = null;
-        setIsRecording(false);
-        setInterimText("");
-      }
+        () => {
+          console.log("Continuous recognition started.");
+        },
+        (error) => {
+          console.error("Start Recognition Error:", error);
+          setSubmitError("Failed to start recording.");
+          recognizerRef.current.close();
+          recognizerRef.current = null;
+          setIsRecording(false);
+          setInterimText("");
+        }
     );
   };
 
@@ -297,15 +309,15 @@ const CreateGroupPost = () => {
       const response = await axios.post(BACKEND_URL, { prompt });
       const generatedText = response.data.generated_text.trim();
       const newContent =
-        formData.content === "<p><br></p>" || !formData.content
-          ? `<p>${generatedText}</p>`
-          : `${formData.content}<p>${generatedText}</p>`;
+          formData.content === "<p><br></p>" || !formData.content
+              ? `<p>${generatedText}</p>`
+              : `${formData.content}<p>${generatedText}</p>`;
       setFormData({ ...formData, content: newContent });
       setRecognizedText(newContent);
       setErrors((prev) => ({ ...prev, content: "" }));
     } catch (error) {
       setSubmitError(
-        error.response?.data?.error || "Failed to generate content. Check if backend is running and API key is valid."
+          error.response?.data?.error || "Failed to generate content. Check if backend is running and API key is valid."
       );
       console.error("Content Generation Error:", error.response?.data || error.message);
     } finally {
@@ -314,8 +326,8 @@ const CreateGroupPost = () => {
   };
 
   const displayContent = isRecording && interimText
-    ? `${formData.content}<p>${interimText}</p>`
-    : formData.content;
+      ? `${formData.content}<p>${interimText}</p>`
+      : formData.content;
 
   const quillModules = {
     toolbar: [
@@ -329,99 +341,99 @@ const CreateGroupPost = () => {
   };
 
   return (
-    <>
-      <Back title="Create a Group Post" />
-      <section className="group-section">
-        <form onSubmit={handleSubmit} className="group-form">
-          <h2 className="group-form__title">Add a Post to Group</h2>
-          {submitError && <p className="group-form__error">{submitError}</p>}
-          <div className="group-form__field">
-            <label className="group-form__label">Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Enter post title"
-              className="group-form__input"
-            />
-            {errors.title && <p className="group-form__field-error">{errors.title}</p>}
-          </div>
-          <div className="group-form__field">
-            <label className="group-form__label">Subject</label>
-            <input
-              type="text"
-              name="subject"
-              value={formData.subject}
-              onChange={handleChange}
-              placeholder="Enter post subject"
-              className="group-form__input"
-            />
-            {errors.subject && <p className="group-form__field-error">{errors.subject}</p>}
-          </div>
-          <div className="group-form__field">
-            <label className="group-form__label">Content</label>
-            <ReactQuill
-              value={displayContent}
-              onChange={handleContentChange}
-              modules={quillModules}
-              placeholder="Write, speak, or generate your post content here..."
-              className="group-form__quill"
-            />
-            {errors.content && <p className="group-form__field-error">{errors.content}</p>}
-            <div className="group-form__speech-controls">
-              <select
-                value={speechLanguage}
-                onChange={(e) => setSpeechLanguage(e.target.value)}
-                className="group-form__language-select"
-                disabled={isRecording}
-              >
-                <option value="en-US">English (US)</option>
-                <option value="fr-FR">French</option>
-                <option value="ar-SA">Arabic (Saudi Arabia)</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleSpeechToText}
-                className={`group-button group-form__record-btn ${isRecording ? "recording" : ""}`}
-                disabled={loading || isGenerating || isCheckingBadWords}
-              >
-                <i className={`fas ${isRecording ? "fa-stop" : "fa-microphone"}`}></i>
-                {isRecording ? "Stop Recording" : "Record Content"}
-              </button>
-              <button
-                type="button"
-                onClick={handleGenerateContent}
-                className={`group-button group-form__generate-btn ${isGenerating ? "generating" : ""}`}
-                disabled={loading || isRecording || isCheckingBadWords}
-              >
-                <i className="fas fa-magic"></i>
-                {isGenerating ? "Generating..." : "Generate Content"}
-              </button>
-              {isRecording && <span className="group-form__recording-indicator">Recording...</span>}
+      <>
+        <Back title="Create a Group Post" />
+        <section className="group-section">
+          <form onSubmit={handleSubmit} className="group-form">
+            <h2 className="group-form__title">Add a Post to {groupName}</h2>
+            {submitError && <p className="group-form__error">{submitError}</p>}
+            <div className="group-form__field">
+              <label className="group-form__label">Title</label>
+              <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Enter post title"
+                  className="group-form__input"
+              />
+              {errors.title && <p className="group-form__field-error">{errors.title}</p>}
             </div>
-          </div>
-          <div className="group-form__field">
-            <label className="group-form__label">Media (Optional)</label>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              accept="image/*,video/*"
-              className="group-form__input"
-            />
-            {errors.media && <p className="group-form__field-error">{errors.media}</p>}
-          </div>
-          <button
-            type="submit"
-            disabled={loading || isRecording || isGenerating || isCheckingBadWords}
-            className="group-button"
-          >
-            {isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
-          </button>
-        </form>
-      </section>
-    </>
+            <div className="group-form__field">
+              <label className="group-form__label">Subject</label>
+              <input
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  placeholder="Enter post subject"
+                  className="group-form__input"
+              />
+              {errors.subject && <p className="group-form__field-error">{errors.subject}</p>}
+            </div>
+            <div className="group-form__field">
+              <label className="group-form__label">Content</label>
+              <ReactQuill
+                  value={displayContent}
+                  onChange={handleContentChange}
+                  modules={quillModules}
+                  placeholder="Write, speak, or generate your post content here..."
+                  className="group-form__quill"
+              />
+              {errors.content && <p className="group-form__field-error">{errors.content}</p>}
+              <div className="group-form__speech-controls">
+                <select
+                    value={speechLanguage}
+                    onChange={(e) => setSpeechLanguage(e.target.value)}
+                    className="group-form__language-select"
+                    disabled={isRecording}
+                >
+                  <option value="en-US">English (US)</option>
+                  <option value="fr-FR">French</option>
+                  <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                </select>
+                <button
+                    type="button"
+                    onClick={handleSpeechToText}
+                    className={`group-button group-form__record-btn ${isRecording ? "recording" : ""}`}
+                    disabled={loading || isGenerating || isCheckingBadWords}
+                >
+                  <i className={`fas ${isRecording ? "fa-stop" : "fa-microphone"}`}></i>
+                  {isRecording ? "Stop Recording" : "Record Content"}
+                </button>
+                <button
+                    type="button"
+                    onClick={handleGenerateContent}
+                    className={`group-button group-form__generate-btn ${isGenerating ? "generating" : ""}`}
+                    disabled={loading || isRecording || isCheckingBadWords}
+                >
+                  <i className="fas fa-magic"></i>
+                  {isGenerating ? "Generating..." : "Generate Content"}
+                </button>
+                {isRecording && <span className="group-form__recording-indicator">Recording...</span>}
+              </div>
+            </div>
+            <div className="group-form__field">
+              <label className="group-form__label">Media (Optional)</label>
+              <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  accept="image/*,video/*"
+                  className="group-form__input"
+              />
+              {errors.media && <p className="group-form__field-error">{errors.media}</p>}
+            </div>
+            <button
+                type="submit"
+                disabled={loading || isRecording || isGenerating || isCheckingBadWords}
+                className="group-button"
+            >
+              {isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
+            </button>
+          </form>
+        </section>
+      </>
   );
 };
 

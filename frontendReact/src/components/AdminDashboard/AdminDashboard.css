@@ -332,7 +332,6 @@ body.dark-mode .expanded-user-details textarea {
   margin-top: 0.5rem;
 }
 
-
 /* Group Manager Specific Styles */
 .group-manager {
   padding: 1rem 0;
@@ -464,7 +463,6 @@ body.dark-mode .member-item {
   background: var(--primary-color);
 }
 
-
 .user-skills-list.wants-to-learn .skill-item {
   display: flex;
   align-items: center;
@@ -486,7 +484,7 @@ body.dark-mode .member-item {
 }
 
 body.dark-mode .user-skills-list.wants-to-learn .skill-name {
-  color: var(--dark-sidebar-text); 
+  color: var(--dark-sidebar-text);
 }
 
 .user-skills-list.has-skills .skill-item {
@@ -560,6 +558,7 @@ body.dark-mode .user-skills-list.wants-to-learn .skill-name {
   justify-content: center;
   margin-top: 1.5rem;
 }
+
 /* New styles for the Read Post button */
 .group-post-details__read-btn {
   padding: 10px 20px;
@@ -787,54 +786,97 @@ body.dark-mode .skill-form label {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Stats Grid for General and Group Statistics */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem; /* Increased gap for better spacing */
   margin-top: 2rem;
 }
 
+/* Wrapper for Group Statistics Grid */
+.group-stats-grid {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.02); /* Subtle background for separation */
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+body.dark-mode .group-stats-grid {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Stats Card for Charts and Metrics */
 .stats-card {
-  padding: 2rem;
-  background: var(--light-bg);
+  background: var(--secondary-color);
+  padding: 2rem; /* Increased padding for more breathing room */
   border-radius: 12px;
   box-shadow: var(--box-shadow);
-  transition: transform var(--transition-speed) ease;
+  transition: transform 0.3s ease, background var(--transition-speed) ease;
   animation: fadeInUp 0.6s ease-out;
+  min-height: 300px; /* Ensure a minimum height for consistency */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Center content vertically */
 }
 
 .stats-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
 }
 
 body.dark-mode .stats-card {
-  background: var(--dark-content-bg);
+  background: #2d3748;
+  color: var(--dark-sidebar-text);
 }
 
 .stats-card h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--primary-color);
+  font-size: 1.4rem;
   margin-bottom: 1rem;
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
 body.dark-mode .stats-card h3 {
   color: var(--accent-color);
 }
 
+/* Metric Group for Total Groups, Posts, and Engagement */
 .metric-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid; /* Switch to grid for better control */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Ensure consistent column width */
+  gap: 1.5rem; /* Increased gap for better spacing */
+  justify-items: center; /* Center the boxes */
 }
 
 .metric-box {
+  flex: 1;
+  background: var(--light-bg);
+  padding: 1.5rem; /* Increased padding for more space */
+  border-radius: 8px;
   text-align: center;
+  box-shadow: var(--box-shadow);
+  transition: background var(--transition-speed) ease, transform 0.3s ease;
+  min-height: 120px; /* Ensure a minimum height so it doesn’t look empty */
+  min-width: 200px; /* Ensure consistent width */
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Add a subtle border */
+  background: rgba(255, 255, 255, 0.8); /* Slightly different background for contrast */
+}
+
+.metric-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .metric-box {
+  background: #4a5568;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .metric-box h4 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--text-color);
+  margin-bottom: 0.5rem;
 }
 
 body.dark-mode .metric-box h4 {
@@ -842,34 +884,59 @@ body.dark-mode .metric-box h4 {
 }
 
 .metric-value {
-  font-size: 2rem;
+  font-size: 2.2rem; /* Slightly larger font size */
   font-weight: 700;
   color: var(--primary-color);
+  padding: 0.5rem 0; /* Add padding for better spacing */
+  display: block; /* Ensure it takes its own line */
 }
 
 body.dark-mode .metric-value {
   color: var(--accent-color);
 }
 
+/* Trending List for Top Groups by Members */
 .trending-list {
   list-style: none;
+  padding: 0;
 }
 
 .trending-item {
-  padding: 0.75rem 0;
-  font-size: 1.2rem;
   display: flex;
   align-items: center;
-  animation: slideInLeft 0.5s ease-out;
+  gap: 1rem;
+  padding: 1rem; /* Increased padding for better spacing */
+  border-bottom: 1px solid #e2e8f0;
+  transition: background var(--transition-speed) ease;
+  background: rgba(0, 0, 0, 0.02); /* Subtle background for separation */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  margin-bottom: 0.5rem; /* Add margin for spacing */
+}
+
+body.dark-mode .trending-item {
+  border-bottom: 1px solid #4a5568;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.trending-item:hover {
+  background: #f1f5f9;
+}
+
+body.dark-mode .trending-item:hover {
+  background: #4a5568;
 }
 
 .trending-rank {
-  font-weight: 700;
-  color: var(--accent-color);
-  margin-right: 1rem;
-  background: rgba(72, 199, 116, 0.1);
+  background: var(--accent-color);
+  color: #fff;
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+body.dark-mode .trending-rank {
+  background: var(--primary-color);
+  color: var(--dark-background);
 }
 
 .message {
@@ -974,30 +1041,52 @@ body.dark-mode .message.warning {
   .dashboard-sidebar {
     width: 250px;
   }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
   .admin-dashboard {
     flex-direction: column;
   }
+
   .dashboard-sidebar {
     width: 100%;
     padding: 1.5rem;
   }
+
   .dashboard-content {
     padding: 1.5rem;
   }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
+
+  .metric-group {
+    grid-template-columns: 1fr; /* Stack on smaller screens */
+  }
+
+  .metric-box {
+    width: 100%;
+  }
+
   .expanded-user-details .user-details-body {
     grid-template-columns: 1fr;
   }
+
   .skill-card {
     padding: 1rem;
   }
+
   .skill-card .skill-certificate img {
     max-width: 100%;
+  }
+
+  .group-stats-header {
+    font-size: 1.8rem;
   }
 }
 
@@ -1006,21 +1095,41 @@ body.dark-mode .message.warning {
     font-size: 1rem;
     padding: 0.75rem;
   }
+
   .section-content h2 {
     font-size: 1.5rem;
   }
+
   .user-actions button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
+
   .skill-card .skill-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
+
   .skill-card .skill-actions {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .group-stats-header {
+    font-size: 1.5rem;
+  }
+
+  .stats-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .metric-box h4 {
+    font-size: 1rem;
   }
 }
 
@@ -1028,4 +1137,42 @@ body.dark-mode .message.warning {
   color: #e53e3e;
   font-weight: 500;
   text-align: center;
+}
+
+/* Group Statistics Section */
+.group-stats-header {
+  margin-top: 4rem; /* Increased margin for more separation */
+  border-top: 2px solid var(--accent-color);
+  padding-top: 2.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  position: relative;
+}
+
+body.dark-mode .group-stats-header {
+  border-top-color: var(--primary-color);
+  color: var(--accent-color);
+}
+
+.group-stats-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--accent-color);
+  border-radius: 2px;
+  transition: width var(--transition-speed) ease;
+}
+
+body.dark-mode .group-stats-header::after {
+  background: var(--primary-color);
+}
+
+.group-stats-header:hover::after {
+  width: 100px;
 }

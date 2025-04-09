@@ -16,6 +16,7 @@ const GroupsList = () => {
   const [reportDetails, setReportDetails] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [privacyFilter, setPrivacyFilter] = useState("all");
+  const [activeMenu, setActiveMenu] = useState("all"); // Track the active menu option
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
   const currentUserId = currentUser.id || currentUser._id;
@@ -37,9 +38,9 @@ const GroupsList = () => {
       setLoading(false);
 
       const membershipPromises = response.data.map((group) =>
-        axios.get(`http://localhost:5000/api/groups/${group._id}/membership`, {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        }).then((res) => res.data.isMember)
+          axios.get(`http://localhost:5000/api/groups/${group._id}/membership`, {
+            headers: { Authorization: `Bearer ${jwtToken}` },
+          }).then((res) => res.data.isMember)
       );
       const membershipResponses = await Promise.all(membershipPromises);
       const membershipStatus = {};
@@ -49,9 +50,9 @@ const GroupsList = () => {
       setMemberships(membershipStatus);
 
       const requestPromises = response.data.map((group) =>
-        axios.get(`http://localhost:5000/api/groups/${group._id}/requests`, {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        }).catch(() => ({ data: [] }))
+          axios.get(`http://localhost:5000/api/groups/${group._id}/requests`, {
+            headers: { Authorization: `Bearer ${jwtToken}` },
+          }).catch(() => ({ data: [] }))
       );
       const requestResponses = await Promise.all(requestPromises);
       const requestStatus = {};
@@ -111,25 +112,25 @@ const GroupsList = () => {
 
       if (privacy === "public") {
         const response = await axios.post(
-          `http://localhost:5000/api/groups/${groupId}/join`,
-          {},
-          { headers: { Authorization: `Bearer ${jwtToken}` } }
+            `http://localhost:5000/api/groups/${groupId}/join`,
+            {},
+            { headers: { Authorization: `Bearer ${jwtToken}` } }
         );
         setMemberships((prev) => ({ ...prev, [groupId]: true }));
         setGroups((prev) =>
-          prev.map((group) =>
-            group._id === groupId
-              ? { ...group, memberCount: response.data.group.memberCount }
-              : group
-          )
+            prev.map((group) =>
+                group._id === groupId
+                    ? { ...group, memberCount: response.data.group.memberCount }
+                    : group
+            )
         );
         setToastMessage("Joined group successfully!");
         navigate(`/groups/${groupId}`);
       } else if (privacy === "private" && !isPending) {
         await axios.post(
-          `http://localhost:5000/api/groups/${groupId}/request`,
-          {},
-          { headers: { Authorization: `Bearer ${jwtToken}` } }
+            `http://localhost:5000/api/groups/${groupId}/request`,
+            {},
+            { headers: { Authorization: `Bearer ${jwtToken}` } }
         );
         setRequests((prev) => ({ ...prev, [groupId]: { status: "pending" } }));
         setToastMessage("Join request sent successfully.");
@@ -145,17 +146,17 @@ const GroupsList = () => {
     const jwtToken = localStorage.getItem("jwtToken");
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/groups/${groupId}/leave`,
-        {},
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          `http://localhost:5000/api/groups/${groupId}/leave`,
+          {},
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       setMemberships((prev) => ({ ...prev, [groupId]: false }));
       setGroups((prev) =>
-        prev.map((group) =>
-          group._id === groupId
-            ? { ...group, memberCount: response.data.group.memberCount }
-            : group
-        )
+          prev.map((group) =>
+              group._id === groupId
+                  ? { ...group, memberCount: response.data.group.memberCount }
+                  : group
+          )
       );
       setRequests((prev) => {
         const newRequests = { ...prev };
@@ -173,14 +174,14 @@ const GroupsList = () => {
     const jwtToken = localStorage.getItem("jwtToken");
     const { groupId, type } = reportModal;
     const url =
-      type === "group"
-        ? `http://localhost:5000/api/groups/${groupId}/report`
-        : `http://localhost:5000/api/groups/posts/${groupId}/${reportModal.postId}/report`;
+        type === "group"
+            ? `http://localhost:5000/api/groups/${groupId}/report`
+            : `http://localhost:5000/api/groups/posts/${groupId}/${reportModal.postId}/report`;
     try {
       await axios.post(
-        url,
-        { reason: reportReason, details: reportDetails },
-        { headers: { Authorization: `Bearer ${jwtToken}` } }
+          url,
+          { reason: reportReason, details: reportDetails },
+          { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
       setToastMessage(`${type === "group" ? "Group" : "Post"} reported successfully.`);
       setReportModal({ open: false, groupId: null, type: null });
@@ -191,185 +192,204 @@ const GroupsList = () => {
     }
   };
 
-  const handleRecommendGroups = () => {
-    navigate('/ai-recommendation');
+  const handleMenuClick = (option) => {
+    setActiveMenu(option);
+    if (option === "forYou") {
+      navigate('/ai-recommendation');
+    }
   };
 
   const filteredGroups = groups.filter((group) =>
-    searchQuery
-      ? group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        group.description.toLowerCase().includes(searchQuery.toLowerCase())
-      : true
+      searchQuery
+          ? group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          group.description.toLowerCase().includes(searchQuery.toLowerCase())
+          : true
   ).filter((group) => (privacyFilter === "all" ? true : group.privacy === privacyFilter));
 
   if (loading) return <p>Loading groups...</p>;
   if (error) return <p className="group-form__error">{error}</p>;
 
   return (
-    <>
-      <Back title="Available Groups" />
-      <section className="group-section">
-        <div className="group-container">
-          <div className="group-controls">
-            <input
-              type="text"
-              placeholder="Search groups by name or description..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="group-search__input"
-            />
-            <select
-              value={privacyFilter}
-              onChange={(e) => setPrivacyFilter(e.target.value)}
-              className="group-filter__select"
-            >
-              <option value="all">All Privacy</option>
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-            </select>
-            <button className="group-button ai-recommend-btn" onClick={handleRecommendGroups}>
-              Recommend with AI
-            </button>
-          </div>
-          <div className="group-grid">
-            {filteredGroups.map((group) => {
-              const isOwner = group.createdBy?._id === currentUserId || group.createdBy?.id === currentUserId;
-              const isPending = requests[group._id]?.status === "pending";
-              const isMember = memberships[group._id];
+      <>
+        <Back title="Available Groups" />
+        <section className="group-section">
+          <div className="group-container">
+            {/* Add Menu */}
+            <div className="group-menu">
+              <button
+                  className={`group-menu__item ${activeMenu === "all" ? "group-menu__item--active" : ""}`}
+                  onClick={() => handleMenuClick("all")}
+              >
+                All
+              </button>
+              <button
+                  className={`group-menu__item ${activeMenu === "forYou" ? "group-menu__item--active" : ""}`}
+                  onClick={() => handleMenuClick("forYou")}
+              >
+                For You
+              </button>
+            </div>
 
-              return (
-                <div className="group-card" key={group._id}>
-                  <div className="group-card__content">
-                    <h1 className="group-card__title">{group.name}</h1>
-                    <p className="group-card__description">{group.description}</p>
-                    <span className="group-card__meta">
+            <div className="group-controls">
+              <input
+                  type="text"
+                  placeholder="Search groups by name or description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="group-search__input"
+              />
+              <select
+                  value={privacyFilter}
+                  onChange={(e) => setPrivacyFilter(e.target.value)}
+                  className="group-filter__select"
+              >
+                <option value="all">All Privacy</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+              {/* Removed the "Recommend with AI" button */}
+            </div>
+            <div className="group-grid">
+              {/* "Create Group" card always first */}
+              <div className="group-card group-card--create">
+                <div className="group-card__content">
+                  <h1 className="group-card__title">Create a New Group</h1>
+                  <p className="group-card__description">Start your own community!</p>
+                  <button className="group-button" onClick={handleCreateGroup}>
+                    Create Group
+                  </button>
+                </div>
+              </div>
+              {/* Other groups */}
+              {filteredGroups.map((group) => {
+                const isOwner = group.createdBy?._id === currentUserId || group.createdBy?.id === currentUserId;
+                const isPending = requests[group._id]?.status === "pending";
+                const isMember = memberships[group._id];
+
+                return (
+                    <div className="group-card" key={group._id}>
+                      <div className="group-card__content">
+                        <h1 className="group-card__title">{group.name}</h1>
+                        <p className="group-card__description">{group.description}</p>
+                        <span className="group-card__meta">
                       Privacy: <label>{group.privacy}</label>
                     </span>
-                    <span className="group-card__meta">
+                        <span className="group-card__meta">
                       Created By: <label>{group.createdBy?.username || "Unknown"}</label>
                     </span>
-                    <span className="group-card__meta">
+                        <span className="group-card__meta">
                       Members: <label>{group.memberCount || 0}</label>
                     </span>
-                    <div className="group-card__actions">
-                      {isOwner ? (
-                        <>
-                          <button className="group-button" onClick={() => handleViewPosts(group._id)}>
-                            View Posts
-                          </button>
-                          <button className="group-button" onClick={() => handleViewRequests(group._id)}>
-                            View Requests
-                          </button>
-                          <button className="group-button" onClick={() => handleViewMembers(group._id)}>
-                            View Members
-                          </button>
-                          <button className="group-button" onClick={() => handleEditGroup(group._id)}>
-                            Edit Group
-                          </button>
-                          <button
-                            className="group-button group-card__delete-btn"
-                            onClick={() => handleDeleteGroup(group._id)}
-                          >
-                            Delete Group
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {isMember ? (
-                            <>
-                              <button className="group-button" onClick={() => handleViewPosts(group._id)}>
-                                View Posts
-                              </button>
-                              <button
-                                className="group-button group-card__leave-btn"
-                                onClick={() => handleLeaveGroup(group._id)}
-                              >
-                                Leave Group
-                              </button>
-                            </>
+                        <div className="group-card__actions">
+                          {isOwner ? (
+                              <>
+                                <button className="group-button" onClick={() => handleViewPosts(group._id)}>
+                                  View Posts
+                                </button>
+                                <button className="group-button" onClick={() => handleViewRequests(group._id)}>
+                                  View Requests
+                                </button>
+                                <button className="group-button" onClick={() => handleViewMembers(group._id)}>
+                                  View Members
+                                </button>
+                                <button className="group-button" onClick={() => handleEditGroup(group._id)}>
+                                  Edit Group
+                                </button>
+                                <button
+                                    className="group-button group-card__delete-btn"
+                                    onClick={() => handleDeleteGroup(group._id)}
+                                >
+                                  Delete Group
+                                </button>
+                              </>
                           ) : (
-                            <button
-                              className="group-button"
-                              onClick={() => handleJoinGroup(group._id, group.privacy)}
-                              disabled={isPending}
-                            >
-                              {isPending ? "Request Pending" : "Join Group"}
-                            </button>
+                              <>
+                                {isMember ? (
+                                    <>
+                                      <button className="group-button" onClick={() => handleViewPosts(group._id)}>
+                                        View Posts
+                                      </button>
+                                      <button
+                                          className="group-button group-card__leave-btn"
+                                          onClick={() => handleLeaveGroup(group._id)}
+                                      >
+                                        Leave Group
+                                      </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        className="group-button"
+                                        onClick={() => handleJoinGroup(group._id, group.privacy)}
+                                        disabled={isPending}
+                                    >
+                                      {isPending ? "Request Pending" : "Join Group"}
+                                    </button>
+                                )}
+                                <button
+                                    className="group-button group-card__report-btn"
+                                    onClick={() => setReportModal({ open: true, groupId: group._id, type: "group" })}
+                                >
+                                  Report Group
+                                </button>
+                              </>
                           )}
-                          <button
-                            className="group-button group-card__report-btn"
-                            onClick={() => setReportModal({ open: true, groupId: group._id, type: "group" })}
-                          >
-                            Report Group
-                          </button>
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="group-card group-card--create">
-              <div className="group-card__content">
-                <h1 className="group-card__title">Create a New Group</h1>
-                <p className="group-card__description">Start your own community!</p>
-                <button className="group-button" onClick={handleCreateGroup}>
-                  Create Group
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
-      {reportModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Report {reportModal.type === "group" ? "Group" : "Post"}</h2>
-            <form onSubmit={handleReportSubmit} className="group-form">
-              <div className="group-form__group">
-                <label htmlFor="reason">Reason</label>
-                <select
-                  id="reason"
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  <option value="Inappropriate Content">Inappropriate Content</option>
-                  <option value="Spam">Spam</option>
-                  <option value="Off-Topic">Off-Topic</option>
-                  <option value="Harassment">Harassment</option>
-                  <option value="Other">Other</option>
-                </select>
+        </section>
+        {reportModal.open && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <h2>Report {reportModal.type === "group" ? "Group" : "Post"}</h2>
+                <form onSubmit={handleReportSubmit} className="group-form">
+                  <div className="group-form__group">
+                    <label htmlFor="reason">Reason</label>
+                    <select
+                        id="reason"
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        required
+                    >
+                      <option value="">Select a reason</option>
+                      <option value="Inappropriate Content">Inappropriate Content</option>
+                      <option value="Spam">Spam</option>
+                      <option value="Off-Topic">Off-Topic</option>
+                      <option value="Harassment">Harassment</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="group-form__group">
+                    <label htmlFor="details">Details (optional)</label>
+                    <textarea
+                        id="details"
+                        value={reportDetails}
+                        onChange={(e) => setReportDetails(e.target.value)}
+                        placeholder="Provide more details..."
+                        maxLength="500"
+                    />
+                  </div>
+                  <div className="modal-actions">
+                    <button type="submit" className="group-button">
+                      Submit Report
+                    </button>
+                    <button
+                        type="button"
+                        className="group-button group-card__delete-btn"
+                        onClick={() => setReportModal({ open: false, groupId: null, type: null })}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="group-form__group">
-                <label htmlFor="details">Details (optional)</label>
-                <textarea
-                  id="details"
-                  value={reportDetails}
-                  onChange={(e) => setReportDetails(e.target.value)}
-                  placeholder="Provide more details..."
-                  maxLength="500"
-                />
-              </div>
-              <div className="modal-actions">
-                <button type="submit" className="group-button">
-                  Submit Report
-                </button>
-                <button
-                  type="button"
-                  className="group-button group-card__delete-btn"
-                  onClick={() => setReportModal({ open: false, groupId: null, type: null })}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {toastMessage && <div className="toast-message">{toastMessage}</div>}
-    </>
+            </div>
+        )}
+        {toastMessage && <div className="toast-message">{toastMessage}</div>}
+      </>
   );
 };
 

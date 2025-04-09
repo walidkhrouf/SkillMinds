@@ -58,6 +58,104 @@ exports.addSkill = async (req, res) => {
   }
 };
 
+exports.getGroupStats = async (req, res) => {
+  try {
+    // Total number of groups
+    const totalGroups = await Group.countDocuments();
+
+    // Total number of group posts
+    const totalPosts = await GroupPost.countDocuments();
+
+    // Total number of comments, likes, and dislikes
+    const totalComments = await GroupPostComment.countDocuments();
+    const totalLikes = await GroupPostLike.countDocuments();
+    const totalDislikes = await GroupPostDislike.countDocuments();
+
+    // Group activity over time (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const groupActivityOverTime = await GroupPost.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          posts: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Most active groups (based on posts)
+    const mostActiveGroups = await GroupPost.aggregate([
+      {
+        $group: {
+          _id: "$groupId",
+          postCount: { $sum: 1 },
+        },
+      },
+      { $sort: { postCount: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "Groupe",
+          localField: "_id",
+          foreignField: "_id",
+          as: "group",
+        },
+      },
+      { $unwind: "$group" },
+      {
+        $project: {
+          name: "$group.name",
+          postCount: 1,
+        },
+      },
+    ]);
+
+    // Group privacy distribution
+    const privacyDistribution = await Group.aggregate([
+      {
+        $group: {
+          _id: "$privacy",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          name: "$_id",
+          value: "$count",
+        },
+      },
+    ]);
+
+    // Average engagement per post (likes + comments / total posts)
+    const avgEngagementPerPost = totalPosts > 0 ? (totalLikes + totalComments) / totalPosts : 0;
+
+    // Top groups by member count
+    const topGroupsByMembers = await Group.find()
+        .sort({ memberCount: -1 })
+        .limit(5)
+        .select("name memberCount")
+        .lean();
+
+    res.status(200).json({
+      totalGroups,
+      totalPosts,
+      totalComments,
+      totalLikes,
+      totalDislikes,
+      groupActivityOverTime,
+      mostActiveGroups,
+      privacyDistribution,
+      avgEngagementPerPost: parseFloat(avgEngagementPerPost.toFixed(2)),
+      topGroupsByMembers,
+    });
+  } catch (error) {
+    console.error("Error fetching group stats:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
 exports.getSkillCategories = (req, res) => {
   try {
     const categories = Skill.schema.path('category').options.enum;

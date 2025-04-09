@@ -32,6 +32,9 @@ const {
   leaveGroup,
   checkMembership,
   recommendGroups,
+  getGroupById,
+    reportComment
+
 } = require("../Controllers/GestionGroupeController");
 
 const storage = multer.memoryStorage();
@@ -64,6 +67,8 @@ const authenticateToken = (req, res, next) => {
 };
 
 router.get("/all", authenticateToken, getAllGroups);
+router.get("/recommend", authenticateToken, recommendGroups);
+router.post("/posts/:groupId/:postId/comment/:commentId/report", authenticateToken, reportComment);
 router.post("/create", authenticateToken, createGroup);
 router.delete("/:groupId", authenticateToken, deleteGroup);
 router.post("/posts/create", authenticateToken, upload, createGroupPost);
@@ -72,6 +77,7 @@ router.get("/posts/:groupId/:postId", authenticateToken, getGroupPostById);
 router.post("/posts/:groupId/:postId/report", authenticateToken, reportPost);
 router.delete("/posts/:groupId/:postId", authenticateToken, deleteGroupPost);
 router.get("/media/:fileId", getMediaFile);
+router.get("/:groupId",authenticateToken, getGroupById);
 router.post("/posts/:groupId/:postId/comment", authenticateToken, createGroupPostComment);
 router.delete("/posts/:groupId/:postId/comment/:commentId", authenticateToken, deleteGroupPostComment);
 router.put("/posts/:groupId/:postId/comment/:commentId", authenticateToken, editGroupPostComment);
@@ -91,6 +97,5 @@ router.put("/:groupId/request/:requestId/reject", authenticateToken, rejectGroup
 router.get("/:groupId/members", authenticateToken, getGroupMembers);
 router.delete("/:groupId/members/:memberId", authenticateToken, removeGroupMember);
 
-router.get("/recommend", authenticateToken, recommendGroups);
 
 module.exports = router;
