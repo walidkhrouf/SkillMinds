@@ -2157,12 +2157,6 @@ const getSkillNames = (skills) => {
   };
 
 
-const handleEditJob = (jobId) => {
-  const jobToEdit = jobOffers.find((job) => job._id === jobId);
-  if (jobToEdit) {
-    setSelectedJob(jobToEdit); // Vous pouvez ouvrir un formulaire d'édition avec les détails du job
-  }
-};
 
 
 
@@ -2521,7 +2515,6 @@ const handleEditJob = (jobId) => {
                                 <p><strong>Posted By:</strong> {selectedJob.postedBy?.username || 'N/A'}</p>
                                 <p><strong>Status:</strong> {selectedJob.status || 'N/A'}</p>
                                 <div className="job-actions">
-          <button onClick={() => handleEditJob(selectedJob._id)}>✏️ Edit</button>
           <button onClick={() => handleDeleteJob(selectedJob._id)}>🗑 Delete</button>
         </div>
 
