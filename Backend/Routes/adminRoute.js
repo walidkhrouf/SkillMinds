@@ -18,4 +18,5 @@ router.put("/groups/:groupId", adminController.authenticateAdmin, adminControlle
 router.delete("/groups/:groupId", adminController.authenticateAdmin, adminController.deleteGroupAdmin);
 router.delete("/groups/:groupId/posts/:postId", adminController.authenticateAdmin, adminController.deleteGroupPostAdmin);
 
+
 module.exports = router;

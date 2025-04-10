@@ -32,6 +32,14 @@ import CreateCourse from "./components/Courses/CreateCourse.jsx";
 import CourseDetails from "./components/Courses/CourseDetails.jsx";
 import AllCourses from "./components/Courses/AllCourses.jsx";
 import UpdateCourse from "./components/Courses/UpdateCourse.jsx";
+import Recruitement from "./components/GestionRecruitement/Recruitement.jsx";
+import AllJobApplications from "./components/GestionRecruitement/AllJobApplication.jsx";
+import AllJobOffers from "./components/GestionRecruitement/AllJobOffers.jsx";
+import CreateJobOffer from "./components/GestionRecruitement/CreateJobOffer.jsx";
+import ApplyToJob from "./components/GestionRecruitement/ApplyToJob.jsx";
+import EditJobOffer from "./components/GestionRecruitement/EditJobOffer.jsx";
+import JobOfferDetails from "./components/GestionRecruitement/JobOfferDetails.jsx";
+import RecommendedJobs from "./components/GestionRecruitement/RecommendedJobs.jsx";
 
 
 import ActivityDetails from "./components/activities/ActivityDetails.jsx";
@@ -102,6 +110,15 @@ const AppContent = () => {
         />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/firstchoose" element={<SkillsList />} />
+
+        <Route path="/Recruitement" element={<Recruitement/>} />
+        <Route path="/all-job-offers" element={<AllJobOffers />} />
+        <Route path="/all-job-applications" element={<AllJobApplications />} />
+        <Route path="/create-job-offer" element={<CreateJobOffer />} /> {/* Route pour créer une offre */}
+        <Route path="/apply-to-job/:jobId" element={<ApplyToJob />} /> {/* Route pour postuler */}
+        <Route path="/edit-job-offer/:jobId" element={<EditJobOffer />} />
+        <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
+        <Route path="/recommended-jobs" element={<RecommendedJobs />} />
       </Routes>
       {!hideLayout && <Footer />}
       <ToastContainer 

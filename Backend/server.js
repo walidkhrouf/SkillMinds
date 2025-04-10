@@ -14,6 +14,8 @@ const fileRoutes = require("./Routes/fileRoute");
 const notificationRoutes = require("./Routes/NotificationRoute");
 const coursesRoutes = require('./Routes/CoursesRoute');
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
+const GestionRecruitementRoute = require("./Routes/GestionRecruitementRoute"); // Import des routes de gestion du recrutement
+
 const User = require("./models/User");
 require("dotenv").config({ path: __dirname + "/.env" });
 require("./config/databaseConnection");
@@ -154,10 +156,12 @@ app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/recruitment", GestionRecruitementRoute); // Routes de gestion du recrutement
 app.use("/api/groups", groupeRoutes);
 app.use("/api/events", eventsRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use("/uploads", express.static("uploads"));
+
 app.disable("etag");
 
 // Authentication Routes

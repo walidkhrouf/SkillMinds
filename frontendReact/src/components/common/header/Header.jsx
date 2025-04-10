@@ -182,7 +182,7 @@ const Header = () => {
                 </a>
               </li>
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                <a href="/all-job-offers" className={({ isActive }) => (isActive ? "active" : "")}>
                   Recruitment
                 </a>
               </li>

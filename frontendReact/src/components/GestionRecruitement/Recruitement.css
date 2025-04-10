@@ -1,0 +1,1494 @@
+
+/* ================= Recruitement Section ================= */
+.recruitement {
+  padding: 50px 0;
+  background-color:rgb(232, 222, 215);
+}
+
+.recruitement .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* ================= View More Button ================= */
+.viewmore {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #a47f18;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: 0.3s;
+  height: 50px;
+}
+
+.viewmore:hover {
+  background-color: #8a6c1a;
+}
+
+/* ================= Job Offer Card ================= */
+.job-offers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.job-offer-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+  width: 200px;
+}
+
+.job-offer-card:hover {
+  transform: translateY(-5px);
+}
+
+.job-offer-card h3 {
+  font-size: 20px;
+  color: #333;
+}
+
+.job-offer-card h1 {
+  font-size: 30px;
+  color: #333;
+}
+.job-offer-card p {
+  margin: 5px 0;
+  color: #666;
+}
+
+/* ================= Actions (Edit & Delete) ================= */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.edit-button,
+.delete-button {
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+.edit-button {
+  background-color: #4CAF50;
+}
+
+.edit-button:hover {
+  background-color: #388E3C;
+}
+
+.delete-button {
+  background-color: #f44336;
+}
+
+.delete-button:hover {
+  background-color: #D32F2F;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Styles pour la barre de recherche */
+.search-bar {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap; /* Permet un affichage réactif */
+}
+
+/* Styles pour le sélecteur de filtrage */
+.filter-select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+/* Styles pour le champ de saisie */
+.search-input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 300px;
+  max-width: 100%;
+}
+
+/* Styles pour le bouton de réinitialisation */
+.clear-button {
+  padding: 10px 20px;
+  background-color: #a47f18;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.clear-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.clear-button:hover:not(:disabled) {
+  background-color: #8a6c1a;
+}
+
+/* Styles pour les résultats vides */
+.no-results {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  margin-top: 20px;
+}
+/* ================= Horizontal Job Cards (Latest Jobs) ================= */
+.horizontal-cards {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.horizontal-cards .job-offer-card {
+  min-width: 300px;
+}
+
+/* ================= Responsive Design ================= */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .search-input, .filter-select {
+    width: 100%;
+  }
+
+  .job-offers-list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .horizontal-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+/* Conteneur principal du formulaire */
+.create-job-offer {
+  width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Titre du formulaire */
+.create-job-offer h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: rgb(78, 49, 6);
+  margin-bottom: 20px;
+}
+
+/* Conteneur des champs du formulaire */
+.create-job-offer form div {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+/* Labels des champs */
+.create-job-offer label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Champs de saisie */
+.create-job-offer input[type="text"],
+.create-job-offer textarea,
+.create-job-offer select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.create-job-offer input[type="text"]:focus,
+.create-job-offer textarea:focus,
+.create-job-offer select:focus {
+  border-color: #a47f18;
+  box-shadow: 0 0 5px rgba(164, 127, 24, 0.5);
+  outline: none;
+}
+
+
+
+/* Zone de texte (textarea) */
+.create-job-offer textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Bouton de soumission */
+.create-job-offer button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #a47f18;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.create-job-offer button[type="submit"]:hover {
+  background-color: #8a6c1a;
+}
+
+/* Style pour les messages d'erreur ou de succès (optionnel) */
+.create-job-offer .message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.create-job-offer .message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.create-job-offer .message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+
+
+
+/* src/components/Recruitement.css ou un fichier CSS dédié */
+
+/* Conteneur principal du formulaire */
+.apply-to-job {
+  width: 600px;
+  height: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Titre du formulaire */
+.apply-to-job h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Conteneur des champs du formulaire */
+.job-offer-form form div {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+/* Labels des champs */
+.job-offer-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Champs de saisie */
+.job-offer-form input[type="text"],
+.job-offer-form select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.job-offer-form input[type="text"]:focus,
+.job-offer-form select:focus {
+  border-color: #a47f18;
+  box-shadow: 0 0 5px rgba(164, 127, 24, 0.5);
+  outline: none;
+}
+
+/* Bouton de soumission */
+.job-offer-form button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #155724;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.job-offer-form button[type="submit"]:hover {
+  background-color: #8a6c1a;
+}
+
+/* Bouton annuler */
+.job-offer-form .cancel-button {
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #dc3545;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.job-offer-form .cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Conteneur principal du formulaire */
+.job-offer-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 500px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.job-offer-form h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Form Actions */
+.job-offer-form .form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.job-offer-form .form-actions button {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+
+/* Container principal */
+.apply-container {
+  width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Titre */
+.apply-container h2 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+/* Message d'erreur */
+.error-message {
+  color: #ff4d4d;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Message de succès */
+.success-message {
+  color: #28a745;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Formulaire */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+form label {
+  margin-bottom: 8px;
+}
+
+/* Zone de texte pour la lettre de motivation */
+form textarea {
+  height: 150px;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+/* Champ de fichier pour le CV */
+form input[type="file"] {
+  margin-bottom: 20px;
+}
+
+/* Bouton de soumission */
+form button {
+  background-color: #a47f18;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+form button:hover {
+  background-color: #a47f18;
+}
+
+
+
+
+
+.job-page-layout {
+  display: flex;
+  gap: 30px;
+  padding: 40px;
+  background-color:rgb(237, 237, 237);
+}
+
+.job-filters {
+  width: 350px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+  overflow-y: auto;
+  max-height: 83vh;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
+
+}
+
+.job-filters h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 20px 0 10px;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+.job-filters label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.job-results {
+  flex: 1;
+}
+
+.job-offer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.job-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+}
+
+.job-card h2 {
+  margin-bottom: 10px;
+  font-size: 22px;
+  color: rgb(78, 49, 6);
+}
+.job-card h4 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: rgba(164, 127, 24, 0.5);
+}
+
+.job-card p {
+  margin: 5px 0;
+  color: #555;
+  font-size: 16px;
+}
+
+.job-card-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.create-button {
+  margin-top: 30px;
+  display: inline-block;
+}
+
+ 
+
+@media screen and (max-width: 768px) {
+  .job-page-layout {
+    flex-direction: column;
+  }
+
+  .job-filters {
+    width: 100%;
+    position: static;
+    max-height: none;
+    color:white;
+  }
+}
+
+
+.job-count {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: left;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  
+}
+
+.pagination li {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #555;
+  background-color: white;
+}
+
+.pagination li.active {
+  background-color: rgba(164, 127, 24, 0.5);
+  color: white;
+  font-weight: bold;
+  border-color: transparent;
+}
+
+.pagination li.disabled {
+  color: #aaa;
+  cursor: default;
+}
+
+
+.top-search-bar {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.search-text {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+.search-select {
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  background-color: #f9f9f9;
+}
+
+.search-btn {
+  background-color:rgb(78, 49, 6);
+  color: white;
+  padding: 10px 20px;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.search-btn:hover:not(:disabled) {
+  background-color:rgba(164, 127, 24, 0.5);
+}
+
+.search-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+
+
+
+
+.job-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sub-actions {
+  display: flex;
+  gap: 10px;
+}
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: 0;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: 0;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+.job-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.job-location img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.job-title-link h2 {
+  color: rgb(78, 49, 6);
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.job-title-link h2:hover {
+  color: rgba(164, 127, 24, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  
+}
+
+
+.signup-container1 {
+  display: flex;
+  width: 1330px;
+  margin: 50px auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  align-items: stretch;
+  height: 1150px;
+}
+
+
+.left-box1 {
+  padding: 50px;
+  border-right: 1px solid #eee;
+  flex: 1;
+  width: 900px;
+}
+
+.right-box1 {
+  flex: 1;
+  background-image: url("/public/images/bgfinale.jpg");
+  color: white;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+
+}
+
+
+
+
+
+
+.signup-container2 {
+  display: flex;
+  width: 1300px;
+  margin: 50px auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  align-items: stretch;
+  height: 1000px;
+}
+
+
+.left-box2 {
+  padding: 50px;
+  border-right: 1px solid #eee;
+  flex: 1;
+  width: 900px;
+}
+
+.right-box2 {
+  flex: 1;
+  background-image: url("/public/images/bgfinale.jpg");
+  color: white;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+
+}
+
+
+
+
+.signup-container3 {
+  display: flex;
+  width: 1200px;
+  margin: 50px auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  align-items: stretch;
+  height: 480px;
+}
+
+
+.left-box3 {
+  padding: 50px;
+  border-right: 1px solid #eee;
+  flex: 1;
+  width: 900px;
+}
+
+.right-box3 {
+  flex: 1;
+  background-image: url("/public/images/bgfinale.jpg");
+  color: white;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+
+}
+
+.pill-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pill {
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background-color: #a47f18;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease-in-out;
+}
+
+.pill:hover {
+  background-color: #ddd;
+}
+
+.pill.selected {
+  background-color: rgb(78, 49, 6);
+  color: white;
+  border-color: #a47f18;
+}
+
+
+
+
+
+
+/* 🌟 Recommended Jobs Page Styles */
+
+.job-results {
+  max-width: 1250px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color:rgb(237, 237, 237);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.job-results h2 {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+}
+
+.job-offer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.job-card {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.job-title-link {
+  text-decoration: none;
+  color: #1a202c;
+}
+
+.job-title-link h2 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  color:rgb(78, 49, 6);
+  transition: color 0.2s ease;
+}
+
+.job-title-link h2:hover {
+  color: #b7791f;
+}
+
+.job-location {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #4a5568;
+}
+
+.job-location img {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+.job-card p {
+  margin: 6px 0;
+  color: #555;
+  font-size: 15px;
+}
+
+.job-card strong {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.viewmore {
+  display: inline-block;
+  padding: 8px 14px;
+  margin-top: 10px;
+  background-color: #a47f18;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.viewmore:hover {
+  background-color: #80551b;
+}
+
+
+
+.recommended-jobs-container {
+  padding: 40px;
+  background-color: #f9f9f9;
+}
+
+.recommended-title {
+  text-align: center;
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.recommended-empty {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
+
+.recommended-job-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+
+.recommended-job-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  min-width: 300px;
+  flex: 0 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.recommended-job-title h3 {
+  color: #2d2d2d;
+  margin-bottom: 10px;
+}
+
+.recommended-job-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.recommended-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.recommended-btn {
+  padding: 8px 14px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: background 0.2s ease-in-out;
+}
+
+.recommended-btn.view {
+  background-color: #a47f18;
+  color: white;
+}
+
+.recommended-btn.view:hover {
+  background-color: #8a6912;
+}
+
+.recommended-btn.apply {
+  background-color: #006644;
+  color: white;
+}
+
+.recommended-btn.apply:hover {
+  background-color: #004d33;
+}
+
+.recommended-timestamp {
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  font-size: 13px;
+  color: green;
+  
+}
+.recommended-job-location img {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+
+.job-card p, .job-card h2, .job-card h4, .job-card div {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+
+
+
+/* === Dark Mode for General Containers === */
+body.dark-mode .job-page-layout,
+body.dark-mode .job-filters,
+body.dark-mode .job-results,
+body.dark-mode .job-card,
+body.dark-mode .apply-to-job,
+body.dark-mode .notification-dropdown,
+body.dark-mode .profile-dropdown,
+body.dark-mode .job-offer-form {
+  background-color: #181818;
+  color: #e0e0e0;
+}
+
+body.dark-mode .job-card:hover,
+body.dark-mode .apply-to-job:hover,
+body.dark-mode .job-offer-form:hover {
+  background-color: #252525;
+}
+
+/* === Dark Mode for Text Elements === */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode label {
+  color: #e0e0e0;
+}
+
+/* === Dark Mode for Inputs and Buttons === */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  background-color: #444;
+  border-color: #666;
+}
+
+body.dark-mode .viewmore,
+body.dark-mode .create-button,
+body.dark-mode .search-btn,
+body.dark-mode .edit-button,
+body.dark-mode .delete-button,
+body.dark-mode .logout-btn,
+body.dark-mode .certificate-btn {
+  background-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .viewmore:hover,
+body.dark-mode .search-btn:hover,
+body.dark-mode .edit-button:hover,
+body.dark-mode .delete-button:hover,
+body.dark-mode .logout-btn:hover,
+body.dark-mode .certificate-btn:hover {
+  background-color: #555;
+}
+
+/* === Dark Mode for Notifications === */
+body.dark-mode .notification-item {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .notification-item.unread {
+  background-color: #3a3a3a;
+}
+
+body.dark-mode .notification-item:hover {
+  background-color: #444;
+}
+
+/* === Dark Mode for Pagination === */
+body.dark-mode .pagination li {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .pagination li:hover {
+  background-color: #444;
+}
+
+body.dark-mode .pagination li.active {
+  background-color: #555;
+}
+
+/* === Dark Mode for Search Bar === */
+body.dark-mode .search-text,
+body.dark-mode .search-select {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .search-btn {
+  background-color: #444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .search-btn:hover {
+  background-color: #555;
+}
+
+/* === Dark Mode for Profile & Notification === */
+body.dark-mode .profile-photo {
+  border: 2px solid #555;
+}
+
+body.dark-mode .profile-details,
+body.dark-mode .notification-dropdown {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+/* === Dark Mode for Form Messages === */
+body.dark-mode .message.success {
+  background-color: #155724;
+  color: #d4edda;
+}
+
+body.dark-mode .message.error {
+  background-color: #721c24;
+  color: #f8d7da;
+}
+/* Dark Mode Adjustments for Create Job Offer */
+body.dark-mode .create-job-offer,
+body.dark-mode .create-job-offer input[type="text"],
+body.dark-mode .create-job-offer textarea,
+body.dark-mode .create-job-offer select {
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
+}
+
+body.dark-mode .create-job-offer input[type="text"]::placeholder,
+body.dark-mode .create-job-offer textarea::placeholder {
+  color: #bbb;
+}
+
+body.dark-mode .create-job-offer h2 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .create-job-offer label {
+  color: #ccc;
+}
+
+body.dark-mode .create-job-offer button[type="submit"] {
+  background-color: #555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .create-job-offer button[type="submit"]:hover {
+  background-color: #666;
+}
+
+body.dark-mode .create-job-offer button[type="submit"]:active {
+  background-color: #777;
+}
+
+/* Improved Readability for Input Fields */
+body.dark-mode .create-job-offer input[type="text"]:focus,
+body.dark-mode .create-job-offer textarea:focus,
+body.dark-mode .create-job-offer select:focus {
+  background-color: #444;
+  color: #fff;
+  border-color: #777;
+}
+
+/* Adjustments for the Right Box (Background Image) */
+body.dark-mode .right-box1, 
+body.dark-mode .right-box2, 
+body.dark-mode .right-box3 {
+  background-color: #222;
+}
+
+
+/* Responsive Design for Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .signup-container1 {
+    flex-direction: column;
+    width: 90%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .left-box1, .right-box1 {
+    width: 100%;
+    padding: 30px;
+  }
+
+  .left-box1 {
+    height: auto;
+  }
+
+  .right-box1 {
+    display: block;
+    background-size: cover;
+  }
+
+  .create-job-offer {
+    width: 100%;
+    margin: 0;
+  }
+
+  .create-job-offer h2 {
+    font-size: 26px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    font-size: 18px;
+  }
+
+  .form-group input, 
+  .form-group textarea, 
+  .form-group select {
+    width: 100%;
+    font-size: 18px;
+    padding: 10px;
+  }
+
+  .pill-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .pill {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .auth-btn {
+    width: 100%;
+    font-size: 20px;
+    padding: 14px;
+  }
+
+  .message {
+    font-size: 16px;
+  }
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  .signup-container1 {
+    flex-direction: column;
+    width: 100%;
+    margin: 20px auto;
+    padding: 10px;
+  }
+
+  .left-box1, .right-box1 {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .left-box1 {
+    height: auto;
+  }
+
+  .right-box1 {
+    display: none; /* Hide right box on mobile */
+  }
+
+  .create-job-offer {
+    width: 100%;
+    margin: 0;
+  }
+
+  .create-job-offer h2 {
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 16px;
+  }
+
+  .form-group input, 
+  .form-group textarea, 
+  .form-group select {
+    width: 100%;
+    font-size: 16px;
+    padding: 8px;
+  }
+
+  .pill-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .pill {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .auth-btn {
+    width: 100%;
+    font-size: 18px;
+    padding: 12px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+}
+
+
+.weather-right {
+  display: flex;
+  padding-left: 30px; /* espace entre texte et bord */
+}
+
+.job-offer-intro {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  padding: 30px 150px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.job-offer-text h2 {
+  font-size: 2.5rem;
+  
+  line-height: 1.3;
+  color: #3e2b14;
+  font-family: 'Georgia', serif;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.job-offer-text h2 span {
+  color: #af7f3e;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.job-offer-image img {
+  max-width: 400px;
+  border-radius: 20px;
+  object-fit: cover;
+}
