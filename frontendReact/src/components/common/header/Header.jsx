@@ -181,12 +181,22 @@ const Header = () => {
                   Events
                 </a>
               </li>
+
+              <li>
+                
+                <NavLink to="/tutorials" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Tutorials
+                </NavLink>
+                
+              </li>
+
               <li>
                 <a href="/all-job-offers" className={({ isActive }) => (isActive ? "active" : "")}>
                   Recruitment
                 </a>
               </li>
               <li>
+
                 ||
               </li>
               {currentUser?.role === "admin" && (

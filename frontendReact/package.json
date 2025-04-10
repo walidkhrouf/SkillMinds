@@ -15,6 +15,7 @@
     "@reduxjs/toolkit": "^2.6.0",
     "@stripe/react-stripe-js": "^3.3.0",
     "@stripe/stripe-js": "^5.10.0",
+    "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.7.9",
     "country-flag-icons": "^1.5.18",
     "country-list": "^2.3.0",

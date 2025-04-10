@@ -40,7 +40,9 @@ import ApplyToJob from "./components/GestionRecruitement/ApplyToJob.jsx";
 import EditJobOffer from "./components/GestionRecruitement/EditJobOffer.jsx";
 import JobOfferDetails from "./components/GestionRecruitement/JobOfferDetails.jsx";
 import RecommendedJobs from "./components/GestionRecruitement/RecommendedJobs.jsx";
-
+import Tutorials from "./components/Gestion_tutorial/Tutorials.jsx";
+import CreateTutorial from "./components/Gestion_tutorial/CreateTutorial.jsx";
+import TutorialDetail from "./components/Gestion_tutorial/TutorialDetail.jsx";
 
 import ActivityDetails from "./components/activities/ActivityDetails.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -100,6 +102,9 @@ const AppContent = () => {
         <Route path="/add-activity" element={<AddActivity />} />
         <Route path="/update-activity/:id" element={<UpdateActivity />} />
         <Route path="/activity/:id" element={<ActivityDetails />} />
+        <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/tutorials/create" element={<CreateTutorial />} />
+        <Route path="/tutorials/:tutorialId" element={<TutorialDetail />} />
         <Route
           path="/admin"
           element={

@@ -15,6 +15,7 @@ const notificationRoutes = require("./Routes/NotificationRoute");
 const coursesRoutes = require('./Routes/CoursesRoute');
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
 const GestionRecruitementRoute = require("./Routes/GestionRecruitementRoute"); // Import des routes de gestion du recrutement
+const tutorialRoutes = require("./Routes/tutorialRoute");
 
 const User = require("./models/User");
 require("dotenv").config({ path: __dirname + "/.env" });
@@ -153,6 +154,7 @@ passport.deserializeUser(async (id, done) => {
 
 // Routes
 app.use("/api/users", require("./Routes/UserRoute"));
+app.use("/api/tutorials", tutorialRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/notifications", notificationRoutes);

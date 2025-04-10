@@ -194,28 +194,25 @@ const updateJobOffer = async (req, res) => {
 
 const deleteJobOffer = async (req, res) => {
   try {
-    const { id } = req.params;
-    const role = req.query.role; // Expect role from query parameter
-
-    if (role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can delete job offers' });
+    const currentUserId = req.query.userId;
+    const jobOffer = await JobOffer.findById(req.params.id);
+    if (!jobOffer) return res.status(404).json({ message: 'Job offer not found' });
+    if (jobOffer.postedBy.toString() !== currentUserId) {
+      return res.status(403).json({ message: 'You can only delete your own job offers' });
     }
 
-    const jobOffer = await JobOffer.findByIdAndDelete(id);
-    if (!jobOffer) {
-      return res.status(404).json({ message: 'Job offer not found' });
-    }
+    await JobOffer.findByIdAndDelete(req.params.id);
 
-    await Notification.create({
-      userId: jobOffer.postedBy,
+    const notification = new Notification({
+      userId: currentUserId,
       type: 'JOB_OFFER_DELETED',
-      message: `Your job offer "${jobOffer.title}" has been deleted successfully.`,
+      message: `Your job offer "${jobOffer.title}" has been deleted successfully.`
     });
+    await notification.save();
 
     res.status(200).json({ message: 'Job offer deleted successfully' });
   } catch (error) {
-    console.error('Error deleting job offer:', error);
-    res.status(500).json({ message: 'Server error while deleting job offer' });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -239,15 +236,15 @@ const getRecommendedJobsBySkills = async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    // Vérifie que l'utilisateur existe
+    // VÃ©rifie que l'utilisateur existe
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Récupère les skills depuis UserSkill (et non User)
+    // RÃ©cupÃ¨re les skills depuis UserSkill (et non User)
     const userSkillsDocs = await UserSkill.find({ userId });
     const userSkills = userSkillsDocs.map(skill => skill.skillId.toString());
 
-    // Récupère les offres de job ouvertes
+    // RÃ©cupÃ¨re les offres de job ouvertes
     const allJobs = await JobOffer.find({ status: { $ne: 'closed' } });
 
     // Filtre les jobs dont requiredSkills matchent avec les skills du user
