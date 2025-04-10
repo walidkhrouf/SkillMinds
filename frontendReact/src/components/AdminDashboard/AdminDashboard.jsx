@@ -2118,28 +2118,44 @@ const getSkillNames = (skills) => {
         console.error("Error fetching job details:", err);
     }
 };
-const handleDeleteJob = async (jobId) => {
-  if (!window.confirm("Are you sure you want to delete this job?")) return;
-  try {
-    const token = localStorage.getItem("jwtToken");
-    const response = await fetch(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (response.ok) {
-      // Met à jour l'état pour supprimer l'offre d'emploi de la liste
-      setJobOffers(jobOffers.filter((job) => job._id !== jobId));
-      setSelectedJob(null); // Réinitialise la sélection de l'offre
-      showMessage("🗑 Job deleted successfully");
-    } else {
-      const data = await response.json();
-      showMessage(data.message || "Error deleting job", "error");
+  const handleDeleteJob = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+      if (!currentUser || currentUser.role !== 'admin') {
+        showMessage("Only admins can delete job offers", "error");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/recruitment/job-offers/${jobId}?role=${currentUser.role}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        showMessage("Job deleted successfully", "success");
+        // Refresh the job list
+        fetchJobOffers();
+        // Clear selection if deleting the currently selected job
+        if (selectedJob && selectedJob._id === jobId) {
+          setSelectedJob(null);
+          setApplications([]);
+        }
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error deleting job", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting job:", err);
+      showMessage("Error deleting job", "error");
     }
-  } catch (err) {
-    console.error("Error deleting job:", err);
-    showMessage("Error deleting job", "error");
-  }
-};
+  };
+
 
 const handleEditJob = (jobId) => {
   const jobToEdit = jobOffers.find((job) => job._id === jobId);
@@ -2151,9 +2167,9 @@ const handleEditJob = (jobId) => {
 
 
 
-  
-  
-  
+
+
+
 
   const renderSection = () => {
     switch (activeSection) {
@@ -2508,8 +2524,8 @@ const handleEditJob = (jobId) => {
           <button onClick={() => handleEditJob(selectedJob._id)}>✏️ Edit</button>
           <button onClick={() => handleDeleteJob(selectedJob._id)}>🗑 Delete</button>
         </div>
-    
-                                
+
+
                               </div>
                             </td>
                           </tr>

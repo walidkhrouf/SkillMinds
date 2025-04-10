@@ -194,25 +194,28 @@ const updateJobOffer = async (req, res) => {
 
 const deleteJobOffer = async (req, res) => {
   try {
-    const currentUserId = req.query.userId;
-    const jobOffer = await JobOffer.findById(req.params.id);
-    if (!jobOffer) return res.status(404).json({ message: 'Job offer not found' });
-    if (jobOffer.postedBy.toString() !== currentUserId) {
-      return res.status(403).json({ message: 'You can only delete your own job offers' });
+    const { id } = req.params;
+    const role = req.query.role; // Expect role from query parameter
+
+    if (role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can delete job offers' });
     }
 
-    await JobOffer.findByIdAndDelete(req.params.id);
+    const jobOffer = await JobOffer.findByIdAndDelete(id);
+    if (!jobOffer) {
+      return res.status(404).json({ message: 'Job offer not found' });
+    }
 
-    const notification = new Notification({
-      userId: currentUserId,
+    await Notification.create({
+      userId: jobOffer.postedBy,
       type: 'JOB_OFFER_DELETED',
-      message: `Your job offer "${jobOffer.title}" has been deleted successfully.`
+      message: `Your job offer "${jobOffer.title}" has been deleted successfully.`,
     });
-    await notification.save();
 
     res.status(200).json({ message: 'Job offer deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting job offer:', error);
+    res.status(500).json({ message: 'Server error while deleting job offer' });
   }
 };
 
