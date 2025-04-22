@@ -1,0 +1,125 @@
+/* Container for the entire page */
+.group-members-container {
+    padding: 30px;
+    max-width: 800px;
+    margin: 80px auto 0 auto; /* Added margin-top to push content below navbar */
+    background-color: #f5f7fa;
+    min-height: 100vh;
+  }
+  
+  /* Header with title and back button */
+  .group-members-header {
+    display: flex;
+    flex-direction: column; /* Vertically center the title and button */
+    justify-content: space-between; /* Space them apart */
+    margin-bottom: 25px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+  }
+  
+  /* Title styling */
+  .group-members-header h1 {
+    font-size: 2rem;
+    color: #333;
+    font-weight: 600;
+    margin: 0; /* Remove default margin */
+  }
+  
+  /* Back button */
+  .back-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #0056b3;
+  }
+
+  .group-card__leave-btn {
+    background-color: #e74c3c; /* Red for leaving */
+    color: white;
+  }
+  
+  .group-card__leave-btn:hover {
+    background-color: #c0392b;
+  }
+  
+  /* Message box for success/error */
+  .message-box {
+    background-color: #fef3f2;
+    color: #d9534f;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Grid for member cards */
+  .members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  /* Individual member card */
+  .member-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Member info */
+  .member-info {
+    flex-grow: 1;
+  }
+  
+  .member-name {
+    font-size: 1.1rem;
+    color: #444;
+    font-weight: 500;
+  }
+  
+  /* Remove button */
+  .remove-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .remove-button:hover {
+    background-color: #c82333;
+  }
+  
+  /* No members message */
+  .no-members {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }

@@ -1,0 +1,512 @@
+.activity-container {
+  display: flex;
+  width: 1000px;
+  height: 800px;
+  margin: 6.25rem auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  align-items: stretch;
+}
+
+.activity-left-box, .activity-right-box {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.activity-left-box {
+  border-right: 1px solid #eee;
+}
+
+.activity-right-box {
+  background-image: url("/public/images/event.jpg");
+  color: white;
+  text-align: center;
+  height: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+}
+/* Image Preview Styles */
+
+
+/* Image Preview Styles */
+.activity-image-preview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.activity-image-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  object-fit: contain; /* Ensures the image maintains aspect ratio */
+}
+
+.image-filename {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  word-break: break-all;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .activity-image-preview img {
+    max-width: 150px;
+    max-height: 150px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .preview-image {
+    max-height: 150px;
+  }
+}
+h1 {
+  font-weight: bold;
+  font-size: 4em;
+  color: rgb(78, 49, 6);
+}
+
+h2 {  
+  color: rgb(126, 83, 20);
+}
+
+.activity-auth-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-auth-form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.activity-form-step {
+  display: none;
+}
+
+.activity-form-step.active {
+  display: block;
+}
+
+.activity-form-group {
+  margin-bottom: 20px;
+}
+
+.activity-form-group input,
+.activity-form-group select,
+.activity-form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+
+.activity-form-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adds space between the checkbox and the label text */
+  cursor: pointer; /* Makes the label clickable */
+}
+
+.activity-form-group input[type="checkbox"] {
+  margin: 0; /* Removes default margin */
+  cursor: pointer; /* Makes the checkbox clickable */
+}
+.activity-auth-btn, .activity-back-btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.activity-auth-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #a47f18;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: white; 
+}
+
+.activity-auth-btn:hover {
+  background-color: #a47f18; 
+}
+
+.activity-back-btn {
+  background-color: white; 
+  color: #a47f18; 
+  border: 2px solid #a47f18; 
+}
+
+.activity-back-btn:hover {
+  background-color: #a47f18; 
+  color: white; 
+}
+
+.activity-file-upload-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.activity-file-upload-container input[type="file"] {
+  display: none;
+}
+
+.activity-file-upload-label {
+  background-color: #a47f18; 
+  color: white; 
+  padding: 12px 20px; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: background-color 0.3s, transform 0.3s; 
+  flex: 0 0 auto; 
+  min-width: 150px; 
+  text-align: center; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.activity-file-upload-label:hover {
+  background-color: #8c6414; 
+  transform: scale(1.05);
+}
+
+.activity-file-name {
+  margin-left: 10px; 
+  color: #333; 
+  white-space: nowrap; 
+  font-size: 14px;
+  flex: 1;
+}
+
+.activity-image-indicator {
+  margin-left: 10px; 
+  font-size: 12px; 
+  color: #888; 
+}
+
+.activity-mentor-skills-section {
+  margin-top: 20px;
+}
+
+.activity-mentor-skills-section h3 {
+  color: #a47f18;
+  margin-bottom: 15px;
+}
+
+.activity-mentor-skills-section h4 {
+  color: #a47f18;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.activity-mentor-skills-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.activity-mentor-skill-pill {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border-radius: 20px; 
+  border: 2px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-mentor-skill-pill:hover {
+  background-color: #e0e0e0;
+  border-color: #a47f18;
+}
+
+.activity-mentor-skill-pill.selected {
+  background-color: #a47f18;
+  color: white;
+  border-color: #a47f18;
+  transform: scale(1.05); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activity-mentor-skill-pill.selected:hover {
+  background-color: #8c6414; 
+}
+
+.activity-mentor-certificates-grid {
+  margin-top: 20px;
+}
+
+.activity-mentor-certificates-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.activity-certificate-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.activity-certificate-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.activity-certificate-card h5 {
+  color: #a47f18;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Remove or adjust the old .activity-file-upload-label and .activity-ai-btn styles */
+/* Adjust the container to space the buttons nicely */
+.image-input-container {
+  display: flex;
+  flex-direction: row; /* Ensure horizontal layout */
+  align-items: center; /* Vertically align buttons */
+  gap: 10px; /* Space between the two buttons */
+  margin-top: 10px; /* Space above the container */
+}
+
+/* Style for both label and button */
+.activity-image-btn {
+  padding: 12px 20px; /* Consistent padding */
+  border-radius: 4px; /* 4px */
+  cursor: pointer;
+  font-size: 16px; /* Consistent font size */
+  background-color: #a47f18; /* Same background color as before */
+  color: white; /* Same text color as before */
+  border: none; /* No border for button, consistent for label */
+  transition: background-color 0.3s, transform 0.3s; /* Smooth transitions */
+  text-align: center; /* Center text */
+  flex: 0 0 auto; /* From your new design */
+  width: 180px; /* Fixed width from your new design */
+  height: 40px; /* Fixed height for consistency, matching previous design */
+  line-height: 1; /* Ensure text is vertically centered */
+  display: inline-flex; /* From your new design, works well */
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* From your new design */
+  box-sizing: border-box; /* Ensure padding doesn’t affect height */
+  margin: 0; /* Reset any default margins */
+}
+
+/* Hover effect */
+.activity-image-btn:hover {
+  background-color: #8a6a15; /* Darker shade on hover, matching previous design */
+  transform: scale(1.05); /* From your new design */
+}
+
+/* Disabled state for the button */
+.activity-image-btn:disabled {
+  background-color: #cccccc; /* Same disabled color as before */
+  cursor: not-allowed;
+  transform: none; /* Prevent scaling when disabled */
+}
+
+/* Ensure the file input remains hidden */
+.image-upload-input {
+  display: none;
+}
+
+/* Optional: Ensure label behaves exactly like button */
+.image-input-container label.activity-image-btn {
+  margin: 0; /* Reset label-specific margins */
+  padding: 12px 20px; /* Match button padding */
+  height: 40px; /* Match button height */
+  display: inline-flex; /* Match button display */
+  align-items: center; /* Match button alignment */
+  justify-content: center; /* Match button alignment */
+  color: white !important; /* Ensure white text */
+}
+
+/* Optional: Ensure button consistency */
+.image-input-container button.activity-image-btn {
+  margin: 0; /* Reset button margins */
+  padding: 12px 20px; /* Ensure exact padding match */
+  height: 40px; /* Match label height */
+}
+
+/* Spinner styling (if needed) */
+.spinner {
+  /* Add your spinner styles here, e.g., animation for loading */
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.activity-switch-auth {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.activity-switch-auth p {
+  font-size: 14px;
+  color: #333;
+}
+
+.activity-switch-auth a {
+  color: #a47f18;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.activity-switch-auth a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .activity-container {
+    flex-direction: column;
+    min-height: auto; 
+  }
+  .activity-left-box {
+    border-right: none;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5em;
+  }
+
+  .activity-form-group input,
+  .activity-form-group select,
+  .activity-form-group textarea {
+    width: calc(100% - 12px);
+  }
+
+  .activity-auth-btn {
+    font-size: 14px;
+  }
+
+  .activity-mentor-skill-pill {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  .activity-mentor-certificates-list {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-certificate-card {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .activity-container {
+    width: 100%;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  .activity-right-box {
+    padding: 20px;
+  }
+
+  .activity-mentor-skills-pill-list {
+    gap: 8px;
+  }
+
+  .activity-mentor-skill-pill {
+    padding: 6px 12px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+
+  .activity-file-upload-label {
+    padding: 10px 16px;
+    min-width: 120px;
+    font-size: 14px;
+  }
+
+  .activity-certificate-card {
+    padding: 10px;
+  }
+
+  .activity-certificate-card h5 {
+    font-size: 14px;
+  }
+}
+
+.activity-progress-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.activity-progress-step {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #ddd;
+  margin: 0 8px;
+  transition: background-color 0.3s;
+}
+
+.activity-progress-step.active {
+  background-color: #a47f18;
+}
+
+.activity-form-navigation {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between; 
+}
+
+.activity-error {
+  color: red;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.activity-success {
+  color: green;
+  margin-bottom: 15px;
+  text-align: center;
+}

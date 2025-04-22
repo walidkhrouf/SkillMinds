@@ -1,0 +1,187 @@
+.all-courses {
+    padding: 3.125rem 1.25rem;
+    background-color: #f5f5f5;
+  }
+  
+  .all-courses h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-family: 'Inter', Arial, sans-serif;
+  }
+  
+  .error {
+    color: #dc3545;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+    gap: 1.875rem;
+  }
+  
+  .course-item {
+    background-color: #fff;
+    padding: 1.875rem;
+    border-radius: 0.3125rem;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .course-item h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: rgb(78, 49, 6);
+  }
+  
+  .course-item p {
+    margin: 0.5rem 0;
+    color: #666;
+  }
+  
+  .owner-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  
+  .update-btn {
+    padding: 0.5rem 1rem;
+    background-color: #ffc107;
+    color: #fff;
+    border: none;
+    border-radius: 0.3125rem;
+    cursor: pointer;
+  }
+  
+  .update-btn:hover {
+    background-color: #e0a800;
+  }
+  
+  .delete-btn {
+    padding: 0.5rem 1rem;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 0.3125rem;
+    cursor: pointer;
+  }
+  
+  .delete-btn:hover {
+    background-color: #c82333;
+  }
+  
+  .view-btn {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 0.3125rem;
+    cursor: pointer;
+  }
+  
+  .view-btn:hover {
+    background-color: #0069d9;
+  }
+  
+  .enroll-btn {
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 0.3125rem;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  
+  .enroll-btn:hover {
+    background-color: #218838;
+  }
+  
+  .back-btn {
+    display: block;
+    margin: 2rem auto 0;
+    padding: 0.75rem 1.5rem;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 0.3125rem;
+    cursor: pointer;
+  }
+  
+  .back-btn:hover {
+    background-color: #5a6268;
+  }
+
+  .owned-btn {
+    background-color: #6c757d; 
+    cursor: pointer;
+  }
+  
+  .owned-btn:hover {
+    background-color: #5a6268;
+  }
+
+  .search-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.search-bar {
+    width: 50%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.3125rem;
+}
+
+.payment-popup {
+  position: fixed;
+  top: 10%;
+  left: 25%;
+  width: 50%;
+  background-color: #fff;
+  border: 2px solid #333;
+  padding: 20px;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.cancel-btn {
+  background-color: #c82333;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.rating-form {
+  margin-top: 10px;
+}
+
+.rating-form label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.rating-form select {
+  padding: 5px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.rating-message {
+  font-size: 0.9em;
+  color: green;
+}
+
+.current-rating {
+  font-size: 0.85em;
+  color: #444;
+}
+

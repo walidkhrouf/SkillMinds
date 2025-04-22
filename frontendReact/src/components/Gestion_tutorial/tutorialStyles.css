@@ -1,0 +1,444 @@
+.tutorial-section {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.tutorial-card {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tutorial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.tutorial-card__title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #6A4E23;
+  margin-bottom: 10px;
+}
+
+.tutorial-card__category,
+.tutorial-card__author,
+.tutorial-card__date {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+.tutorial-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 3 colonnes de largeur égale */
+  gap: 20px; /* Espace entre les cartes */
+  padding: 20px;
+}
+
+@media screen and (max-width: 1024px) {
+  .tutorial-list {
+    grid-template-columns: repeat(2, 1fr); /* 2 colonnes sur les écrans moyens (tablettes) */
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .tutorial-list {
+    grid-template-columns: 1fr; /* 1 colonne sur les petits écrans (mobiles) */
+  }
+
+  .tutorial-card {
+    padding: 15px; /* Réduit le padding sur les petits écrans */
+  }
+
+  .tutorial-card__title {
+    font-size: 18px; /* Réduit la taille du titre */
+  }
+}
+/* Style général de la recherche */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 20px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+
+
+/* Style pour le titre des tutoriels */
+.tutorial-list__title {
+  font-size: 2.5rem; /* Taille de police plus grande pour un impact visuel */
+  font-weight: bold; /* Met le titre en gras */
+  color: #6A4E23; /* Couleur sombre pour une meilleure lisibilité */
+  text-align: center; /* Centre le texte */
+  text-transform: uppercase; /* Met en majuscule */
+  letter-spacing: 2px; /* Espacement des lettres pour un effet aéré */
+  margin-bottom: 20px; /* Ajoute de l'espace en bas */
+  padding: 10px 0; /* Ajoute de l'espace vertical autour du texte */
+  position: relative;
+}
+
+.tutorial-list__title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 80px; /* Largeur de la ligne sous le titre */
+  height: 3px; /* Hauteur de la ligne */
+  background-color: #eeba5b; /* Couleur de la ligne sous le titre */
+  transform: translateX(-50%); /* Centrer la ligne sous le titre */
+}
+
+.tutorial-list__title:hover {
+  color: #eeba5b; /* Change la couleur du texte au survol */
+  text-shadow: 0 0 10px rgba(226, 158, 70, 0.5); /* Ajoute un léger effet d'ombre au texte au survol */
+}
+
+.tutorial-list__title span {
+  display: block;
+  font-size: 1.2rem; /* Taille réduite pour le sous-titre (facultatif) */
+  color: #666; /* Couleur plus douce pour le sous-titre */
+  margin-top: 10px; /* Espacement pour le sous-titre */
+}
+
+
+
+.search-container input {
+  width: 100%;
+  padding: 10px 40px 10px 15px; /* Plus d'espace autour du texte */
+  border: 1px solid #ccc;
+  border-radius: 30px; /* Bord arrondi pour un look moderne */
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-container input:focus {
+  box-shadow: 0 0 5px rgba(228, 134, 58, 0.514); /* Ombre portée au focus */
+}
+
+.search-container input::placeholder {
+  color: #aaa; /* Couleur de l'espace réservé */
+  font-style: italic;
+}
+
+
+
+.search-label {
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  font-size: 12px;
+  color: #999;
+  background-color: white;
+  padding: 0 5px;
+  transition: all 0.3s ease;
+}
+
+.search-container input:focus + .search-label,
+.search-container input:not(:placeholder-shown) + .search-label {
+  top: -20px;
+  left: 15px;
+  font-size: 12px;
+}
+
+/* Ajout d'un bouton de recherche */
+.search-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+
+
+.search-button:active {
+  transform: translateY(2px);
+}
+
+.tutorial-button {
+  margin-top: 15px;
+  background-color: transparent;
+  border: 2px solid #c29a3a;
+  color: #c29a3a;
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tutorial-button:hover {
+  background-color: #c29a3a;
+  color: #fff;
+}
+
+.tutorial-form,
+.tutorial-detail {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.tutorial-form__title,
+.tutorial-detail__title {
+  margin-bottom: 15px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #6A4E23;
+}
+
+.tutorial-form__field {
+  margin-bottom: 15px;
+}
+
+.tutorial-form__label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.tutorial-form__input,
+.tutorial-form__textarea,
+.tutorial-form__select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.tutorial-form__textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.tutorial-form__error,
+.tutorial-form__field-error,
+.tutorial-detail__error {
+  color: #d9534f;
+  margin-top: 5px;
+}
+
+@media screen and (max-width: 768px) {
+  .tutorial-section {
+    padding: 15px;
+  }
+
+  .tutorial-card {
+    padding: 20px;
+  }
+
+  .tutorial-card__title {
+    font-size: 20px;
+  }
+  .modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    margin: 0 auto;
+  }
+  
+  .overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .share-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  
+  .share-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .close-button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #ccc;
+    cursor: pointer;
+  }
+  
+  .close-button:hover {
+    background-color: #999;
+  }
+  
+}
+/* Amélioration du label de sélection de langue */
+.language-selector {
+  margin-top: 20px; /* Ajoute un peu d'espace au-dessus du sélecteur de langue */
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  width: 150px;
+  transition: background-color 0.3s ease;
+}
+
+.language-selector:hover {
+  background-color: #f5f5f5;
+}
+
+/* Pour les champs de formulaire dans l'édition */
+.tutorial-form__field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.tutorial-form__field label {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.tutorial-form__input,
+.tutorial-form__textarea {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.tutorial-form__input:focus,
+.tutorial-form__textarea:focus {
+  border-color: #6a4e23; /* Bordure colorée au focus */
+}
+
+.tutorial-form__input {
+  height: 40px;
+}
+
+.tutorial-form__textarea {
+  height: 150px;
+  resize: vertical;
+}
+
+.tutorial-form__input::placeholder,
+.tutorial-form__textarea::placeholder {
+  color: #aaa;
+}
+
+/* Amélioration de l'alignement et de l'affichage général des actions du tutoriel */
+.tutorial-detail__actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.tutorial-detail__actions button {
+  padding: 10px 15px;
+  background-color: #c29a3a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tutorial-detail__actions button:hover {
+  background-color: #a87f1b;
+}
+
+.tutorial-detail__actions button:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(226, 158, 70, 0.7); /* Effet d'ombre au focus */
+}
+
+/* Amélioration des erreurs affichées */
+.tutorial-detail__error,
+.tutorial-form__error,
+.tutorial-form__field-error {
+  color: #d9534f;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.tutorial-button {
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  background-color: #c29a3a;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tutorial-button:hover {
+  background-color: #a87f1b;
+}
+
+/* Style pour les médias */
+.tutorial-detail__media {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tutorial-detail__media img {
+  max-width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.tutorial-detail__media img:hover {
+  transform: scale(1.05);
+}
+
+@media screen and (max-width: 768px) {
+  .tutorial-section {
+    padding: 15px;
+  }
+
+  .tutorial-form__field {
+    margin-bottom: 12px;
+  }
+
+  .tutorial-detail__title {
+    font-size: 24px;
+  }
+
+  .tutorial-detail__meta {
+    font-size: 14px;
+  }
+}

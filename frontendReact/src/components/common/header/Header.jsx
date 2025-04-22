@@ -147,7 +147,7 @@ const Header = () => {
               </li>
               <li>
                 <NavLink to="/courses" className={({ isActive }) => (isActive ? "active" : "")}>
-                  All Courses
+                  Courses
                 </NavLink>
               </li>
               <li>
@@ -177,16 +177,26 @@ const Header = () => {
               </li>
          
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                <a href="/activities" className={({ isActive }) => (isActive ? "active" : "")}>
                   Events
                 </a>
               </li>
+
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                
+                <NavLink to="/tutorials" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Tutorials
+                </NavLink>
+                
+              </li>
+
+              <li>
+                <a href="/all-job-offers" className={({ isActive }) => (isActive ? "active" : "")}>
                   Recruitment
                 </a>
               </li>
               <li>
+
                 ||
               </li>
               {currentUser?.role === "admin" && (
