@@ -3,11 +3,7 @@ pipeline {
     tools {
         nodejs 'NodeJS' // Ensure 'NodeJS' is configured with version 20.x
     }
-    environment {
-        SONAR_SCANNER_HOME = tool 'SonarQubeScanner' // Ensure 'SonarQubeScanner' is configured
-        NEXUS_URL = 'http://<nexus-host>:8081/repository/npm-hosted/' // Replace with your Nexus URL
-        NEXUS_CREDENTIALS_ID = 'nexus-credentials' // Ensure credentials are configured
-    }
+
     stages {
         stage('Checkout') {
             steps {
