@@ -11,6 +11,9 @@ app.use('/api/recruitment', GestionRecruitementRoute);
 
 let server;
 
+// ✅ Augmente le timeout Jest pour les opérations Mongo lentes
+jest.setTimeout(15000);
+
 beforeAll(async () => {
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect('mongodb://127.0.0.1:27017/jobTestDB');
@@ -19,9 +22,18 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  server.close();
+  try {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+
+    if (server && server.close) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+  } catch (err) {
+    console.error("Error during afterAll cleanup:", err);
+  }
 });
 
 describe('Create Job Offer', () => {
@@ -58,8 +70,9 @@ describe('Create Job Offer', () => {
       .post('/api/recruitment/job-offers')
       .send(newJob);
 
-    console.log(res.body);
+    console.log(res.body); // Pour debug
     expect(res.statusCode).toBe(201);
     expect(res.body.title).toBe('Développeur Web');
+    expect(res.body.postedBy).toBe(userId.toString());
   });
 });
