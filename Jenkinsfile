@@ -1,10 +1,9 @@
 pipeline {
     agent any
     stages {
-        stage('Example') {
+        stage('Checkout') {
             steps {
-                // Your build steps here
-                echo 'Hello World'
+                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev.git'
             }
         }
     }
