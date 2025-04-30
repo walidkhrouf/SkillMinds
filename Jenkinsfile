@@ -1,6 +1,11 @@
-stage('Checkout') {
-    steps {
-        git branch: 'main', 
-            url: 'https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev.git'
+pipeline {
+    agent any
+    stages {
+        stage('Example') {
+            steps {
+                // Your build steps here
+                echo 'Hello World'
+            }
+        }
     }
 }
