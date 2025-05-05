@@ -19,16 +19,17 @@ pipeline {
             }
         }
 
-        stage('Install Tools') {
+       stage('Verify Tools') {
             steps {
                 script {
-                    sh '''
-                        # Install zip if not available
-                        if ! command -v zip >/dev/null 2>&1; then
-                            echo "Installing zip package..."
-                            sudo apt-get update -qq && sudo apt-get install -y zip
-                        fi
-                    '''
+                    // Check if zip is available, continue with warning if not
+                    def zipAvailable = sh(script: 'command -v zip || true', returnStatus: true) == 0
+                    if (!zipAvailable) {
+                        echo "WARNING: zip command not found. Frontend artifacts won't be zipped."
+                        // You could also fail the pipeline here if zip is required:
+                        // error "zip command is required but not found"
+                    }
+                    env.ZIP_AVAILABLE = zipAvailable
                 }
             }
         }
