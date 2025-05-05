@@ -80,7 +80,7 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \
-                            -Dsonar.sources=Backend/src \
+                            -Dsonar.sources=Backend/Controllers \
                             -Dsonar.tests=Backend/tests
                         """
                     }
