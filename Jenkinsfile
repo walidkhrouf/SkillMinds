@@ -86,12 +86,34 @@ pipeline {
             }
         }
 
-        // ========== NEW STAGES ADDED ==========
         stage('Build Frontend') {
             steps {
                 dir('frontendReact') {
                     sh 'npm install'
-                    sh 'npm run build' // Generates dist/ folder
+                    sh 'npm run build' 
+                }
+            }
+        }
+
+        stage('Validate Backend Package') {
+            steps {
+                dir('Backend') {
+                    script {
+                        // Check if package.json exists
+                        if (!fileExists('package.json')) {
+                            error "package.json not found in Backend directory!"
+                        }
+                        
+                        // Read package.json
+                        def packageJson = readJSON file: 'package.json'
+                        
+                        // Validate required fields
+                        if (!packageJson.name || !packageJson.version) {
+                            error "package.json must contain both 'name' and 'version' fields!"
+                        }
+                        
+                        echo "Backend package validated: ${packageJson.name}@${packageJson.version}"
+                    }
                 }
             }
         }
@@ -100,7 +122,7 @@ pipeline {
             steps {
                 dir('Backend') {
                     sh 'npm install'
-                    sh 'npm pack' // Generates .tgz file
+                    sh 'npm pack' 
                 }
             }
         }
@@ -129,8 +151,9 @@ pipeline {
                         // Backend (TGZ)
                         sh """
                             if ls Backend/*.tgz 1> /dev/null 2>&1; then
+                                TGZ_FILE=\$(ls Backend/*.tgz | head -1)
                                 curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file Backend/*.tgz \\
+                                    --upload-file \$TGZ_FILE \\
                                     "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/${BUILD_VERSION}/"
                             else
                                 echo "ERROR: No .tgz file found in Backend/"
