@@ -1816,7 +1816,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [jobOffers, setJobOffers] = useState([]); // Contient les offres d'emploi
+const [jobOffers, setJobOffers] = useState([]); // Contient les offres d'emploi
 const [jobLoading, setJobLoading] = useState(true); // Indicateur de chargement des offres d'emploi
 const [jobError, setJobError] = useState(null); // Erreur de récupération des offres d'emploi
 const [selectedJob, setSelectedJob] = useState(null); // Offre d'emploi sélectionnée
@@ -1830,6 +1830,24 @@ const showMessage = (text, type = "success") => {
   setMessage({ text, type });
   setTimeout(() => setMessage(null), 5000); // Ferme le message après 5 secondes
 };
+
+const [editingJob, setEditingJob] = useState(null);
+const [editingJobData, setEditingJobData] = useState({});
+const startEditingJob = (job) => {
+  setEditingJob(job._id);
+  setEditingJobData({
+    title: job.title,
+    description: job.description,
+    experienceLevel: job.experienceLevel,
+    jobType: job.jobType,
+    location: job.location,
+    city: job.city,
+    salaryRange: job.salaryRange,
+    requiredSkills: job.requiredSkills,
+
+  });
+};
+
 
 useEffect(() => {
   async function fetchSkills() {
@@ -2121,10 +2139,69 @@ const getSkillNames = (skills) => {
  
 
 
+const handleDeleteJob = async (jobId) => {
+  const confirm = window.confirm("Are you sure you want to delete this job?");
+  if (!confirm) return;
+
+  try {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const token = localStorage.getItem("jwtToken");
+
+    const response = await fetch(`http://localhost:5000/api/recruitment/job-offers/${jobId}?userId=${currentUser._id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      setJobOffers((prev) => prev.filter((job) => job._id !== jobId));
+      setSelectedJob(null);
+      showMessage("🗑 Job deleted successfully");
+    } else {
+      const data = await response.json();
+      showMessage(data.message || "Failed to delete job", "error");
+    }
+  } catch (err) {
+    console.error("Error deleting job:", err);
+    showMessage("Error deleting job", "error");
+  }
+};
 
 
 
 
+
+
+const saveJobEdits = async (jobId) => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    
+    const response = await fetch(`http://localhost:5000/api/recruitment/job-offers/${jobId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ...editingJobData,
+        userId: currentUser._id
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setJobOffers(prev => prev.map(job => job._id === jobId ? data : job));
+      setSelectedJob(data);
+      setEditingJob(null);
+      showMessage("💾 Job updated successfully");
+    } else {
+      showMessage(data.message || "Error updating job", "error");
+    }
+  } catch (error) {
+    console.error("Error updating job:", error);
+    showMessage("Error updating job", "error");
+  }
+};
 
 
 
@@ -2480,7 +2557,124 @@ const getSkillNames = (skills) => {
                                 <p><strong>Posted By:</strong> {selectedJob.postedBy?.username || 'N/A'}</p>
                                 <p><strong>Status:</strong> {selectedJob.status || 'N/A'}</p>
                                 <div className="job-actions">
-       
+                                <div className="job-actions">
+                                <button onClick={() => startEditingJob(selectedJob)}>✏️ Edit</button>
+
+  <button onClick={() => handleDeleteJob(selectedJob._id)}>🗑 Delete</button>
+</div>
+{editingJob === selectedJob._id && (
+  <div className="edit-job-form" style={{
+    border: "1px solid #ccc",
+    borderRadius: "10px",
+    padding: "20px",
+    backgroundColor: "#f9f9f9",
+    marginTop: "20px"
+  }}>
+    <h3 style={{ marginBottom: "15px", color: "#333" }}>✏️ Edit Job Offer</h3>
+
+    <div className="form-group">
+      <label>Title:</label>
+      <input
+        type="text"
+        value={editingJobData.title}
+        onChange={(e) => setEditingJobData({ ...editingJobData, title: e.target.value })}
+      />
+    </div>
+
+    <div className="form-group">
+      <label>Description:</label>
+      <textarea
+        rows="4"
+        value={editingJobData.description}
+        onChange={(e) => setEditingJobData({ ...editingJobData, description: e.target.value })}
+      />
+    </div>
+
+    <div className="form-group">
+      <label>Experience Level:</label>
+      <select
+        value={editingJobData.experienceLevel}
+        onChange={(e) => setEditingJobData({ ...editingJobData, experienceLevel: e.target.value })}
+      >
+        <option value="">Select Level</option>
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+    </div>
+
+    <div className="form-group">
+      <label>Job Type:</label>
+      <select
+        value={editingJobData.jobType}
+        onChange={(e) => setEditingJobData({ ...editingJobData, jobType: e.target.value })}
+      >
+        <option value="">Select Type</option>
+        <option value="Full Time">Full Time</option>
+        <option value="Part Time">Part Time</option>
+        <option value="Internship">Internship</option>
+        <option value="Freelance">Freelance</option>
+      </select>
+    </div>
+
+    <div className="form-group">
+      <label>Location:</label>
+      <input
+        type="text"
+        value={editingJobData.location}
+        onChange={(e) => setEditingJobData({ ...editingJobData, location: e.target.value })}
+      />
+    </div>
+
+    <div className="form-group">
+      <label>City:</label>
+      <input
+        type="text"
+        value={editingJobData.city}
+        onChange={(e) => setEditingJobData({ ...editingJobData, city: e.target.value })}
+      />
+    </div>
+
+    <div className="form-group">
+      <label>Salary Range:</label>
+      <input
+        type="text"
+        placeholder="Ex: 3000-5000"
+        value={editingJobData.salaryRange}
+        onChange={(e) => setEditingJobData({ ...editingJobData, salaryRange: e.target.value })}
+      />
+    </div>
+    <div className="form-group">
+  <label>Required Skills:</label>
+  <select
+    multiple
+    value={editingJobData.requiredSkills}
+    onChange={(e) => {
+      const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+      setEditingJobData({ ...editingJobData, requiredSkills: selectedOptions });
+    }}
+  >
+    {Object.entries(skillsMap).map(([id, name]) => (
+      <option key={id} value={id}>
+        {name}
+      </option>
+    ))}
+  </select>
+</div>
+
+    
+
+    <div style={{ marginTop: "15px" }}>
+      <button onClick={() => saveJobEdits(selectedJob._id)} style={{ marginRight: "10px", backgroundColor: "#4CAF50", color: "#fff", padding: "8px 16px", border: "none", borderRadius: "4px" }}>
+        💾 Save
+      </button>
+      <button onClick={() => setEditingJob(null)} style={{ backgroundColor: "#d9534f", color: "#fff", padding: "8px 16px", border: "none", borderRadius: "4px" }}>
+        ❌ Cancel
+      </button>
+    </div>
+  </div>
+)}
+
                               </div>
 
 
@@ -2493,6 +2687,7 @@ const getSkillNames = (skills) => {
                   )}
                 </tbody>
               </table>
+              
             </>
           )}
         </div>
