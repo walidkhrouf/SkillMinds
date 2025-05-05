@@ -72,22 +72,26 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+       stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'sonar-scanner'
+                    // Add this tool configuration
+                    def scannerHome = tool 'sonar-scanner' // Name must match Jenkins configuration
+                    
+                    // Configure SonarQube environment
                     withSonarQubeEnv('sq1') {
                         sh """
-                            \${scannerHome}/bin/sonar-scanner \\
-                            -Dsonar.projectKey=DevMinds_4TWIN5_pidev \\
-                            -Dsonar.projectName=DevMinds_4TWIN5_pidev \\
-                            -Dsonar.sources=Backend/Controllers \\
-                            -Dsonar.tests=Backend/tests,Backend/test 
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
+                            -Dsonar.projectName=DevMinds_4TWIN5_pidev \
+                            -Dsonar.sources=Backend/Controllers \
+                            -Dsonar.tests=Backend/tests,Backend/test
                         """
                     }
                 }
             }
         }
+    
 
      
 
