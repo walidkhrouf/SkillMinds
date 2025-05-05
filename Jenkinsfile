@@ -21,15 +21,7 @@ pipeline {
             }
         }
 
-        // Stage 2: Build
-        stage('Build') {
-            steps {
-                script {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
-            }
-        }
+      
 
         // Stage 3: Verify GitHub Actions Results
         stage('Check GitHub Actions') {
