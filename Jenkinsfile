@@ -19,15 +19,12 @@ pipeline {
             }
         }
 
-       stage('Verify Tools') {
+        stage('Verify Tools') {
             steps {
                 script {
-                    // Check if zip is available, continue with warning if not
                     def zipAvailable = sh(script: 'command -v zip || true', returnStatus: true) == 0
                     if (!zipAvailable) {
                         echo "WARNING: zip command not found. Frontend artifacts won't be zipped."
-                        // You could also fail the pipeline here if zip is required:
-                        // error "zip command is required but not found"
                     }
                     env.ZIP_AVAILABLE = zipAvailable
                 }
@@ -72,13 +69,10 @@ pipeline {
             }
         }
 
-       stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Add this tool configuration
-                    def scannerHome = tool 'sonar-scanner' // Name must match Jenkins configuration
-                    
-                    // Configure SonarQube environment
+                    def scannerHome = tool 'sonar-scanner'
                     withSonarQubeEnv('sq1') {
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
@@ -91,9 +85,25 @@ pipeline {
                 }
             }
         }
-    
 
-     
+        // ========== NEW STAGES ADDED ==========
+        stage('Build Frontend') {
+            steps {
+                dir('frontendReact') {
+                    sh 'npm install'
+                    sh 'npm run build' // Generates dist/ folder
+                }
+            }
+        }
+
+        stage('Package Backend') {
+            steps {
+                dir('Backend') {
+                    sh 'npm install'
+                    sh 'npm pack' // Generates .tgz file
+                }
+            }
+        }
 
         stage('Publish to Nexus') {
             steps {
@@ -103,24 +113,28 @@ pipeline {
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASS'
                     )]) {
+                        // Frontend (ZIP)
                         sh """
                             if [ -d "frontendReact/dist" ]; then
-                                zip -r frontend-\${BUILD_VERSION}.zip frontendReact/dist/ || echo "Warning: Frontend zip failed"
+                                zip -r frontend-${BUILD_VERSION}.zip frontendReact/dist/
                                 curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file frontend-\${BUILD_VERSION}.zip \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/\${BUILD_VERSION}/" || echo "Warning: Frontend upload failed"
+                                    --upload-file frontend-${BUILD_VERSION}.zip \\
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/${BUILD_VERSION}/"
                             else
-                                echo "Warning: frontendReact/dist directory not found"
+                                echo "ERROR: frontendReact/dist not found!"
+                                exit 1
                             fi
                         """
 
+                        // Backend (TGZ)
                         sh """
-                            if [ -d "Backend/target" ] && [ -n "\$(ls -A Backend/target/*.jar 2>/dev/null)" ]; then
+                            if ls Backend/*.tgz 1> /dev/null 2>&1; then
                                 curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file Backend/target/*.jar \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/\${BUILD_VERSION}/" || echo "Warning: Backend upload failed"
+                                    --upload-file Backend/*.tgz \\
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/${BUILD_VERSION}/"
                             else
-                                echo "Warning: No JAR files found in Backend/target"
+                                echo "ERROR: No .tgz file found in Backend/"
+                                exit 1
                             fi
                         """
                     }
@@ -131,7 +145,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/dist/**,**/target/*.jar', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/dist/**,**/*.tgz', allowEmptyArchive: true
             cleanWs()
         }
         success {
