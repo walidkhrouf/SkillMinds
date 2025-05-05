@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs 'NodeJS' // Ensure 'NodeJS' is configured with version 20.x
-        sonarQubeScanner 'SonarScanner' // Reference the SonarQube Scanner configured in Jenkins
+        sonarRunner 'SonarScanner' // Reference the SonarQube Scanner configured in Jenkins
     }
 
     stages {
