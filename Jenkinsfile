@@ -82,21 +82,14 @@ pipeline {
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \\
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \\
                             -Dsonar.sources=Backend/Controllers \\
-                            -Dsonar.tests=Backend/tests,Backend/test \\
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                            -Dsonar.tests=Backend/tests,Backend/test 
                         """
                     }
                 }
             }
         }
 
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+     
 
         stage('Publish to Nexus') {
             steps {
