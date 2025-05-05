@@ -81,7 +81,7 @@ pipeline {
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \
                             -Dsonar.sources=Backend/Controllers \
-                            -Dsonar.tests=Backend/tests,Backend/test \
+                            -Dsonar.tests=Backend/tests,Backend/test
                         """
                     }
                 }
