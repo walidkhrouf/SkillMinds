@@ -356,6 +356,7 @@ const CreateGroupPost = () => {
                   onChange={handleChange}
                   placeholder="Enter post title"
                   className="group-form__input"
+                  aria-required="true"
               />
               {errors.title && <p className="group-form__field-error">{errors.title}</p>}
             </div>
@@ -368,6 +369,7 @@ const CreateGroupPost = () => {
                   onChange={handleChange}
                   placeholder="Enter post subject"
                   className="group-form__input"
+                  aria-required="true"
               />
               {errors.subject && <p className="group-form__field-error">{errors.subject}</p>}
             </div>
@@ -379,6 +381,7 @@ const CreateGroupPost = () => {
                   modules={quillModules}
                   placeholder="Write, speak, or generate your post content here..."
                   className="group-form__quill"
+                  aria-required="true"
               />
               {errors.content && <p className="group-form__field-error">{errors.content}</p>}
               <div className="group-form__speech-controls">
@@ -387,6 +390,7 @@ const CreateGroupPost = () => {
                     onChange={(e) => setSpeechLanguage(e.target.value)}
                     className="group-form__language-select"
                     disabled={isRecording}
+                    aria-label="Select speech language"
                 >
                   <option value="en-US">English (US)</option>
                   <option value="fr-FR">French</option>
@@ -397,6 +401,8 @@ const CreateGroupPost = () => {
                     onClick={handleSpeechToText}
                     className={`group-button group-form__record-btn ${isRecording ? "recording" : ""}`}
                     disabled={loading || isGenerating || isCheckingBadWords}
+                    aria-label={isRecording ? "Stop recording" : "Start recording"}
+                    title={isRecording ? "Stop Recording" : "Record Content"}
                 >
                   <i className={`fas ${isRecording ? "fa-stop" : "fa-microphone"}`}></i>
                   {isRecording ? "Stop Recording" : "Record Content"}
@@ -406,6 +412,8 @@ const CreateGroupPost = () => {
                     onClick={handleGenerateContent}
                     className={`group-button group-form__generate-btn ${isGenerating ? "generating" : ""}`}
                     disabled={loading || isRecording || isCheckingBadWords}
+                    aria-label={isGenerating ? "Generating content" : "Generate content"}
+                    title={isGenerating ? "Generating..." : "Generate Content"}
                 >
                   <i className="fas fa-magic"></i>
                   {isGenerating ? "Generating..." : "Generate Content"}
@@ -421,16 +429,54 @@ const CreateGroupPost = () => {
                   onChange={handleFileChange}
                   accept="image/*,video/*"
                   className="group-form__input"
+                  aria-label="Upload media files"
               />
               {errors.media && <p className="group-form__field-error">{errors.media}</p>}
+              {mediaFiles.length > 0 && (
+                  <div className="group-form__media-preview">
+                    {mediaFiles.map((file, index) => (
+                        <div key={index} className="group-form__media-item">
+                          {file.type.startsWith("image") ? (
+                              <img
+                                  src={URL.createObjectURL(file)}
+                                  alt={file.name}
+                                  className="group-form__media-image"
+                              />
+                          ) : (
+                              <video
+                                  src={URL.createObjectURL(file)}
+                                  controls
+                                  className="group-form__media-video"
+                              />
+                          )}
+                          <p>{file.name}</p>
+                        </div>
+                    ))}
+                  </div>
+              )}
             </div>
-            <button
-                type="submit"
-                disabled={loading || isRecording || isGenerating || isCheckingBadWords}
-                className="group-button"
-            >
-              {isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
-            </button>
+            <div className="group-form__actions">
+              <button
+                  type="submit"
+                  disabled={loading || isRecording || isGenerating || isCheckingBadWords}
+                  className="group-button group-form__submit-btn"
+                  aria-label="Create post"
+                  title="Create Post"
+              >
+                <i className="fas fa-paper-plane"></i>
+                {isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
+              </button>
+              <button
+                  type="button"
+                  onClick={() => navigate(`/groups/${groupId}`)}
+                  className="group-button group-form__cancel-btn"
+                  aria-label="Cancel and go back"
+                  title="Cancel"
+              >
+                <i className="fas fa-times"></i>
+                Cancel
+              </button>
+            </div>
           </form>
         </section>
       </>

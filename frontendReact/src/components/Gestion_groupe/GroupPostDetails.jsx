@@ -28,6 +28,8 @@ const GroupPostDetails = () => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentContent, setEditedCommentContent] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [likeClicked, setLikeClicked] = useState(false);
+  const [dislikeClicked, setDislikeClicked] = useState(false);
   const utteranceRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -52,6 +54,20 @@ const GroupPostDetails = () => {
       return () => clearTimeout(timer);
     }
   }, [toastMessage]);
+
+  useEffect(() => {
+    if (likeClicked) {
+      const timer = setTimeout(() => setLikeClicked(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [likeClicked]);
+
+  useEffect(() => {
+    if (dislikeClicked) {
+      const timer = setTimeout(() => setDislikeClicked(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [dislikeClicked]);
 
   const fetchPostData = async () => {
     const jwtToken = localStorage.getItem("jwtToken");
@@ -119,7 +135,7 @@ const GroupPostDetails = () => {
         setIsPlaying(false);
         utteranceRef.current = null;
       };
-      utterance.onerror = (event) => {
+      utterance.onerror = () => {
         setToastMessage("TTS stopped!");
         setIsPlaying(false);
         utteranceRef.current = null;
@@ -218,6 +234,7 @@ const GroupPostDetails = () => {
       setDislikesCount(response.data.dislikesCount);
       setHasLiked(response.data.hasLiked);
       setHasDisliked(response.data.hasDisliked);
+      setLikeClicked(true);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to toggle like.");
     }
@@ -237,6 +254,7 @@ const GroupPostDetails = () => {
       setDislikesCount(response.data.dislikesCount);
       setHasLiked(response.data.hasLiked);
       setHasDisliked(response.data.hasDisliked);
+      setDislikeClicked(true);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to toggle dislike.");
     }
@@ -316,7 +334,7 @@ const GroupPostDetails = () => {
         .set(opt)
         .from(element)
         .save()
-        .catch((err) => {
+        .catch(() => {
           setToastMessage("Failed to generate PDF.");
         });
   };
@@ -390,21 +408,31 @@ const GroupPostDetails = () => {
 
   return (
       <>
-        <Back title="Post Details" />
-        <section className="group-section">
+      <Back title="Post Details" />
+      <section className="group-section">
+        <div className="group-container">
           <div className="group-post-details">
             <div className="group-post-details__content">
-              <h1 className="group-post-details__title">{post.title}</h1>
-              <h2 className="group-post-details__subject">{post.subject}</h2>
-              <div className="group-post-details__text">{renderContent(post.content)}</div>
+              {/* Meta Information at the Top */}
               <div className="group-post-details__meta-info">
-              <span className="group-post-details__meta">
-                Posted by: <label>{post.userId?.username || "Unknown"}</label>
-              </span>
                 <span className="group-post-details__meta">
-                Created: <label>{new Date(post.createdAt).toLocaleString()}</label>
-              </span>
+                  Posted by: <label>{post.userId?.username || "Unknown"}</label>
+                </span>
+                <span className="group-post-details__meta">
+                  Created: <label>{new Date(post.createdAt).toLocaleString()}</label>
+                </span>
               </div>
+
+              {/* Post Title and Subject */}
+              <div className="group-post-details__header">
+                <h1 className="group-post-details__title">{post.title}</h1>
+                <h2 className="group-post-details__subject">{post.subject}</h2>
+              </div>
+
+              {/* Post Content */}
+              <div className="group-post-details__text">{renderContent(post.content)}</div>
+
+              {/* Media Section */}
               {post.media && post.media.length > 0 && (
                   <div className="group-post-details__media">
                     <h4>Media</h4>
@@ -441,125 +469,160 @@ const GroupPostDetails = () => {
                     ))}
                   </div>
               )}
+
+              {/* Interaction Section */}
               <div className="group-post-details__interaction">
                 <div className="group-post-details__actions">
-                  <button
-                      className={`group-post-details__like-btn ${hasLiked ? "active" : ""}`}
-                      onClick={handleLikeToggle}
-                  >
-                    <i className={`fas ${hasLiked ? "fa-thumbs-up" : "fa-thumbs-o-up"}`}></i>
-                    <span>{hasLiked ? "Unlike" : "Like"} ({likesCount})</span>
-                  </button>
-                  <button
-                      className={`group-post-details__dislike-btn ${hasDisliked ? "active" : ""}`}
-                      onClick={handleDislikeToggle}
-                  >
-                    <i className={`fas ${hasDisliked ? "fa-thumbs-down" : "fa-thumbs-o-down"}`}></i>
-                    <span>{hasDisliked ? "Undislike" : "Dislike"} ({dislikesCount})</span>
-                  </button>
-                  <button
-                      className={`group-post-details__read-btn ${isPlaying ? "playing" : ""}`}
-                      onClick={handleTogglePlay}
-                  >
-                    <i className={`fas ${isPlaying ? "fa-stop" : "fa-play"}`}></i>
-                    <span>{isPlaying ? "Stop Playing" : "Read Post"}</span>
-                  </button>
-                  <button className="group-post-details__print-btn" onClick={handlePrintPDF}>
-                    <i className="fas fa-print"></i>
-                    <span>Print PDF</span>
-                  </button>
+                  <div className="group-post-details__action-item">
+                    <span
+                        className={`group-emoji group-emoji--like ${hasLiked ? "active" : ""} ${likeClicked ? "clicked" : ""}`}
+                        onClick={handleLikeToggle}
+                        title={hasLiked ? `Unlike this post (${likesCount})` : `Like this post (${likesCount})`}
+                    >
+                      {hasLiked ? "👍" : "👆"}
+                    </span>
+                    <span className="group-post-details__counter">{likesCount}</span>
+                  </div>
+                  <div className="group-post-details__action-item">
+                    <span
+                        className={`group-emoji group-emoji--dislike ${hasDisliked ? "active" : ""} ${dislikeClicked ? "clicked" : ""}`}
+                        onClick={handleDislikeToggle}
+                        title={hasDisliked ? `Undislike this post (${dislikesCount})` : `Dislike this post (${dislikesCount})`}
+                    >
+                      {hasDisliked ? "👎" : "👇"}
+                    </span>
+                    <span className="group-post-details__counter">{dislikesCount}</span>
+                  </div>
+                  <div className="group-post-details__action-item">
+                    <span
+                        className={`group-emoji group-emoji--read ${isPlaying ? "active" : ""}`}
+                        onClick={handleTogglePlay}
+                        title={isPlaying ? "Stop reading" : "Read post aloud"}
+                    >
+                      {isPlaying ? "⏹️" : "▶️"}
+                    </span>
+                  </div>
+                  <div className="group-post-details__action-item">
+                    <span
+                        className="group-emoji group-emoji--print"
+                        onClick={handlePrintPDF}
+                        title="Print this post as PDF"
+                    >
+                      📄
+                    </span>
+                  </div>
                   {(isPostAuthor || isGroupOwner) && (
-                      <button
-                          className="group-button group-post-details__delete-btn"
+                      <div className="group-post-details__action-item">
+                      <span
+                          className="group-emoji group-emoji--delete"
                           onClick={handleDeletePost}
+                          title="Delete this post"
                       >
-                        Delete Post
-                      </button>
+                        🗑️
+                      </span>
+                      </div>
                   )}
                   {!isPostAuthor && (
-                      <button
-                          className="group-button group-post-details__report-btn"
+                      <div className="group-post-details__action-item">
+                      <span
+                          className="group-emoji group-emoji--report"
                           onClick={() => setReportModal({ open: true, groupId, postId, commentId: null, type: "post" })}
+                          title="Report this post"
                       >
-                        Report Post
-                      </button>
+                        🚨
+                      </span>
+                      </div>
                   )}
                 </div>
+
+                {/* Comment Form */}
                 <form onSubmit={handleAddComment} className="group-post-details__comment-form">
-                <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="group-form__textarea group-post-details__comment-input"
-                />
-                  <button type="submit" className="group-button">
+                  <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Add a comment..."
+                      className="group-form__textarea group-post-details__comment-input"
+                  />
+                  <button
+                      type="submit"
+                      className="group-post-details__comment-btn"
+                      title="Submit comment"
+                  >
                     Comment
                   </button>
                 </form>
+
+                {/* Comments Section */}
                 <div className="group-post-details__comments">
                   <h4>Comments ({comments.length})</h4>
                   {comments.length > 0 ? (
                       comments.map((comment) => (
                           <div key={comment._id} className="group-post-details__comment">
                             {editingCommentId === comment._id ? (
-                                <div>
-                          <textarea
-                              value={editedCommentContent}
-                              onChange={(e) => setEditedCommentContent(e.target.value)}
-                              className="group-form__textarea group-post-details__comment-input"
-                          />
-                                  <button
-                                      className="group-button"
-                                      onClick={() => handleSaveEditComment(comment._id)}
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                      className="group-button group-post-details__delete-comment-btn"
-                                      onClick={handleCancelEdit}
-                                  >
-                                    Cancel
-                                  </button>
+                                <div className="group-post-details__edit-comment">
+                            <textarea
+                                value={editedCommentContent}
+                                onChange={(e) => setEditedCommentContent(e.target.value)}
+                                className="group-form__textarea group-post-details__comment-input"
+                            />
+                                  <div className="group-post-details__edit-actions">
+                              <span
+                                  className="group-emoji group-emoji--submit"
+                                  onClick={() => handleSaveEditComment(comment._id)}
+                                  title="Save edited comment"
+                              >
+                                💾
+                              </span>
+                                    <span
+                                        className="group-emoji group-emoji--cancel"
+                                        onClick={handleCancelEdit}
+                                        title="Cancel editing"
+                                    >
+                                ❌
+                              </span>
+                                  </div>
                                 </div>
                             ) : (
                                 <>
                                   <p>{comment.content}</p>
                                   <span className="group-post-details__comment-meta">
-                            By: <label>{comment.userId?.username || "Unknown"}</label> |{" "}
+                              By: <label>{comment.userId?.username || "Unknown"}</label> |{" "}
                                     {new Date(comment.createdAt).toLocaleString()}
-                                    {/* Show report count to post owner */}
                                     {isPostAuthor && (
                                         <span className="group-post-details__report-count">
-                                | Reports: <label>{comment.reportCount || 0}</label>
-                              </span>
+                                  | Reports: <label>{comment.reportCount || 0}</label>
+                                </span>
                                     )}
                                     {((comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) || isPostAuthor) && (
                                         <>
                                           {(comment.userId?.id === currentUserId || comment.userId?._id === currentUserId) && (
-                                              <button
-                                                  className="group-post-details__edit-comment-btn"
+                                              <span
+                                                  className="group-emoji group-emoji--edit"
                                                   onClick={() => handleEditComment(comment._id, comment.content)}
+                                                  title="Edit this comment"
                                               >
-                                                Edit
-                                              </button>
+                                      ✏️
+                                    </span>
                                           )}
-                                          <button
-                                              className="group-post-details__delete-comment-btn"
+                                          <span
+                                              className="group-emoji group-emoji--delete"
                                               onClick={() => handleDeleteComment(comment._id)}
+                                              title="Delete this comment"
                                           >
-                                            Delete
-                                          </button>
+                                    🗑️
+                                  </span>
                                         </>
                                     )}
                                     {(comment.userId?.id !== currentUserId && comment.userId?._id !== currentUserId) && (
-                                        <button
-                                            className="group-post-details__report-comment-btn"
+                                        <span
+                                            className="group-emoji group-emoji--report"
                                             onClick={() => setReportModal({ open: true, groupId, postId, commentId: comment._id, type: "comment" })}
+                                            title="Report this comment"
                                         >
-                                          Report
-                                        </button>
+                                  🚨
+                                </span>
                                     )}
-                          </span>
+                            </span>
                                 </>
                             )}
                           </div>
@@ -568,68 +631,87 @@ const GroupPostDetails = () => {
                       <p>No comments yet.</p>
                   )}
                 </div>
+
+                {/* Navigation Section */}
                 <div className="navigation-buttons">
-                  <button className="group-button" onClick={() => navigate("/groups")}>
-                    Group List
-                  </button>
-                  <button className="group-button" onClick={() => navigate(`/groups/${groupId}`)}>
-                    Back to Posts
-                  </button>
-                </div>
+                  <span
+                      className="group-emoji group-emoji--view-posts"
+                      onClick={() => navigate("/groups")}
+                      title="View group list"
+                  >
+                    📋
+                  </span>
+                  <span
+                      className="group-emoji group-emoji--view-posts"
+                                    onClick={() => navigate(`/groups/${groupId}`)}
+                  title="Back to posts"
+                  >
+                  🔙
+                </span>
               </div>
             </div>
           </div>
-        </section>
-        {reportModal.open && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <h2>Report {reportModal.type === "group" ? "Group" : reportModal.type === "post" ? "Post" : "Comment"}</h2>
-                <form onSubmit={handleReportSubmit} className="group-form">
-                  <div className="group-form__group">
-                    <label htmlFor="reason">Reason</label>
-                    <select
-                        id="reason"
-                        value={reportReason}
-                        onChange={(e) => setReportReason(e.target.value)}
-                        required
-                    >
-                      <option value="">Select a reason</option>
-                      <option value="Inappropriate Content">Inappropriate Content</option>
-                      <option value="Spam">Spam</option>
-                      <option value="Off-Topic">Off-Topic</option>
-                      <option value="Harassment">Harassment</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div className="group-form__group">
-                    <label htmlFor="details">Details (optional)</label>
-                    <textarea
-                        id="details"
-                        value={reportDetails}
-                        onChange={(e) => setReportDetails(e.target.value)}
-                        placeholder="Provide more details..."
-                        maxLength="500"
-                    />
-                  </div>
-                  <div className="modal-actions">
-                    <button type="submit" className="group-button">
-                      Submit Report
-                    </button>
-                    <button
-                        type="button"
-                        className="group-button group-card__delete-btn"
-                        onClick={() => setReportModal({ open: false, groupId: null, postId: null, commentId: null, type: null })}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
+        </div>
+      </div>
+      </section>
+
+  {/* Report Modal */}
+  {reportModal.open && (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h2>Report {reportModal.type === "group" ? "Group" : reportModal.type === "post" ? "Post" : "Comment"}</h2>
+          <form onSubmit={handleReportSubmit} className="group-form">
+            <div className="group-form__group">
+              <label htmlFor="reason">Reason</label>
+              <select
+                  id="reason"
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  required
+              >
+                <option value="">Select a reason</option>
+                <option value="Inappropriate Content">Inappropriate Content</option>
+                <option value="Spam">Spam</option>
+                <option value="Off-Topic">Off-Topic</option>
+                <option value="Harassment">Harassment</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
-        )}
-        {toastMessage && <div className="toast-message">{toastMessage}</div>}
-      </>
-  );
+            <div className="group-form__group">
+              <label htmlFor="details">Details (optional)</label>
+              <textarea
+                  id="details"
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Provide more details..."
+                  maxLength="500"
+              />
+            </div>
+            <div className="modal-actions">
+                <span
+                    className="group-emoji group-emoji--submit"
+                    onClick={handleReportSubmit}
+                    title="Submit report"
+                >
+                  📨
+                </span>
+              <span
+                  className="group-emoji group-emoji--cancel"
+                  onClick={() => setReportModal({ open: false, groupId: null, postId: null, commentId: null, type: null })}
+                  title="Cancel report"
+              >
+                  ❌
+                </span>
+            </div>
+          </form>
+        </div>
+      </div>
+  )}
+
+  {/* Toast Message */}
+  {toastMessage && <div className="toast-message">{toastMessage}</div>}
+</>
+);
 };
 
 export default GroupPostDetails;
