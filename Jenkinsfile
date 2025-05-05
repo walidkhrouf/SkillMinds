@@ -2,6 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs 'NodeJS' // Ensure 'NodeJS' is configured with version 20.x
+        sonarQubeScanner 'SonarScanner' // Reference the SonarQube Scanner configured in Jenkins
     }
 
     stages {
@@ -78,9 +79,7 @@ pipeline {
                               -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                               -Dsonar.projectName=DevMinds_4TWIN5_pidev \
                               -Dsonar.sources=Backend/src \
-                              -Dsonar.tests=Backend/tests \
-                              -Dsonar.host.url=${SONAR_HOST_URL} \
-                              -Dsonar.login=${SONAR_AUTH_TOKEN}
+                              -Dsonar.tests=Backend/tests
                         '''
                     }
                 }
