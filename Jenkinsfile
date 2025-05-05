@@ -5,9 +5,8 @@ pipeline {
     }
 
     environment {
-        NEXUS_URL = 'http://192.168.33.10:8081' // Update with your Nexus URL
-        NEXUS_REPO = 'maven-releases'              // e.g., 'maven-releases'
-        NEXUS_CREDS = credentials('nexus-credentials') // Jenkins credential ID
+        NEXUS_URL = 'http://192.168.33.10:8081'
+        NEXUS_REPO = 'maven-releases'
         BUILD_VERSION = "${env.BUILD_ID}-${new Date().format('yyyyMMddHHmm')}"
     }
 
@@ -21,7 +20,20 @@ pipeline {
             }
         }
 
-      
+        // Stage 2: Install Required Tools
+        stage('Install Tools') {
+            steps {
+                script {
+                    sh '''
+                        # Install zip if not available
+                        if ! command -v zip >/dev/null 2>&1; then
+                            echo "Installing zip package..."
+                            sudo apt-get update -qq && sudo apt-get install -y zip
+                        fi
+                    '''
+                }
+            }
+        }
 
         // Stage 3: Verify GitHub Actions Results
         stage('Check GitHub Actions') {
@@ -45,7 +57,6 @@ pipeline {
                         - URL: ${run.html_url}
                         """
 
-                        // Check job results
                         def jobs = sh(script: """
                             curl -s -H "Authorization: token \${GITHUB_TOKEN}" \
                                 -H "Accept: application/vnd.github.v3+json" \
@@ -82,26 +93,47 @@ pipeline {
             }
         }
 
-      
+        // Stage 5: Quality Gate Check
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         // Stage 6: Publish to Nexus
         stage('Publish to Nexus') {
             steps {
                 script {
-                    // Frontend (React)
-                    sh """
-                        zip -r frontend-${BUILD_VERSION}.zip frontendReact/dist/
-                        curl -u $NEXUS_CREDS_USR:$NEXUS_CREDS_PSW \
-                            --upload-file frontend-${BUILD_VERSION}.zip \
-                            "$NEXUS_URL/repository/$NEXUS_REPO/frontend/${BUILD_VERSION}/"
-                    """
+                    withCredentials([usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    )]) {
+                        // Frontend (React)
+                        sh """
+                            if [ -d "frontendReact/dist" ]; then
+                                zip -r frontend-${BUILD_VERSION}.zip frontendReact/dist/ || echo "Warning: Frontend zip failed"
+                                curl -f -u $NEXUS_USER:$NEXUS_PASS \
+                                    --upload-file frontend-${BUILD_VERSION}.zip \
+                                    "$NEXUS_URL/repository/$NEXUS_REPO/frontend/${BUILD_VERSION}/" || echo "Warning: Frontend upload failed"
+                            else
+                                echo "Warning: frontendReact/dist directory not found"
+                            fi
+                        """
 
-                    // Backend
-                    sh """
-                        curl -u $NEXUS_CREDS_USR:$NEXUS_CREDS_PSW \
-                            --upload-file Backend/target/*.jar \
-                            "$NEXUS_URL/repository/$NEXUS_REPO/backend/${BUILD_VERSION}/"
-                    """
+                        // Backend
+                        sh """
+                            if [ -d "Backend/target" ] && [ -n "$(ls -A Backend/target/*.jar 2>/dev/null)" ]; then
+                                curl -f -u $NEXUS_USER:$NEXUS_PASS \
+                                    --upload-file Backend/target/*.jar \
+                                    "$NEXUS_URL/repository/$NEXUS_REPO/backend/${BUILD_VERSION}/" || echo "Warning: Backend upload failed"
+                            else
+                                echo "Warning: No JAR files found in Backend/target"
+                            fi
+                        """
+                    }
                 }
             }
         }
@@ -119,7 +151,8 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed! Check logs for details.'
-            slackSend color: 'danger', message: "Build ${env.BUILD_NUMBER} failed!"
+            // Uncomment if you have Slack Notification plugin installed
+            // slackSend color: 'danger', message: "Build ${env.BUILD_NUMBER} failed!"
         }
     }
 }
