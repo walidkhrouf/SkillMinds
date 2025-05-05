@@ -68,14 +68,28 @@ pipeline {
                 }
             }
         }
-      
-      
-       
-     
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // Configure SonarQube environment
+                    withSonarQubeEnv('sq1') { // 'sq1' corresponds to the SonarQube configuration in Jenkins
+                        sh '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
+                              -Dsonar.projectName=DevMinds_4TWIN5_pidev \
+                              -Dsonar.sources=Backend/src \
+                              -Dsonar.tests=Backend/tests \
+                              -Dsonar.host.url=${SONAR_HOST_URL} \
+                              -Dsonar.login=${SONAR_AUTH_TOKEN}
+                        '''
+                    }
+                }
+            }
+        }
     }
     post {
         always {
-            archiveArtifacts artifacts: 'frontendReact/coverage/**,Backend/coverage/**,frontendReact/dist/**,Backend/dist/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'frontendReact/dist/**,Backend/dist/**', allowEmptyArchive: true
             cleanWs()
         }
         success {
