@@ -13,7 +13,8 @@ const notificationSchema = new Schema({
       "EVENT_CREATION_PAYMENT", "SKILL_REMOVAL",'JOB_OFFER_CREATED', 
       'JOB_OFFER_UPDATED', 
       'JOB_OFFER_DELETED', 
-      'JOB_APPLICATION_RECEIVED'
+      'JOB_APPLICATION_RECEIVED',
+      'GROUP_REQUEST'
     ],
     required: true
   },

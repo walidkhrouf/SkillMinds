@@ -166,7 +166,7 @@ const Header = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/groups" className={({ isActive }) => (isActive ? "active" : "")}>
                   Groups
                 </NavLink>
               </li>
