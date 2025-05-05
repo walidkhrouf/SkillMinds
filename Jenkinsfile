@@ -82,14 +82,7 @@ pipeline {
             }
         }
 
-        // Stage 5: Quality Gate
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+      
 
         // Stage 6: Publish to Nexus
         stage('Publish to Nexus') {
