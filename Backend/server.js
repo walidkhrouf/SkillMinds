@@ -34,6 +34,13 @@ const io = socketIo(server, {
   },
 });
 
+// Add this after initializing Socket.IO and before defining routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
@@ -211,6 +218,7 @@ io.on("connection", (socket) => {
 });
 
 // Routes
+
 app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/tutorials", tutorialRoutes);
 app.use("/api/admin", adminRoutes);
