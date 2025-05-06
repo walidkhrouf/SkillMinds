@@ -87,6 +87,7 @@
   height: 12.5rem; /* 200px */
   overflow: hidden;
   background-color: #f0f0f0;
+  position: relative; /* For overlay and badge positioning */
 }
 
 .event-cards-container .img img {
@@ -95,10 +96,35 @@
   object-fit: cover;
 }
 
+/* Past Event Styling */
+.past-event .img::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+  z-index: 1;
+}
+
+.ended-badge {
+  position: absolute;
+  top: 0.625rem; /* 10px */
+  right: 0.625rem; /* 10px */
+  
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
 .event-cards-container .text {
   padding: 0.9375rem; /* 15px */
-  position: relative; /* Added to position buttons absolutely within */
-  min-height: 15rem; /* Ensure enough space for content and buttons */
+  position: relative;
+  min-height: 15rem;
   display: flex;
   flex-direction: column;
 }
@@ -142,13 +168,13 @@
 
 /* Link Styles */
 .text-link {
-  color: inherit; /* Inherits the color from parent */
-  text-decoration: none; /* Removes underline */
+  color: inherit;
+  text-decoration: none;
 }
 
 .text-link:hover {
-  color: inherit; /* Maintains the same color on hover */
-  text-decoration: none; /* Ensures no underline appears on hover */
+  color: inherit;
+  text-decoration: none;
 }
 
 .image-link {
@@ -161,13 +187,12 @@
   text-decoration: none;
 }
 
-/* For the h2 that appears when image fails to load */
 .image-link h2 {
-  color: inherit; /* Inherits the color from parent */
+  color: inherit;
 }
 
 .image-link:hover h2 {
-  color: inherit; /* Maintains the same color on hover */
+  color: inherit;
 }
 
 /* Action Buttons */
@@ -177,11 +202,10 @@
   right: 0.625rem;
   display: flex;
   gap: 0.5rem;
-  align-items: center; /* Align all buttons vertically */
+  align-items: center;
 }
 
-.event-cards-container .update-btn,
-.event-cards-container .delete-btn {
+.event-cards-container .update-btn {
   background: none;
   border: none;
   padding: 0.25rem;
@@ -194,34 +218,39 @@
   color: #007bff;
 }
 
-.event-cards-container .delete-btn {
-  color: red;
-}
-
 .event-cards-container .update-btn:hover {
   opacity: 0.8;
   color: #0056b3;
 }
 
-.event-cards-container .delete-btn:hover {
+.event-cards-container .update-btn.delete-btn {
+  color: red;
+}
+
+.event-cards-container .update-btn.delete-btn:hover {
   opacity: 0.8;
   color: darkred;
 }
 
 /* Participate and Pay Buttons */
 .participate-btn {
-  padding: 0.25rem 0.75rem; /* Smaller padding to match other buttons */
+  padding: 0.25rem 0.75rem;
   background-color: #28a745;
   color: white;
   border: none;
   border-radius: 0.3125rem;
   cursor: pointer;
-  font-size: 0.875rem; /* Match other button sizes */
+  font-size: 0.875rem;
   transition: background-color 0.3s ease;
 }
 
 .participate-btn:hover {
   background-color: #218838;
+}
+
+.participate-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
 }
 
 .pay-btn {
@@ -239,28 +268,33 @@
   background-color: #218838;
 }
 
+.pay-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
 .card-element {
   position: absolute;
-  bottom: 2.5rem; /* Position above the buttons */
-  width: calc(100% - 1.875rem); /* Account for padding */
+  bottom: 2.5rem;
+  width: calc(100% - 1.875rem);
 }
 
 /* Responsive Design */
-@media (min-width: 48rem) { /* 768px */
+@media (min-width: 48rem) {
   .recommended-activities-list .recommended-item,
   .all-activities-list .items {
-    width: calc(50% - 1.25rem); /* 2 columns */
+    width: calc(50% - 1.25rem);
   }
 }
 
-@media (min-width: 64rem) { /* 1024px */
+@media (min-width: 64rem) {
   .recommended-activities-list .recommended-item,
   .all-activities-list .items {
-    width: calc(33.333% - 1.25rem); /* 3 columns */
+    width: calc(33.333% - 1.25rem);
   }
 }
 
-@media (max-width: 30rem) { /* 480px */
+@media (max-width: 30rem) {
   .recommended-activities-list .recommended-item,
   .all-activities-list .items {
     max-width: 100%;

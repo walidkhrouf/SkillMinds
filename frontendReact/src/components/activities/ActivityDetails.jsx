@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import './ActivityDetails.css';
@@ -20,55 +20,70 @@ const ActivityDetails = () => {
   const [totalComments, setTotalComments] = useState(0);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState('');
+  const [userRole, setUserRole] = useState(null);
 
   const isLoggedIn = !!localStorage.getItem('jwtToken');
 
-  const getCurrentUserId = () => {
+  const getCurrentUserInfo = () => {
     const token = localStorage.getItem('jwtToken');
     if (token) {
       try {
         const decoded = JSON.parse(atob(token.split('.')[1]));
-        return decoded.userId || decoded.id;
+        return {
+          userId: decoded.userId || decoded.id,
+          role: decoded.role,
+        };
       } catch (e) {
         console.error('Error decoding token:', e);
-        return null;
+        return { userId: null, role: null };
       }
     }
-    return null;
+    return { userId: null, role: null };
   };
 
-  const currentUserId = getCurrentUserId();
+  const { userId: currentUserId, role: currentUserRole } = getCurrentUserInfo();
 
-  const fetchActivityData = async () => {
-    try {
-      const activityResponse = await axios.get(`http://localhost:5000/api/events/${id}`);
-      setActivity(activityResponse.data);
-      setTotalComments(activityResponse.data.comments.length);
-
-      if (isLoggedIn) {
-        const jwtToken = localStorage.getItem('jwtToken');
-        const ratingResponse = await axios.get(
-          `http://localhost:5000/api/events/${id}/rating`,
-          { headers: { Authorization: `Bearer ${jwtToken}` } }
-        );
-        setUserRating(ratingResponse.data.userRating || 0);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch activity details');
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Check if the current user is participating in the activity
+  const isUserParticipating = activity?.participants?.some(
+    (participant) => participant._id === currentUserId || participant === currentUserId
+  ) || false;
 
   useEffect(() => {
+    setUserRole(currentUserRole);
+    const fetchActivityData = async () => {
+      try {
+        const activityResponse = await axios.get(`http://localhost:5000/api/events/${id}`);
+        setActivity(activityResponse.data);
+        setTotalComments(activityResponse.data.comments.length);
+
+        if (isLoggedIn) {
+          const jwtToken = localStorage.getItem('jwtToken');
+          const ratingResponse = await axios.get(
+            `http://localhost:5000/api/events/${id}/rating`,
+            { headers: { Authorization: `Bearer ${jwtToken}` } }
+          );
+          setUserRating(ratingResponse.data.userRating || 0);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch activity details');
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchActivityData();
-  }, [id, isLoggedIn]);
+  }, [id, isLoggedIn, currentUserRole]);
 
   const handleRatingSubmit = async (rating) => {
     if (!isLoggedIn) {
       toast.warn('Please log in to rate this activity');
       navigate('/signin');
+      return;
+    }
+
+    // Only learners need to participate to rate
+    if (userRole === 'learner' && !isUserParticipating) {
+      toast.warn('You must participate in this activity to rate it');
       return;
     }
 
@@ -153,19 +168,17 @@ const ActivityDetails = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
-  
-
     try {
       const jwtToken = localStorage.getItem('jwtToken');
       await axios.delete(
         `http://localhost:5000/api/events/${id}/comment/${commentId}`,
         { headers: { Authorization: `Bearer ${jwtToken}` } }
       );
-      setActivity(prev => ({
+      setActivity((prev) => ({
         ...prev,
-        comments: prev.comments.filter(comment => comment._id !== commentId)
+        comments: prev.comments.filter((comment) => comment._id !== commentId),
       }));
-      setTotalComments(prev => prev - 1);
+      setTotalComments((prev) => prev - 1);
       toast.success('Comment deleted successfully!');
     } catch (err) {
       console.error('Comment deletion error:', err);
@@ -197,16 +210,25 @@ const ActivityDetails = () => {
       <div className="activity-header">
         <h1>{activity.title}</h1>
         <div className="activity-meta">
-          <span><i className="fa fa-folder"></i> {activity.category}</span>
-          <span><i className="fa fa-calendar-alt"></i> {new Date(activity.date).toLocaleDateString()}</span>
-          <span><i className="fa fa-map-marker-alt"></i> {activity.location}</span>
+          <span>
+            <i className="fa fa-folder"></i> {activity.category}
+          </span>
+          <span>
+            <i className="fa fa-calendar-alt"></i> {new Date(activity.date).toLocaleDateString()}
+          </span>
+          <span>
+            <i className="fa fa-map-marker-alt"></i> {activity.location}
+          </span>
         </div>
       </div>
 
       <div className="activity-content">
         <div className="activity-image">
           {activity.eventImage?.filename ? (
-            <img src={`http://localhost:5000/uploads/${activity.eventImage.filename}`} alt={activity.title} />
+            <img
+              src={`http://localhost:5000/uploads/${activity.eventImage.filename}`}
+              alt={activity.title}
+            />
           ) : (
             <div className="no-image">
               <i className="fa fa-image"></i>
@@ -236,46 +258,73 @@ const ActivityDetails = () => {
                 <span className="value">{activity.isPaid ? `$${activity.amount}` : 'Free'}</span>
               </div>
             </div>
-            {activity.link && (
+            {isLoggedIn && (userRole === 'admin' || userRole === 'mentor' || isUserParticipating) && activity.link && (
               <div className="detail-item">
                 <i className="fa fa-link"></i>
                 <div>
                   <span className="label">Event Link:</span>
-                  <a href={activity.link} target="_blank" rel="noopener noreferrer" className="value link">
+                  <a
+                    href={activity.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="value link"
+                  >
                     {activity.link}
                   </a>
                 </div>
+              </div>
+            )}
+            {isLoggedIn && userRole === 'learner' && !isUserParticipating && activity.link && (
+              <div className="detail-item">
+                <p className="login-message">
+                  You must participate in this activity to view the event link
+                </p>
+              </div>
+            )}
+            {!isLoggedIn && activity.link && (
+              <div className="detail-item">
+                <p className="login-message">
+                  Please <Link to={`/signin?redirect=/activity/${id}`}>log in</Link> to participate and view the event link
+                </p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="rating-section">
-        <h3>Rate this activity</h3>
-        <div className="star-rating">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              disabled={isSubmitting}
-              className={`star-btn ${star <= (hoverRating || userRating) ? 'filled' : ''}`}
-              onMouseEnter={() => isLoggedIn && setHoverRating(star)}
-              onMouseLeave={() => isLoggedIn && setHoverRating(0)}
-              onClick={() => handleRatingSubmit(star)}
-            >
-              ★
-            </button>
-          ))}
-        </div>
-        <div className="rating-stats">
-          <span>Average: {displayAverage.toFixed(1)}</span>
-          <span>Total ratings: {activity.ratings?.length || 0}</span>
-        </div>
-        {!isLoggedIn && (
-          <p className="login-message">Please log in to rate this activity</p>
-        )}
+      <div className="rating-stats">
+        <span>Average: {displayAverage.toFixed(1)}</span>
+        <span>Total ratings: {activity.ratings?.length || 0}</span>
       </div>
+
+      {isLoggedIn && (userRole === 'admin' || userRole === 'mentor' || isUserParticipating) && (
+        <div className="rating-section">
+          <h3>Rate this activity</h3>
+          <div className="star-rating">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                disabled={isSubmitting}
+                className={`star-btn ${star <= (hoverRating || userRating) ? 'filled' : ''}`}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={() => handleRatingSubmit(star)}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {isLoggedIn && userRole === 'learner' && !isUserParticipating && (
+        <p className="login-message">You must participate in this activity to rate it</p>
+      )}
+      {!isLoggedIn && (
+        <p className="login-message">
+          Please <Link to={`/signin?redirect=/activity/${id}`}>log in</Link> to participate and rate this activity
+        </p>
+      )}
 
       <div className="comments-section">
         <h3>Comments ({totalComments})</h3>
@@ -287,7 +336,9 @@ const ActivityDetails = () => {
                   <div className="comment-user-info">
                     {comment.userId?.profileImage ? (
                       <img
-                        src={`http://localhost:5000/api/files/${comment.userId.profileImage._id || comment.userId.profileImage}`}
+                        src={`http://localhost:5000/api/files/${
+                          comment.userId.profileImage._id || comment.userId.profileImage
+                        }`}
                         alt={comment.userId.username}
                         className="comment-user-avatar"
                         onError={(e) => {
@@ -297,17 +348,24 @@ const ActivityDetails = () => {
                         }}
                       />
                     ) : null}
-                    <div className="comment-user-avatar default-avatar" style={{ display: comment.userId?.profileImage ? 'none' : 'flex' }}>
+                    <div
+                      className="comment-user-avatar default-avatar"
+                      style={{
+                        display: comment.userId?.profileImage ? 'none' : 'flex',
+                      }}
+                    >
                       {comment.userId?.username?.charAt(0).toUpperCase() || 'A'}
                     </div>
-                    <span className="comment-username">{comment.userId?.username || 'Anonymous'}</span>
+                    <span className="comment-username">
+                      {comment.userId?.username || 'Anonymous'}
+                    </span>
                   </div>
                   <span className="comment-date">
                     {new Date(comment.createdAt).toLocaleDateString()}
                     {comment.updatedAt && ' (Edited)'}
                   </span>
                 </div>
-                
+
                 {editingCommentId === comment._id ? (
                   <div className="comment-edit">
                     <textarea
@@ -322,11 +380,7 @@ const ActivityDetails = () => {
                       >
                         Save
                       </button>
-                      <button
-                        onClick={() => setEditingCommentId(null)}
-                      >
-                        Cancel
-                      </button>
+                      <button onClick={() => setEditingCommentId(null)}>Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -336,15 +390,17 @@ const ActivityDetails = () => {
                       <div className="comment-actions">
                         <button
                           onClick={() => handleEditComment(comment)}
-                          className="edit-btn"
+                          className="action-icon edit-icon"
+                          title="Edit Comment"
                         >
-                          Edit
+                          <i className="fas fa-pen"></i>
                         </button>
                         <button
                           onClick={() => handleDeleteComment(comment._id)}
-                          className="delete-btn"
+                          className="action-icon delete-icon"
+                          title="Delete Comment"
                         >
-                          Delete
+                          <i className="fas fa-trash"></i>
                         </button>
                       </div>
                     )}
@@ -383,7 +439,7 @@ const ActivityDetails = () => {
           </div>
         )}
 
-        {isLoggedIn && (
+        {isLoggedIn && userRole !== 'admin' && (
           <form onSubmit={handleCommentSubmit} className="comment-form">
             <textarea
               value={commentText}
@@ -392,7 +448,10 @@ const ActivityDetails = () => {
               rows="4"
               disabled={isCommentSubmitting}
             />
-            <button type="submit" disabled={isCommentSubmitting || !commentText.trim()}>
+            <button
+              type="submit"
+              disabled={isCommentSubmitting || !commentText.trim()}
+            >
               {isCommentSubmitting ? 'Submitting...' : 'Post Comment'}
             </button>
           </form>

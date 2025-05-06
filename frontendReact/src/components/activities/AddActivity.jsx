@@ -27,6 +27,7 @@ const AddActivity = () => {
   const [success, setSuccess] = useState('');
   const [showCalendlyWidget, setShowCalendlyWidget] = useState(false);
   const [imageGenerating, setImageGenerating] = useState(false);
+  const [descriptionGenerating, setDescriptionGenerating] = useState(false);
 
   const isWeekday = (date) => {
     const day = date.getDay();
@@ -50,20 +51,20 @@ const AddActivity = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value,
-    });
-    setError(''); 
+    }));
+    setError('');
     setSuccess('');
   };
 
   const handleDateChange = (date) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       date,
-    });
-    setError(''); 
+    }));
+    setError('');
     setSuccess('');
   };
 
@@ -130,6 +131,47 @@ const AddActivity = () => {
     }
   };
 
+  const handleGenerateAIDescription = async () => {
+    if (!formData.title || formData.title.trim().length < 3) {
+      setError('Please enter a valid title (at least 3 characters).');
+      return;
+    }
+  
+    setDescriptionGenerating(true);
+    setError('');
+    setSuccess('');
+  
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/api/events/generate-description',
+        {
+          title: formData.title.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+          },
+        }
+      );
+  
+      const { description } = response.data;
+      if (!description || description.match(/(script|src|void|var)/i)) {
+        throw new Error('Invalid description generated');
+      }
+  
+      setFormData((prev) => ({
+        ...prev,
+        description,
+      }));
+      setSuccess('AI description generated successfully!');
+    } catch (err) {
+      console.error('AI description generation error:', err);
+      setError(err.response?.data?.error || 'Failed to generate AI description. Please try again.');
+    } finally {
+      setDescriptionGenerating(false);
+    }
+  };
+
   const validateStep = () => {
     const { title, description, date, numberOfPlaces, location, category, isPaid, amount, link } = formData;
 
@@ -192,12 +234,13 @@ const AddActivity = () => {
   const handleNext = () => {
     if (validateStep()) {
       setStep((prev) => prev + 1);
+      setError('');
     }
   };
 
   const handleBack = () => {
     setStep((prev) => prev - 1);
-    setError(''); 
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -217,7 +260,7 @@ const AddActivity = () => {
       for (const key in formData) {
         if (key === 'eventImage' && formData.eventImage) {
           dataToSubmit.append('eventImage', formData.eventImage);
-        } else if (key === 'date') {
+        } else if (key === 'date' && formData.date) {
           dataToSubmit.append(key, formData.date.toISOString().split('T')[0]);
         } else {
           dataToSubmit.append(key, formData[key]);
@@ -294,6 +337,21 @@ const AddActivity = () => {
                   value={formData.description}
                   onChange={handleChange}
                 />
+                <button
+                  type="button"
+                  className="activity-ai-btn"
+                  onClick={handleGenerateAIDescription}
+                  disabled={descriptionGenerating || !formData.title}
+                >
+                  {descriptionGenerating ? (
+                    <>
+                      <span className="spinner"></span>
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate AI Description'
+                  )}
+                </button>
               </div>
               <div className="activity-form-group">
                 <label htmlFor="date">Date:</label>
@@ -402,46 +460,46 @@ const AddActivity = () => {
                   />
                 </div>
               )}
-            <div className="activity-form-group">
-              <label htmlFor="eventImage">Upload Image or Generate AI Image:</label>
-              <div className="image-input-container">
-                <input
-                  type="file"
-                  id="eventImage"
-                  name="eventImage"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="image-upload-input"
-                />
-                <label htmlFor="eventImage" className="activity-image-btn">
-                  Upload Image
-                </label>
-                <button
-                  type="button"
-                  className="activity-image-btn"
-                  onClick={handleGenerateAIImage}
-                  disabled={imageGenerating || !formData.title}
-                >
-                  {imageGenerating ? (
-                    <>
-                      <span className="spinner"></span>
-                      Generating...
-                    </>
-                  ) : (
-                    'Generate AI Image'
-                  )}
-                </button>
-              </div>
-              {formData.eventImage && (
-                <div className="activity-image-preview">
-                  <img
-                    src={URL.createObjectURL(formData.eventImage)}
-                    alt="Event Preview"
+              <div className="activity-form-group">
+                <label htmlFor="eventImage">Upload Image or Generate AI Image:</label>
+                <div className="image-input-container">
+                  <input
+                    type="file"
+                    id="eventImage"
+                    name="eventImage"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="image-upload-input"
                   />
-                  <p className="image-filename">{formData.eventImage.name}</p>
+                  <label htmlFor="eventImage" className="activity-image-btn">
+                    Upload Image
+                  </label>
+                  <button
+                    type="button"
+                    className="activity-image-btn"
+                    onClick={handleGenerateAIImage}
+                    disabled={imageGenerating || !formData.title}
+                  >
+                    {imageGenerating ? (
+                      <>
+                        <span className="spinner"></span>
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate AI Image'
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
+                {formData.eventImage && (
+                  <div className="activity-image-preview">
+                    <img
+                      src={URL.createObjectURL(formData.eventImage)}
+                      alt="Event Preview"
+                    />
+                    <p className="image-filename">{formData.eventImage.name}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Navigation Buttons */}
