@@ -42,7 +42,7 @@ function Activities() {
   };
 
   const handleRecommendActivities = async () => {
-    setIsWaiting(true); 
+    setIsWaiting(true);
 
     setTimeout(async () => {
       try {
@@ -71,9 +71,9 @@ function Activities() {
           alert(err.response?.data?.message || 'Failed to fetch recommendations.');
         }
       } finally {
-        setIsWaiting(false); 
+        setIsWaiting(false);
       }
-    }, 2000); 
+    }, 2000);
   };
 
   const handleFilterChange = (type) => {
@@ -99,7 +99,7 @@ function Activities() {
         <div className="button-container">
           {isLoggedIn && (
             <>
-              {(userRole === 'learner' || userRole === 'admin') && (
+              {userRole === 'learner' && (
                 <button onClick={handleRecommendActivities} className="recommend-btn">
                   {isWaiting ? 'Generating Recommendations...' : 'Recommend Activities with AI'}
                 </button>

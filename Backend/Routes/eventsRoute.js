@@ -21,6 +21,7 @@ router.get('/category-stats', eventsController.getActivityCategoryStats);
 router.get('/trending', eventsController.getTrendingActivities);
 router.get('/', eventsController.getActivities);
 router.post('/generate-image', eventsController.generateAIImage);
+router.post('/generate-description', eventsController.generateAIDescription);
 router.get('/:id', eventsController.getActivityById);
 router.put('/:id', upload.single('eventImage'), eventsController.updateActivity);
 router.delete('/:id', eventsController.deleteActivity);

@@ -269,71 +269,82 @@ const recommendActivities = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.userId || decoded.id;
 
-    const allActivities = await Activity.find({})
-      .populate('createdBy', 'username')
-      .populate('participants', 'username');
+    // Get today's date (without time for comparison)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    
+    // Fetch activities with date >= today and available places
+    const allActivities = await Activity.find({
+      date: { $gt: today }, // Only future activities
+      numberOfPlaces: { $gt: 0 }
+    })
+      .populate('createdBy', 'username')
+      .populate('participants', '_id username');
+
+    // Filter out activities where user is creator or participant
     const availableActivities = allActivities.filter((activity) => {
-      const isCreator = activity.createdBy && activity.createdBy._id
-        ? activity.createdBy._id.toString() === userId
-        : false;
-      return (
-        !activity.participants.includes(userId) && 
-        !isCreator && 
-        activity.numberOfPlaces > 0 
+      const isCreator = activity.createdBy?._id?.toString() === userId;
+      const isParticipant = activity.participants.some(
+        (participant) => participant._id.toString() === userId
       );
+      return !isParticipant && !isCreator;
     });
 
     if (availableActivities.length === 0) {
-      return res.status(200).json({ message: 'No available activities to recommend', recommendations: [] });
-    }
-
-    
-    const userActivities = allActivities.filter((activity) => {
-      const isCreator = activity.createdBy && activity.createdBy._id
-        ? activity.createdBy._id.toString() === userId
-        : false;
-      return activity.participants.includes(userId) || isCreator;
-    });
-
-    
-    if (userActivities.length === 0) {
-      const recommendations = availableActivities.slice(0, 5); 
-      return res.status(200).json({
-        message: 'Recommended activities (no user history)',
-        recommendations: recommendations,
+      console.log('No activities found after filtering: past dates, participants, or no places');
+      return res.status(200).json({ 
+        message: 'No available activities to recommend', 
+        recommendations: [] 
       });
     }
 
-    
+    // Get user's past activities (created or participated in)
+    const userActivities = allActivities.filter((activity) => {
+      const isCreator = activity.createdBy?._id?.toString() === userId;
+      const isParticipant = activity.participants.some(
+        (participant) => participant._id.toString() === userId
+      );
+      return isCreator || isParticipant;
+    });
+
+    // If no history, return random 5 activities
+    if (userActivities.length === 0) {
+      const recommendations = availableActivities
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 5);
+      return res.status(200).json({
+        message: 'Recommended activities (no user history)',
+        recommendations,
+      });
+    }
+
+    // Extract user preferences
     const userTitles = userActivities.map((activity) => activity.title.toLowerCase());
     const userLocations = [...new Set(userActivities.map((activity) => activity.location))];
 
-    
+    // Score each available activity
     const recommendations = availableActivities.map((activity) => {
       let score = 0;
 
-      
+      // 1. Title similarity (50%)
       const titleSimilarity = userTitles.reduce((maxSim, userTitle) => {
         const sim = natural.JaroWinklerDistance(userTitle, activity.title.toLowerCase());
         return Math.max(maxSim, sim);
       }, 0);
-      score += titleSimilarity * 50; 
+      score += titleSimilarity * 50;
 
-    
+      // 2. Location match (30%)
       if (userLocations.includes(activity.location)) {
-        score += 30; // Weight: 30%
-
+        score += 30;
       }
 
       return { ...activity._doc, recommendationScore: score };
     });
 
-    
+    // Sort and return top 3
     const sortedRecommendations = recommendations
       .sort((a, b) => b.recommendationScore - a.recommendationScore)
-      .slice(0, 5);
+      .slice(0, 3);
 
     res.status(200).json({
       message: 'Recommended activities',
@@ -786,6 +797,120 @@ const getTrendingActivities = async (req, res) => {
     });
   }
 };
+
+
+const generateAIDescription = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Authentication token required' });
+  }
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'Token not provided' });
+  }
+
+  try {
+    // Verify JWT token
+    jwt.verify(token, process.env.JWT_SECRET);
+    const { title } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // Create optimized prompt for event descriptions
+    const prompt = `Generate a 5-7 word description for an event titled "${title}", summarizing its purpose or focus, avoiding code or special characters:`;
+
+    // Call DeepInfra API
+    const response = await axios.post(
+      'https://api.deepinfra.com/v1/openai/chat/completions',
+      {
+        model: 'mistralai/Mixtral-8x7B-Instruct-v0.1', // Modern, high-quality model
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that generates concise event descriptions.' },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 20, // Limit output for brevity
+        temperature: 0.6, // Controlled creativity
+        top_p: 0.9,
+        n: 1, // One response
+        presence_penalty: 0, // No penalty needed for short output
+        frequency_penalty: 2.0, // Prevent repetition
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.DEEPINFRA_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10-second timeout
+      }
+    );
+
+    // Extract and clean the generated text
+    let description = response.data.choices[0].message.content.trim();
+
+    // Advanced cleaning
+    description = description
+      .replace(new RegExp(prompt, 'gi'), '') // Remove prompt if it appears
+      .replace(/[^a-zA-Z0-9 ,.!-]/g, '') // Remove special chars
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+
+    // Limit to 5-7 words
+    const words = description.split(/\s+/).slice(0, 7);
+    description = words.join(' ');
+
+    // Validate output
+    if (words.length < 3) {
+      throw new Error('Generated description too short');
+    }
+    if (description.match(/(script|src|void|var|function)/i)) {
+      throw new Error('Invalid or code-like description generated');
+    }
+
+    return res.status(200).json({
+      description,
+      wordCount: words.length,
+    });
+  } catch (error) {
+    console.error('AI Description Error:', error);
+
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        message: 'Invalid token',
+        error: 'Authentication failed',
+      });
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        message: 'Token expired',
+        error: 'Please login again',
+      });
+    }
+
+    if (error.response) {
+      return res.status(502).json({
+        message: 'AI Service Error',
+        error: error.response.data?.error?.message || 'Failed to process request',
+      });
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      return res.status(504).json({
+        message: 'AI Service Timeout',
+        error: 'The description generation took too long',
+      });
+    }
+
+    return res.status(500).json({
+      message: 'Description generation failed',
+      error: error.message || 'Unknown error occurred',
+    });
+  }
+};
+
+
 module.exports = {
   createActivity,
   getActivities,
@@ -804,5 +929,6 @@ module.exports = {
   submitComment,
   getActivityComments,
   updateComment,
-  deleteComment
+  deleteComment,
+  generateAIDescription
 };

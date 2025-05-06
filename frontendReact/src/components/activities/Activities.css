@@ -57,7 +57,7 @@
 .activities-wrapper .add-event-btn {
   padding: 0.75rem 1.25rem; /* 12px 20px */
   font-size: 1rem;
-  background-color: #159e8b; /* Green color */
+  background-color: rgb(78, 49, 6); /* Green color */
   color: #fff;
   border: none;
   border-radius: 0.3125rem; /* 5px */
@@ -98,9 +98,9 @@
 }
 
 .activities-wrapper .filter-btn.active {
-  background-color: #159e8b; /* Green to match add-event-btn */
+  background-color:rgb(78, 49, 6); /* Green to match add-event-btn */
   color: #fff;
-  border-color: #159e8b; /* Updated to match green theme */
+  border-color: rgb(78, 49, 6); /* Updated to match green theme */
 }
 
 .activities-wrapper .cards-container {
