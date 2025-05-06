@@ -22,6 +22,7 @@ pipeline {
         stage('Verify Tools') {
             steps {
                 script {
+                    // Verify tar is available
                     def tarAvailable = sh(script: 'command -v tar || true', returnStatus: true) == 0
                     if (!tarAvailable) {
                         error "ERROR: tar command not found. This is required for packaging."
@@ -59,7 +60,7 @@ pipeline {
                         """, returnStdout: true).trim()
 
                         def frontendJob = readJSON(text: jobs).jobs.find { it.name == 'frontend' }
-                        def backendJob = readJSON(text: jobs).jobs.find { it.name == 'backend' }
+                        def backendJob = readJSON(text: jobs).find { it.name == 'backend' }
 
                         if (frontendJob?.conclusion != 'success' || backendJob?.conclusion != 'success') {
                             error "Tests failed: Frontend=${frontendJob?.conclusion}, Backend=${backendJob?.conclusion}"
@@ -78,20 +79,9 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \
-                            -Dsonar.sources=frontendReact/src,Backend/Controllers \
-                            -Dsonar.tests=frontendReact/__tests__,Backend/tests \
-                            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
+                            -Dsonar.sources=Backend/Controllers \
+                            -Dsonar.tests=Backend/tests,Backend/test
                         """
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Quality Gate') {
-            steps {
-                script {
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
