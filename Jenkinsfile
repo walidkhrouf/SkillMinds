@@ -125,7 +125,7 @@ pipeline {
             }
         }
 
-        stage('Publish to Nexus') {
+      stage('Publish to Nexus') {
             steps {
                 script {
                     withCredentials([usernamePassword(
@@ -139,9 +139,9 @@ pipeline {
                                 echo "Packaging frontend files..."
                                 tar -czvf frontend-${BUILD_VERSION}.tar.gz -C frontendReact/dist .
                                 echo "Uploading frontend package to Nexus..."
-                                curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file frontend-${BUILD_VERSION}.tar.gz \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/${BUILD_VERSION}/"
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/frontend-${BUILD_VERSION}.tar.gz"
                                 echo "Frontend package uploaded successfully"
                             else
                                 echo "ERROR: frontendReact/dist not found!"
@@ -155,9 +155,9 @@ pipeline {
                                 echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
                                 echo "Uploading backend package to Nexus..."
-                                curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file \$TGZ_FILE \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/${BUILD_VERSION}/"
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/\$(basename \$TGZ_FILE)"
                                 echo "Backend package uploaded successfully"
                             else
                                 echo "ERROR: No .tgz file found in Backend/"
