@@ -79,8 +79,8 @@ const EditJobOffer = () => {
   return (
     <div className="signup-container2">
       <div className="left-box2">
-          <h2 style={{textAlign:'center'}}>Edit Job Offer</h2>
-          {error && <p className="message error">{error}</p>}
+      <h2 className="edit-job-title">Edit Job Offer</h2>
+      {error && <p className="message error">{error}</p>}
           {success && <p className="message success">{success}</p>}
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">

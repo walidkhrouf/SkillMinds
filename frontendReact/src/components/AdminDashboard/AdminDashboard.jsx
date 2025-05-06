@@ -21,6 +21,45 @@ import axios from 'axios';
 
 import "./AdminDashboard.css";
 
+const Statistics = ({ statsData, tutorialStats, loading, error }) => {
+  const renderStatCard = (title, value, icon) => (
+      <div className="stat-card">
+        <span className="stat-icon">{icon}</span>
+        <h4>{title}</h4>
+        <p>{value !== null && value !== undefined ? value : "N/A"}</p>
+      </div>
+  );
+
+  if (loading) {
+    return <div className="loading">⏳ Loading statistics...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  return (
+      <div className="statistics">
+        <h3>Platform Statistics</h3>
+        <div className="stat-grid">
+          {renderStatCard("Total Users", statsData?.users?.total, "👥")}
+          {renderStatCard("Total Skills", statsData?.skills?.total, "📚")}
+          {renderStatCard("Total Tutorials", tutorialStats?.totalTutorials, "📝")}
+          {renderStatCard(
+              "Avg Likes/Tutorial",
+              tutorialStats?.engagementMetrics.find((m) => m.name === "Likes")?.value,
+              "👍"
+          )}
+          {renderStatCard(
+              "Avg Comments/Tutorial",
+              tutorialStats?.engagementMetrics.find((m) => m.name === "Comments")?.value,
+              "💬"
+          )}
+        </div>
+      </div>
+  );
+};
+
 // Dummy data for sections that aren't yet integrated with the backend
 const dummyCourses = [
   { id: 1, title: "React Basics", description: "Learn the fundamentals of React." },
@@ -68,6 +107,8 @@ const defaultStatsData = {
     categories: [],
     trending: [],
   },
+  tutorials: { totalTutorials: 0, engagementMetrics: [] }
+
 };
 
 // Message Component for displaying success/error messages
@@ -1807,11 +1848,122 @@ const ActivityManager = ({ activities, setActivities }) => {
   );
 };
 
+const TutorialManager = () => {
+  const [tutorials, setTutorials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    const fetchTutorials = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const response = await fetch("http://localhost:5000/api/admin/tutorials", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setTutorials(data);
+        } else {
+          showMessage("Failed to fetch tutorials", "error");
+        }
+      } catch (err) {
+        console.error("Error fetching tutorials:", err);
+        showMessage("Error fetching tutorials", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTutorials();
+    const interval = setInterval(fetchTutorials, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const showMessage = (text, type = "success") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleDeleteTutorial = async (tutorialId) => {
+    if (!window.confirm("Are you sure you want to delete this tutorial?")) return;
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await fetch(`http://localhost:5000/api/admin/tutorials/${tutorialId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setTutorials(tutorials.filter((tutorial) => tutorial.tutorialId !== tutorialId));
+        showMessage("🗑 Tutorial deleted successfully");
+      } else {
+        const data = await response.json();
+        showMessage(data.message || "Error deleting tutorial", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting tutorial:", err);
+      showMessage("Error deleting tutorial", "error");
+    }
+  };
+
+  return (
+      <div className="tutorial-manager">
+        {message && (
+            <Message
+                message={message.text}
+                type={message.type}
+                onClose={() => setMessage(null)}
+            />
+        )}
+        {loading ? (
+            <div className="loading">⏳ Loading tutorials...</div>
+        ) : (
+            <>
+              <h3>Tutorial List</h3>
+              <table className="skill-table">
+                <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Content</th>
+                  <th>Category</th>
+                  <th>Created By</th>
+                  <th>Likes</th>
+                  <th>Comments</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {tutorials.map((tutorial) => (
+                    <tr key={tutorial._id}>
+                      <td>{tutorial.title}</td>
+                      <td>{tutorial.content.substring(0, 50)}...</td>
+                      <td>{tutorial.category || "N/A"}</td>
+                      <td>{tutorial.authorId?.username || "N/A"}</td>
+                      <td>{tutorial.likesCount || 0}</td>
+                      <td>{tutorial.commentsCount || 0}</td>
+                      <td>{new Date(tutorial.createdAt).toLocaleString()}</td>
+                      <td>
+                        <button onClick={() => handleDeleteTutorial(tutorial.tutorialId)}>🗑</button>
+                      </td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </>
+        )}
+      </div>
+  );
+};
 // Main AdminDashboard Component
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("statistics");
   const [darkMode, setDarkMode] = useState(false);
   const [statsData, setStatsData] = useState(defaultStatsData);
+  const [tutorialStats, setTutorialStats] = useState({
+    totalTutorials: 0,
+    engagementMetrics: []
+  });
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1868,7 +2020,16 @@ const getSkillNames = (skills) => {
       setLoading(true);
       try {
         const token = localStorage.getItem("jwtToken");
-        const [dashboardStatsResponse, groupStatsResponse, activityStatsResponse, trendingActivitiesResponse] = await Promise.all([
+        if (!token) {
+          throw new Error("No JWT token found");
+        }
+        const [
+          dashboardStatsResponse,
+          groupStatsResponse,
+          activityStatsResponse,
+          trendingActivitiesResponse,
+          tutorialStatsResponse
+        ] = await Promise.all([
           fetch("http://localhost:5000/api/admin/dashboard-stats", {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -1881,17 +2042,22 @@ const getSkillNames = (skills) => {
           fetch("http://localhost:5000/api/events/trending", {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch("http://localhost:5000/api/admin/tutorials/dynamic-stats", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
         ]);
 
         if (!dashboardStatsResponse.ok) throw new Error("Failed to fetch dashboard statistics");
         if (!groupStatsResponse.ok) throw new Error("Failed to fetch group statistics");
         if (!activityStatsResponse.ok) throw new Error("Failed to fetch activity statistics");
         if (!trendingActivitiesResponse.ok) throw new Error("Failed to fetch trending activities");
+        if (!tutorialStatsResponse.ok) throw new Error("Failed to fetch tutorial statistics");
 
         const dashboardData = await dashboardStatsResponse.json();
         const groupData = await groupStatsResponse.json();
         const activityStatsData = await activityStatsResponse.json();
         const trendingActivitiesData = await trendingActivitiesResponse.json();
+        const tutorialData = await tutorialStatsResponse.json();
 
         const cleanedData = {
           users: {
@@ -1931,9 +2097,17 @@ const getSkillNames = (skills) => {
             categories: activityStatsData.categories,
             trending: trendingActivitiesData.filter(activity => activity.averageRating > 0),
           },
+          tutorials: {
+            totalTutorials: tutorialData.totalTutorials,
+            engagementMetrics: tutorialData.engagementMetrics
+          }
         };
 
         setStatsData(cleanedData);
+        setTutorialStats({
+          totalTutorials: tutorialData.totalTutorials,
+          engagementMetrics: tutorialData.engagementMetrics
+        });
         setError(null);
       } catch (err) {
         console.error("Error fetching stats:", err);
@@ -2136,6 +2310,12 @@ const getSkillNames = (skills) => {
         return (
             <div className="section-content">
               <h2>Overview Statistics</h2>
+              <Statistics
+                  statsData={statsData}
+                  tutorialStats={tutorialStats}
+                  loading={loading}
+                  error={error}
+              />
               {loading ? (
                   <p>Loading statistics...</p>
               ) : error ? (
@@ -2390,6 +2570,16 @@ const getSkillNames = (skills) => {
               )}
             </div>
         );
+      case "tutorials":
+        return (
+            <div className="section-content">
+              <h2>Tutorials</h2>
+              <TutorialManager />
+            </div>
+        );
+
+
+
       case "users":
         return (
             <div className="section-content">
@@ -2564,6 +2754,12 @@ const getSkillNames = (skills) => {
                     onClick={() => setActiveSection("groups")}
                 >
                   👥 Groups
+                </li>
+                <li
+                    className={activeSection === "tutorials" ? "active" : ""}
+                    onClick={() => setActiveSection("tutorials")}
+                >
+                  📝 Tutorials
                 </li>
                 <li
                     className={activeSection === "events" ? "active" : ""}

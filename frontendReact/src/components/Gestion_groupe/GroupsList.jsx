@@ -16,7 +16,7 @@ const GroupsList = () => {
   const [reportDetails, setReportDetails] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [privacyFilter, setPrivacyFilter] = useState("all");
-  const [activeMenu, setActiveMenu] = useState("all"); // Track the active menu option
+  const [activeMenu, setActiveMenu] = useState("all");
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
   const currentUserId = currentUser.id || currentUser._id;
@@ -214,7 +214,6 @@ const GroupsList = () => {
         <Back title="Available Groups" />
         <section className="group-section">
           <div className="group-container">
-            {/* Add Menu */}
             <div className="group-menu">
               <button
                   className={`group-menu__item ${activeMenu === "all" ? "group-menu__item--active" : ""}`}
@@ -247,20 +246,17 @@ const GroupsList = () => {
                 <option value="public">Public</option>
                 <option value="private">Private</option>
               </select>
-              {/* Removed the "Recommend with AI" button */}
             </div>
             <div className="group-grid">
-              {/* "Create Group" card always first */}
               <div className="group-card group-card--create">
                 <div className="group-card__content">
                   <h1 className="group-card__title">Create a New Group</h1>
                   <p className="group-card__description">Start your own community!</p>
-                  <button className="group-button" onClick={handleCreateGroup}>
-                    Create Group
-                  </button>
+                  <span className="group-emoji group-emoji--create" onClick={handleCreateGroup} title="Create Group">
+                  ➕
+                </span>
                 </div>
               </div>
-              {/* Other groups */}
               {filteredGroups.map((group) => {
                 const isOwner = group.createdBy?._id === currentUserId || group.createdBy?.id === currentUserId;
                 const isPending = requests[group._id]?.status === "pending";
@@ -283,54 +279,49 @@ const GroupsList = () => {
                         <div className="group-card__actions">
                           {isOwner ? (
                               <>
-                                <button className="group-button" onClick={() => handleViewPosts(group._id)}>
-                                  View Posts
-                                </button>
-                                <button className="group-button" onClick={() => handleViewRequests(group._id)}>
-                                  View Requests
-                                </button>
-                                <button className="group-button" onClick={() => handleViewMembers(group._id)}>
-                                  View Members
-                                </button>
-                                <button className="group-button" onClick={() => handleEditGroup(group._id)}>
-                                  Edit Group
-                                </button>
-                                <button
-                                    className="group-button group-card__delete-btn"
-                                    onClick={() => handleDeleteGroup(group._id)}
-                                >
-                                  Delete Group
-                                </button>
+                          <span className="group-emoji group-emoji--view-posts" onClick={() => handleViewPosts(group._id)} title="View Posts">
+                            📄
+                          </span>
+                                <span className="group-emoji group-emoji--view-requests" onClick={() => handleViewRequests(group._id)} title="View Requests">
+                            📩
+                          </span>
+                                <span className="group-emoji group-emoji--view-members" onClick={() => handleViewMembers(group._id)} title="View Members">
+                            👥
+                          </span>
+                                <span className="group-emoji group-emoji--edit" onClick={() => handleEditGroup(group._id)} title="Edit Group">
+                            ✏️
+                          </span>
+                                <span className="group-emoji group-emoji--delete" onClick={() => handleDeleteGroup(group._id)} title="Delete Group">
+                            🗑️
+                          </span>
                               </>
                           ) : (
                               <>
                                 {isMember ? (
                                     <>
-                                      <button className="group-button" onClick={() => handleViewPosts(group._id)}>
-                                        View Posts
-                                      </button>
-                                      <button
-                                          className="group-button group-card__leave-btn"
-                                          onClick={() => handleLeaveGroup(group._id)}
-                                      >
-                                        Leave Group
-                                      </button>
+                              <span className="group-emoji group-emoji--view-posts" onClick={() => handleViewPosts(group._id)} title="View Posts">
+                                📄
+                              </span>
+                                      <span className="group-emoji group-emoji--leave" onClick={() => handleLeaveGroup(group._id)} title="Leave Group">
+                                🚪
+                              </span>
                                     </>
                                 ) : (
-                                    <button
-                                        className="group-button"
-                                        onClick={() => handleJoinGroup(group._id, group.privacy)}
-                                        disabled={isPending}
+                                    <span
+                                        className={`group-emoji group-emoji--join ${isPending ? "group-emoji--disabled" : ""}`}
+                                        onClick={() => !isPending && handleJoinGroup(group._id, group.privacy)}
+                                        title={isPending ? "Request Pending" : "Join Group"}
                                     >
-                                      {isPending ? "Request Pending" : "Join Group"}
-                                    </button>
+                              {isPending ? "⏳" : "🤝"}
+                            </span>
                                 )}
-                                <button
-                                    className="group-button group-card__report-btn"
+                                <span
+                                    className="group-emoji group-emoji--report"
                                     onClick={() => setReportModal({ open: true, groupId: group._id, type: "group" })}
+                                    title="Report Group"
                                 >
-                                  Report Group
-                                </button>
+                            ⚠️
+                          </span>
                               </>
                           )}
                         </div>
@@ -373,16 +364,16 @@ const GroupsList = () => {
                     />
                   </div>
                   <div className="modal-actions">
-                    <button type="submit" className="group-button">
-                      Submit Report
-                    </button>
-                    <button
-                        type="button"
-                        className="group-button group-card__delete-btn"
+                <span className="group-emoji group-emoji--submit" onClick={handleReportSubmit} title="Submit Report">
+                  ✅
+                </span>
+                    <span
+                        className="group-emoji group-emoji--cancel"
                         onClick={() => setReportModal({ open: false, groupId: null, type: null })}
+                        title="Cancel"
                     >
-                      Cancel
-                    </button>
+                  ❌
+                </span>
                   </div>
                 </form>
               </div>

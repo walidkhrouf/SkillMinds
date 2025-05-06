@@ -18,5 +18,11 @@ router.put("/groups/:groupId", adminController.authenticateAdmin, adminControlle
 router.delete("/groups/:groupId", adminController.authenticateAdmin, adminController.deleteGroupAdmin);
 router.delete("/groups/:groupId/posts/:postId", adminController.authenticateAdmin, adminController.deleteGroupPostAdmin);
 
+// Tutorial routes
+router.get("/tutorials", adminController.authenticateAdmin, adminController.getAllTutorialsAdmin);
+router.delete("/tutorials/:tutorialId", adminController.authenticateAdmin, adminController.deleteTutorialAdmin);
+router.get("/tutorials/stats", adminController.authenticateAdmin, adminController.getTutorialStats);
+router.get("/tutorials/dynamic-stats", adminController.authenticateAdmin, adminController.getTutorialDynamicStats);
+
 
 module.exports = router;
