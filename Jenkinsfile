@@ -19,15 +19,35 @@ pipeline {
             }
         }
 
-        stage('Verify Tools') {
+        stage('Verify Environment') {
             steps {
                 script {
-                    // Verify tar is available
-                    def tarAvailable = sh(script: 'command -v tar || true', returnStatus: true) == 0
-                    if (!tarAvailable) {
-                        error "ERROR: tar command not found. This is required for packaging."
+                    // Verify required commands
+                    def commands = ['tar', 'curl', 'npm', 'node']
+                    commands.each { cmd ->
+                        def available = sh(script: "command -v ${cmd} || true", returnStatus: true) == 0
+                        if (!available) {
+                            error "ERROR: ${cmd} command not found. This is required for the pipeline."
+                        }
+                        echo "${cmd} command is available"
                     }
-                    echo "tar command is available"
+
+                    // Verify Nexus connectivity
+                    withCredentials([usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    )]) {
+                        def nexusStatus = sh(
+                            script: "curl -s -o /dev/null -w '%{http_code}' -u ${env.NEXUS_USER}:${env.NEXUS_PASS} ${env.NEXUS_URL}/service/rest/v1/status",
+                            returnStdout: true
+                        ).trim()
+                        
+                        if (nexusStatus != "200") {
+                            error "ERROR: Cannot connect to Nexus (HTTP ${nexusStatus}). Check URL and credentials."
+                        }
+                        echo "Nexus connection successful"
+                    }
                 }
             }
         }
@@ -37,7 +57,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                         def response = sh(script: """
-                            curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                            curl -s -H "Authorization: token ${env.GITHUB_TOKEN}" \\
                                 -H "Accept: application/vnd.github.v3+json" \\
                                 https://api.github.com/repos/Saif-Hlaimi/DevMinds_4TWIN5_pidev/actions/workflows/ci.yml/runs?per_page=1
                         """, returnStdout: true).trim()
@@ -54,7 +74,7 @@ pipeline {
                         """
 
                         def jobs = sh(script: """
-                            curl -s -H "Authorization: token \${GITHUB_TOKEN}" \\
+                            curl -s -H "Authorization: token ${env.GITHUB_TOKEN}" \\
                                 -H "Accept: application/vnd.github.v3+json" \\
                                 https://api.github.com/repos/Saif-Hlaimi/DevMinds_4TWIN5_pidev/actions/runs/${run.id}/jobs
                         """, returnStdout: true).trim()
@@ -92,6 +112,11 @@ pipeline {
                 dir('frontendReact') {
                     sh 'npm install'
                     sh 'npm run build' 
+                    script {
+                        if (!fileExists('dist/index.html')) {
+                            error "Frontend build failed - missing dist/index.html"
+                        }
+                    }
                 }
             }
         }
@@ -121,6 +146,11 @@ pipeline {
                 dir('Backend') {
                     sh 'npm install'
                     sh 'npm pack' 
+                    script {
+                        if (!fileExists("${packageJson.name}-${packageJson.version}.tgz")) {
+                            error "npm pack failed to create .tgz file"
+                        }
+                    }
                 }
             }
         }
@@ -133,37 +163,35 @@ pipeline {
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASS'
                     )]) {
-                        // Frontend (using tar)
+                        // Create directory structure in Nexus
                         sh """
-                            if [ -d "frontendReact/dist" ]; then
-                                echo "Packaging frontend files..."
-                                tar -czvf frontend-${BUILD_VERSION}.tar.gz -C frontendReact/dist .
-                                echo "Uploading frontend package to Nexus..."
-                                curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file frontend-${BUILD_VERSION}.tar.gz \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/${BUILD_VERSION}/"
-                                echo "Frontend package uploaded successfully"
-                            else
-                                echo "ERROR: frontendReact/dist not found!"
-                                exit 1
-                            fi
+                            curl -X MKCOL -u ${env.NEXUS_USER}:${env.NEXUS_PASS} \
+                                "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/frontend/${env.BUILD_VERSION}/" || true
+                            curl -X MKCOL -u ${env.NEXUS_USER}:${env.NEXUS_PASS} \
+                                "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/backend/${env.BUILD_VERSION}/" || true
                         """
 
-                        // Backend (using npm pack)
-                        sh """
-                            if ls Backend/*.tgz 1> /dev/null 2>&1; then
-                                echo "Found backend package..."
-                                TGZ_FILE=\$(ls Backend/*.tgz | head -1)
-                                echo "Uploading backend package to Nexus..."
-                                curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file \$TGZ_FILE \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/${BUILD_VERSION}/"
-                                echo "Backend package uploaded successfully"
-                            else
-                                echo "ERROR: No .tgz file found in Backend/"
-                                exit 1
-                            fi
-                        """
+                        // Upload Frontend
+                        dir('frontendReact') {
+                            sh """
+                                tar -czvf ../frontend-${env.BUILD_VERSION}.tar.gz -C dist .
+                                curl -f -v -u ${env.NEXUS_USER}:${env.NEXUS_PASS} \\
+                                    --upload-file ../frontend-${env.BUILD_VERSION}.tar.gz \\
+                                    "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/frontend/${env.BUILD_VERSION}/"
+                            """
+                        }
+
+                        // Upload Backend
+                        dir('Backend') {
+                            def packageJson = readJSON file: 'package.json'
+                            def tgzFile = "${packageJson.name}-${packageJson.version}.tgz"
+                            
+                            sh """
+                                curl -f -v -u ${env.NEXUS_USER}:${env.NEXUS_PASS} \\
+                                    --upload-file ${tgzFile} \\
+                                    "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/backend/${env.BUILD_VERSION}/"
+                            """
+                        }
                     }
                 }
             }
@@ -177,11 +205,18 @@ pipeline {
         }
         success {
             echo "Pipeline succeeded! Artifacts published to Nexus:"
-            echo "Frontend: ${NEXUS_URL}/repository/${NEXUS_REPO}/frontend/${BUILD_VERSION}/"
-            echo "Backend: ${NEXUS_URL}/repository/${NEXUS_REPO}/backend/${BUILD_VERSION}/"
+            echo "Frontend: ${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/frontend/${env.BUILD_VERSION}/"
+            echo "Backend: ${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/backend/${env.BUILD_VERSION}/"
         }
         failure {
             echo 'Pipeline failed! Check logs for details.'
+            script {
+                // Additional failure diagnostics
+                if (env.NEXUS_URL) {
+                    echo "Verify Nexus accessibility:"
+                    sh "curl -I ${env.NEXUS_URL} || true"
+                }
+            }
         }
     }
 }
