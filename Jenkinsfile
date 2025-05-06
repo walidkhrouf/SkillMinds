@@ -158,7 +158,7 @@ pipeline {
                                 echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
                                 BASE_NAME=\$(basename \$TGZ_FILE .tgz)
-                                VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')
+                                VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')-${BUILD_VERSION}
                                 echo "Uploading backend package to Nexus..."
                                 curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file \$TGZ_FILE \\
