@@ -284,11 +284,11 @@ async function getWeather(lat, lon, jobId) {
       <aside className="job-filters">
   <h3>Filters</h3>
   
-<label>
+  <label>
   <input 
     type="checkbox" 
     checked={showRecommended} 
-    onChange={() => handleCheckboxChangingWithRedirect(setShowRecommended, '/recommended-jobs')} 
+    onChange={() => setShowRecommended(prev => !prev)} 
   /> Recommended Jobs
 </label>
 
@@ -405,7 +405,7 @@ async function getWeather(lat, lon, jobId) {
 
               </div>
               <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
-              <p><strong>Description:</strong> {job.description || 'N/A'}</p>
+<p className="job-description1"><strong>Description:</strong> {job.description || 'N/A'}</p>
               <h4>Status: {job.status || 'N/A'}</h4>
               <div className="job-card-actions">
       <Link to={`/job-details/${job._id}`} className="viewmore">View Details</Link>

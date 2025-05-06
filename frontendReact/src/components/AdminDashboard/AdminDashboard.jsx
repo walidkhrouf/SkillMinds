@@ -1968,7 +1968,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   const [jobOffers, setJobOffers] = useState([]); // Contient les offres d'emploi
 const [jobLoading, setJobLoading] = useState(true); // Indicateur de chargement des offres d'emploi
 const [jobError, setJobError] = useState(null); // Erreur de récupération des offres d'emploi
@@ -1983,7 +1982,6 @@ const showMessage = (text, type = "success") => {
   setMessage({ text, type });
   setTimeout(() => setMessage(null), 5000); // Ferme le message après 5 secondes
 };
-
 
 useEffect(() => {
   async function fetchSkills() {
@@ -2122,7 +2120,7 @@ const getSkillNames = (skills) => {
 
     if (activeSection === "statistics") {
       fetchStats();
-      const interval = setInterval(fetchStats, 30000);
+      const interval = setInterval(fetchStats, 30000); // Reduced polling frequency
       return () => clearInterval(interval);
     }
   }, [activeSection]);
@@ -2338,52 +2336,53 @@ const getSkillNames = (skills) => {
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="stats-card">
-                        <h3>Jobs Overview</h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                          <BarChart data={[
-                            { status: "Open", count: jobOffers.filter(job => job.status === "open").length },
-                            { status: "Closed", count: jobOffers.filter(job => job.status === "closed").length },
-                          ]}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="status" />
-                            <YAxis allowDecimals={false} />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="count" fill="#a6792e" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="stats-card">
-                        <h3>Trending Skills in Job Offers</h3>
-                        {loadingSkills ? (
-                            <p>Loading trending skills...</p>
-                        ) : skillsError ? (
-                            <p className="error-message">{skillsError}</p>
-                        ) : skillsData && skillsData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={250}>
-                              <PieChart>
-                                <Pie
-                                    data={skillsData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    label={({ name, value }) => `${name}: ${value}`}
-                                >
-                                  {skillsData.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={['#c2b280', '#6f4e37', '#cfa54b'][index % 3]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip />
-                              </PieChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <p>No trending skills available.</p>
-                        )}
-                      </div>
+                     <div className="stats-card">
+                                   <h3>Jobs Overview</h3>
+                                   <ResponsiveContainer width="100%" height={250}>
+                                     <BarChart data={[
+                                       { status: "Open", count: jobOffers.filter(job => job.status === "open").length },
+                                       { status: "Closed", count: jobOffers.filter(job => job.status === "closed").length },
+                                     ]}>
+                                       <CartesianGrid strokeDasharray="3 3" />
+                                       <XAxis dataKey="status" />
+                                       <YAxis allowDecimals={false} />
+                                       <Tooltip />
+                                       <Legend />
+                                       <Bar dataKey="count" fill="#a6792e" />
+                                     </BarChart>
+                                   </ResponsiveContainer>
+                                 </div>
+    <div className="stats-card">
+  <h3>Trending Skills in Job Offers</h3>
+  {loadingSkills ? (
+    <p>Loading trending skills...</p>
+  ) : skillsError ? (
+    <p className="error-message">{skillsError}</p>
+  ) : skillsData && skillsData.length > 0 ? (
+    <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+        <Pie
+          data={skillsData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+          fill="#8884d8"
+          label={({ name, value }) => `${name}: ${value}`}
+        >
+          {skillsData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={['#c2b280', '#6f4e37', '#cfa54b'][index % 3]} />
+          ))}
+        </Pie>
+        <Tooltip />
+      </PieChart>
+    </ResponsiveContainer>
+  ) : (
+    <p>No trending skills available.</p>
+  )}
+</div>
+
                       <div className="stats-card">
                         <h3>Course Categories</h3>
                         <ResponsiveContainer width="100%" height={250}>
@@ -2437,34 +2436,34 @@ const getSkillNames = (skills) => {
                           <h4>Total Activities</h4>
                           <p className="metric-value">{statsData.activities.total}</p>
                         </div>
-                        <div
-                            className="metric-box"
-                            style={{
-                              textAlign: "center",
-                              fontSize: "1.5rem",
-                              fontWeight: "bold",
-                              color: "#333",
-                              margin: "20px",
-                              lineHeight: "1.2"
-                            }}
-                        >
-                          <div
-                              style={{
-                                fontSize: "1.2rem",
-                                marginBottom: "5px"
-                              }}
-                          >
-                            Total Jobs
-                          </div>
-                          <div
-                              style={{
-                                fontSize: "2.5rem",
-                                color: "#a6792e"
-                              }}
-                          >
-                            {jobOffers.length}
-                          </div>
-                        </div>
+                        <div 
+                className="metric-box" 
+                style={{ 
+                  textAlign: "center", 
+                  fontSize: "1.5rem", 
+                  fontWeight: "bold", 
+                  color: "#333", 
+                  margin: "20px", 
+                  lineHeight: "1.2"
+                }}
+              >
+                <div 
+                  style={{ 
+                    fontSize: "1.2rem", 
+                    marginBottom: "5px" 
+                  }}
+                >
+                  Total Jobs
+                </div>
+                <div 
+                  style={{ 
+                    fontSize: "2.5rem", 
+                    color: "#a6792e" 
+                  }}
+                >
+                  {jobOffers.length}
+                </div>
+              </div>
                       </div>
                       <div className="stats-card">
                         <h3>Trending Skills</h3>

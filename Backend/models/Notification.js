@@ -14,7 +14,11 @@ const notificationSchema = new Schema({
       'JOB_OFFER_UPDATED', 
       'JOB_OFFER_DELETED', 
       'JOB_APPLICATION_RECEIVED',
-      'GROUP_REQUEST'
+      'GROUP_REQUEST', "INTERVIEW_DATE_SET",  "INTERVIEW_CONFIRMED_BY_CANDIDATE", // ✅ ajouté
+      "INTERVIEW_DECLINED_BY_CANDIDATE",  // ✅ ajouté
+      'FINAL_DECISION' // ✅ Ajoute cette ligne
+      
+
     ],
     required: true
   },

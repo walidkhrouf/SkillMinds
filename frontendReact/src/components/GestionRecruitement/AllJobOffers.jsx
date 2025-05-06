@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ReactPaginate from 'react-paginate';
 import moment from 'moment';
 import './Recruitement.css';
+import { FaCalendarAlt } from 'react-icons/fa'; // calendrier
 
 const AllJobOffers = () => {
   const navigate = useNavigate();
@@ -25,13 +26,24 @@ const [showMyPostedJobs, setShowMyPostedJobs] = useState(false);
   const [selectedDateFilter, setSelectedDateFilter] = useState('all');
   const [selectedJobTypes, setSelectedJobTypes] = useState([]);
   const [selectedCountries, setSelectedCountries] = useState([]);
+  const [showInterviews, setShowInterviews] = useState(() => {
+    const stored = localStorage.getItem('showInterviews');
+    return stored ? JSON.parse(stored) : false;
+  });
+  useEffect(() => {
+    localStorage.setItem('showInterviews', JSON.stringify(showInterviews));
+  }, [showInterviews]);
+    
+
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/recruitment/job-offers')
-      .then(res => {
-        setJobOffers(res.data);
-        setFilteredOffers(res.data);
+  .then(res => {
+    // Tri des offres par date de création décroissante
+    const sortedOffers = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    setJobOffers(sortedOffers);
+    setFilteredOffers(sortedOffers);
         const locations = res.data.map(job => job.location?.trim()).filter(Boolean);
         const unique = [...new Set(locations)];
         setUniqueCountries(unique);
@@ -147,6 +159,46 @@ const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
   navigate(redirectPath);
 };
 
+const [interviewInvites, setInterviewInvites] = useState(() => {
+  const stored = localStorage.getItem('interviewInvites');
+  return stored ? JSON.parse(stored) : [];
+});
+
+useEffect(() => {
+  if (currentUser._id) {
+    axios.get(`http://localhost:5000/api/recruitment/interview-invites/${currentUser._id}`)
+      .then(res => {
+        setInterviewInvites(res.data);
+      })
+      .catch(err => {
+        const storedInvites = localStorage.getItem('interviewInvites');
+        if (storedInvites) setInterviewInvites(JSON.parse(storedInvites));
+        console.error("Error fetching interview invites", err);
+      });
+  }
+}, [currentUser._id]);
+
+
+const handleInterviewConfirmation = async (applicationId, status) => {
+  try {
+    // Appel API pour mettre à jour la confirmation
+    await axios.put(`http://localhost:5000/api/recruitment/applications/${applicationId}/interview-confirm`, { status });
+
+    // Mettre à jour l'état local avec la nouvelle confirmation
+    const updated = interviewInvites.map(app =>
+      app._id === applicationId ? { ...app, confirmedInterview: status } : app
+    );
+
+    // Enregistrer dans le state et dans le localStorage pour garder après refresh
+    setInterviewInvites(updated);
+    localStorage.setItem('interviewInvites', JSON.stringify(updated));
+  } catch (err) {
+    console.error('Error confirming interview', err);
+  }
+};
+
+
+
   
 
 
@@ -205,6 +257,7 @@ const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
 
       <section className="job-results"> <br /> 
         <h1 className="section-title" style={{ textAlign: 'center', fontSize: '36px' }}>All Job Offers</h1>
+        
 
         <div className="top-search-bar">
           <input
@@ -223,10 +276,80 @@ const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
           <button className="search-btn" onClick={() => {}} disabled={!searchValue || !selectedFilter}>Find Jobs</button>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
-          <Link to="/create-job-offer" className="viewmore create-button">Create New Job Offer</Link>
-          <Link to="/recommended-jobs" className="viewmore create-button" style={{ background: 'rgb(78, 49, 6)' }}>Recommendation with AI</Link>
+        <div className="button-and-calendar-bar">
+  <div className="centered-buttons">
+  <button
+  className="viewmore create-button"
+  onClick={() => {
+    if (!currentUser._id || !currentUser.role) {
+      navigate('/signin');
+    } else {
+      navigate('/create-job-offer');
+    }
+  }}
+>
+  Create New Job Offer
+</button>
+<button
+  className="viewmore create-button"
+  style={{ background: 'rgb(78, 49, 6)' }}
+  onClick={() => {
+    if (!currentUser._id || !currentUser.role) {
+      navigate('/signin');
+    } else {
+      navigate('/recommended-jobs');
+    }
+  }}
+>
+  Recommendation with AI
+</button>
+
+  </div>
+  <div className="calendar-icon" onClick={() => setShowInterviews(!showInterviews)} title={showInterviews ? "Hide Interviews" : "Show Interviews"}>
+    <FaCalendarAlt size={28} />
+  </div>
+</div>
+
+
+{showInterviews && interviewInvites.length > 0 && (
+  <div className="interview-box-wrapper" > <br />
+    <div className="left-side-visual" >
+      <img src="/images/your-next-interview-left.png" alt="Your Next Interviews" />
+    </div>
+
+    <div className="interview-alert-box" style={{backgroundColor:'rgb(78, 49, 6)'}}>
+      <h3 style={{ color: 'white' ,textAlign:'center' ,fontFamily:'monospace' }}>You have upcoming interviews</h3>
+      {interviewInvites
+  .filter(invite => invite.jobId && invite.confirmedInterview !== 'declined')
+  .map(invite => (
+        <div key={invite._id} className="interview-card">
+          <h4>{invite.jobId.title}</h4>
+          <p><strong>Date:</strong> {moment(invite.interviewDate).format('DD MMM YYYY')}</p>
+          <p><strong>Time:</strong> {moment(invite.interviewDate).format('HH:mm')}</p>
+          <div className="interview-actions">
+            {invite.confirmedInterview === 'pending' && (
+              <>
+                <button className="confirm-button" onClick={() => handleInterviewConfirmation(invite._id, 'confirmed')}>Confirm</button>
+                <button className="decline-button" onClick={() => handleInterviewConfirmation(invite._id, 'declined')}>Decline</button>
+              </>
+            )}
+            {(invite.confirmedInterview === 'confirmed' || invite.confirmedInterview === 'declined') && invite.meetLink && (
+              <a href={invite.meetLink} target="_blank" rel="noopener noreferrer" className="join-meet-button">
+                Join Meet
+              </a>
+            )}
+          </div>
         </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
+
+
+        <br />
+      
 
         <p className="job-count">{filteredOffers.length} job{filteredOffers.length !== 1 ? 's' : ''} found</p>
 
@@ -245,7 +368,7 @@ const handleCheckboxChangingWithRedirect = (setter, redirectPath) => {
                    <p>{job.city || 'N/A'}, {job.location || 'N/A'}</p>
                 </div>
                   <p><strong>Posted By:</strong> {job.postedBy?.username || 'N/A'}</p>
-                  <p><strong>Description:</strong> {job.description || 'N/A'}</p>
+                  <p className="job-card-description"><strong>Description:</strong> {job.description || 'N/A'}</p>
                   <h4>Status: {job.status || 'N/A'}</h4>
 
                   <div className="job-card-actions">

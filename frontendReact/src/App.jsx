@@ -43,6 +43,7 @@ import RecommendedJobs from "./components/GestionRecruitement/RecommendedJobs.js
 import Tutorials from "./components/Gestion_tutorial/Tutorials.jsx";
 import CreateTutorial from "./components/Gestion_tutorial/CreateTutorial.jsx";
 import TutorialDetail from "./components/Gestion_tutorial/TutorialDetail.jsx";
+import PickInterviewDate from "./components/GestionRecruitement/PickInterviewDate.jsx";
 
 import ActivityDetails from "./components/activities/ActivityDetails.jsx";
 import { ToastContainer } from 'react-toastify';
@@ -105,6 +106,8 @@ const AppContent = () => {
         <Route path="/tutorials" element={<Tutorials />} />
         <Route path="/tutorials/create" element={<CreateTutorial />} />
         <Route path="/tutorials/:tutorialId" element={<TutorialDetail />} />
+        <Route path="/interview-scheduler/:applicationId" element={<PickInterviewDate />} />
+
         <Route
           path="/admin"
           element={
