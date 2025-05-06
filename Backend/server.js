@@ -19,6 +19,7 @@ const coursesRoutes = require("./Routes/CoursesRoute");
 const groupeRoutes = require("./Routes/GestionGroupeRoute");
 const GestionRecruitementRoute = require("./Routes/GestionRecruitementRoute");
 const tutorialRoutes = require("./Routes/tutorialRoute");
+const chatRoutes = require("./Routes/chatRoute");
 
 const User = require("./models/User");
 require("dotenv").config({ path: __dirname + "/.env" });
@@ -34,7 +35,6 @@ const io = socketIo(server, {
   },
 });
 
-// Add this after initializing Socket.IO and before defining routes
 app.use((req, res, next) => {
   req.io = io;
   next();
@@ -50,6 +50,8 @@ if (!process.env.JWT_SECRET) {
 console.log("JWT_SECRET:", process.env.JWT_SECRET);
 console.log("AZURE_TTS_KEY:", process.env.AZURE_TTS_KEY);
 console.log("AZURE_TTS_REGION:", process.env.AZURE_TTS_REGION);
+console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY);
+
 
 app.use(morgan("dev"));
 app.use(
@@ -78,7 +80,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
 
-// Attach a dummy user for testing
 if (process.env.NODE_ENV === "test") {
   app.use((req, res, next) => {
     req.user = { id: "507f1f77bcf86cd799439011" };
@@ -228,6 +229,8 @@ app.use("/api/recruitment", GestionRecruitementRoute);
 app.use("/api/groups", groupeRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/courses", coursesRoutes);
+app.use("/api", chatRoutes);
+
 app.use("/uploads", express.static("Uploads"));
 
 app.disable("etag");

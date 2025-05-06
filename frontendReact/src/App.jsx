@@ -9,7 +9,6 @@ import Pricing from "./components/pricing/Pricing";
 import Blog from "./components/blog/Blog";
 import Contact from "./components/contact/Contact";
 import Footer from "./components/common/footer/Footer";
-import "./App.css";
 import Signin from "./components/User/Signin";
 import Signup from "./components/User/Signup";
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard.jsx";
@@ -18,12 +17,13 @@ import SkillsList from "./SkillsList/SkillList.jsx";
 import ForgetPassword from "./components/User/ForgetPassword.jsx";
 import Activities from "./components/activities/Activities.jsx";
 import AddActivity from "./components/activities/AddActivity.jsx";
-import UpdateActivity from "./components/activities/UpdateActivity.jsx";import GroupsList from "./components/Gestion_groupe/GroupsList.jsx";
+import UpdateActivity from "./components/activities/UpdateActivity.jsx";
+import GroupsList from "./components/Gestion_groupe/GroupsList.jsx";
 import CreateGroup from "./components/Gestion_groupe/CreateGroup.jsx";
 import CreateGroupPost from "./components/Gestion_groupe/CreateGroupPost.jsx";
 import GroupPosts from "./components/Gestion_groupe/GroupPosts.jsx";
 import GroupPostDetails from "./components/Gestion_groupe/GroupPostDetails.jsx";
-import GroupRequests from "./components/Gestion_groupe/GroupRequests"; 
+import GroupRequests from "./components/Gestion_groupe/GroupRequests";
 import EditGroup from "./components/Gestion_groupe/EditGroup.jsx";
 import GroupMembers from "./components/Gestion_groupe/GroupMembers.jsx";
 import AIRecommendation from "./components/Gestion_groupe/AIRecommendation.jsx";
@@ -44,115 +44,122 @@ import Tutorials from "./components/Gestion_tutorial/Tutorials.jsx";
 import CreateTutorial from "./components/Gestion_tutorial/CreateTutorial.jsx";
 import TutorialDetail from "./components/Gestion_tutorial/TutorialDetail.jsx";
 import PickInterviewDate from "./components/GestionRecruitement/PickInterviewDate.jsx";
-
+import ChatBot from "./components/chatbot/ChatBot.jsx";
 import ActivityDetails from "./components/activities/ActivityDetails.jsx";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 const AdminRoute = ({ children }) => {
   const storedUser = localStorage.getItem("currentUser");
-  if (!storedUser) {
-    return <Navigate to="/signin" replace />;
-  }
+  if (!storedUser) return <Navigate to="/signin" replace />;
   const user = JSON.parse(storedUser);
-  if (user.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
+  if (user.role !== "admin") return <Navigate to="/" replace />;
   return children;
 };
-
-AdminRoute.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+AdminRoute.propTypes = { children: PropTypes.node.isRequired };
 
 const AppContent = () => {
   const { pathname } = useLocation();
   const hideLayout = pathname === "/admin";
 
   return (
-    <>
-      {!hideLayout && <Header />}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/courses" element={<CourseHome />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/journal" element={<Blog />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/groups/:groupId/edit" element={<EditGroup />} />
-        <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
-        <Route path="/groups" element={<GroupsList />} />
-        <Route path="/groups/:groupId" element={<GroupPosts />} />
-        <Route path="/groups/:groupId/posts/:postId" element={<GroupPostDetails />} />
-        <Route path="/groups/:groupId/requests" element={<GroupRequests />} /> 
-        <Route path="/create-group" element={<CreateGroup />} />
-        <Route path="/groups/:groupId/post" element={<CreateGroupPost />} />
-        <Route path="/groups/:groupId/members" element={<GroupMembers />} />
-        <Route path="/ai-recommendation" element={<AIRecommendation />} />
-        
-        <Route path="/courses" element={<CoursesCard />} />
-        <Route path="/create-course" element={<CreateCourse />} />
-        <Route path="/course-details/:id" element={<CourseDetails />} />
-        <Route path="/all-courses" element={<AllCourses />} />
-        <Route path="/update-course/:id" element={<UpdateCourse />} />
-        
-        
-        <Route path="/activities" element={<Activities />} />
-        <Route path="/add-activity" element={<AddActivity />} />
-        <Route path="/update-activity/:id" element={<UpdateActivity />} />
-        <Route path="/activity/:id" element={<ActivityDetails />} />
-        <Route path="/tutorials" element={<Tutorials />} />
-        <Route path="/tutorials/create" element={<CreateTutorial />} />
-        <Route path="/tutorials/:tutorialId" element={<TutorialDetail />} />
-        <Route path="/interview-scheduler/:applicationId" element={<PickInterviewDate />} />
+      <>
+        {!hideLayout && <Header />}
 
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/courses" element={<CourseHome />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/journal" element={<Blog />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/signin" element={<Signin />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password/:id/:token" element={<ForgetPassword />} />
+
+          {/* Group management */}
+          <Route path="/groups" element={<GroupsList />} />
+          <Route path="/create-group" element={<CreateGroup />} />
+          <Route path="/groups/:groupId" element={<GroupPosts />} />
+          <Route path="/groups/:groupId/post" element={<CreateGroupPost />} />
+          <Route path="/groups/:groupId/edit" element={<EditGroup />} />
+          <Route path="/groups/:groupId/requests" element={<GroupRequests />} />
+          <Route path="/groups/:groupId/members" element={<GroupMembers />} />
+          <Route path="/ai-recommendation" element={<AIRecommendation />} />
+
+          {/* Course management */}
+          <Route path="/all-courses" element={<AllCourses />} />
+          <Route path="/create-course" element={<CreateCourse />} />
+          <Route path="/course-details/:id" element={<CourseDetails />} />
+          <Route path="/update-course/:id" element={<UpdateCourse />} />
+
+          {/* Activities */}
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/add-activity" element={<AddActivity />} />
+          <Route path="/update-activity/:id" element={<UpdateActivity />} />
+          <Route path="/activity/:id" element={<ActivityDetails />} />
+
+          {/* Tutorials */}
+          <Route path="/tutorials" element={<Tutorials />} />
+          <Route path="/tutorials/create" element={<CreateTutorial />} />
+          <Route path="/tutorials/:tutorialId" element={<TutorialDetail />} />
+
+          {/* Recruitment */}
+          <Route path="/interview-scheduler/:applicationId" element={<PickInterviewDate />} />
+          <Route path="/Recruitement" element={<Recruitement />} />
+          <Route path="/all-job-offers" element={<AllJobOffers />} />
+          <Route path="/all-job-applications" element={<AllJobApplications />} />
+          <Route path="/create-job-offer" element={<CreateJobOffer />} />
+          <Route path="/apply-to-job/:jobId" element={<ApplyToJob />} />
+          <Route path="/edit-job-offer/:jobId" element={<EditJobOffer />} />
+          <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
+          <Route path="/recommended-jobs" element={<RecommendedJobs />} />
+
+          {/* Admin dashboard */}
+          <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+          />
+
+          {/* Profile and skills */}
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/firstchoose" element={<SkillsList />} />
+        </Routes>
+
+        {!hideLayout && <Footer />}
+
+        {/* Floating chatbot widget (visible on all pages) */}
+        <ChatBot />
+
+        <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            style={{
+              zIndex: 9999,
+              marginTop: '4rem'
+            }}
         />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/firstchoose" element={<SkillsList />} />
-
-        <Route path="/Recruitement" element={<Recruitement/>} />
-        <Route path="/all-job-offers" element={<AllJobOffers />} />
-        <Route path="/all-job-applications" element={<AllJobApplications />} />
-        <Route path="/create-job-offer" element={<CreateJobOffer />} /> {/* Route pour créer une offre */}
-        <Route path="/apply-to-job/:jobId" element={<ApplyToJob />} /> {/* Route pour postuler */}
-        <Route path="/edit-job-offer/:jobId" element={<EditJobOffer />} />
-        <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
-        <Route path="/recommended-jobs" element={<RecommendedJobs />} />
-      </Routes>
-      {!hideLayout && <Footer />}
-      <ToastContainer 
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        style={{
-          zIndex: 9999,
-          marginTop: '4rem' // Adjust this value based on your header height
-        }}
-      />
-    </>
+      </>
   );
 };
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+      <Router>
+        <AppContent />
+      </Router>
   );
 }
 
