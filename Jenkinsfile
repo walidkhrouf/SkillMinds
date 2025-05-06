@@ -127,6 +127,12 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                sh 'apt-get update && apt-get install -y zip'
+            }
+        }
+
         stage('Publish to Nexus') {
             steps {
                 script {
