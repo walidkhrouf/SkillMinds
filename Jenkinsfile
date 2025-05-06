@@ -60,7 +60,7 @@ pipeline {
                         """, returnStdout: true).trim()
 
                         def frontendJob = readJSON(text: jobs).jobs.find { it.name == 'frontend' }
-                        def backendJob = readJSON(text: jobs).find { it.name == 'backend' }
+                        def backendJob = readJSON(text: jobs).jobs.find { it.name == 'backend' }
 
                         if (frontendJob?.conclusion != 'success' || backendJob?.conclusion != 'success') {
                             error "Tests failed: Frontend=${frontendJob?.conclusion}, Backend=${backendJob?.conclusion}"
