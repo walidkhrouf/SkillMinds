@@ -22,7 +22,6 @@ pipeline {
         stage('Verify Tools') {
             steps {
                 script {
-                    // Verify tar is available
                     def tarAvailable = sh(script: 'command -v tar || true', returnStatus: true) == 0
                     if (!tarAvailable) {
                         error "ERROR: tar command not found. This is required for packaging."
@@ -79,9 +78,20 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \
-                            -Dsonar.sources=Backend/Controllers \
-                            -Dsonar.tests=Backend/tests,Backend/test
+                            -Dsonar.sources=frontendReact/src,Backend/Controllers \
+                            -Dsonar.tests=frontendReact/__tests__,Backend/tests \
+                            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
                         """
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Quality Gate') {
+            steps {
+                script {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
@@ -125,7 +135,7 @@ pipeline {
             }
         }
 
-      stage('Publish to Nexus') {
+        stage('Publish to Nexus') {
             steps {
                 script {
                     withCredentials([usernamePassword(
@@ -141,7 +151,10 @@ pipeline {
                                 echo "Uploading frontend package to Nexus..."
                                 curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file frontend-${BUILD_VERSION}.tar.gz \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/frontend-${BUILD_VERSION}.tar.gz"
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/frontend/${BUILD_VERSION}/frontend-${BUILD_VERSION}.tar.gz" || {
+                                        echo "ERROR: Failed to upload frontend package to Nexus"
+                                        exit 1
+                                    }
                                 echo "Frontend package uploaded successfully"
                             else
                                 echo "ERROR: frontendReact/dist not found!"
@@ -154,10 +167,15 @@ pipeline {
                             if ls Backend/*.tgz 1> /dev/null 2>&1; then
                                 echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
+                                BASE_NAME=\$(basename \$TGZ_FILE .tgz)
+                                VERSION=\$(echo \$BASE_NAME | cut -d '-' -f 2-)
                                 echo "Uploading backend package to Nexus..."
                                 curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file \$TGZ_FILE \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/\$(basename \$TGZ_FILE)"
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/\${BASE_NAME}.tgz" || {
+                                        echo "ERROR: Failed to upload backend package to Nexus"
+                                        exit 1
+                                    }
                                 echo "Backend package uploaded successfully"
                             else
                                 echo "ERROR: No .tgz file found in Backend/"
@@ -177,8 +195,8 @@ pipeline {
         }
         success {
             echo "Pipeline succeeded! Artifacts published to Nexus:"
-            echo "Frontend: ${NEXUS_URL}/repository/${NEXUS_REPO}/frontend/${BUILD_VERSION}/"
-            echo "Backend: ${NEXUS_URL}/repository/${NEXUS_REPO}/backend/${BUILD_VERSION}/"
+            echo "Frontend: ${NEXUS_URL}/repository/${NEXUS_REPO}/com/devminds/frontend/${BUILD_VERSION}/frontend-${BUILD_VERSION}.tar.gz"
+            echo "Backend: ${NEXUS_URL}/repository/${NEXUS_REPO}/com/devminds/backend/"
         }
         failure {
             echo 'Pipeline failed! Check logs for details.'
