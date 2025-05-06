@@ -22,11 +22,12 @@ pipeline {
         stage('Verify Tools') {
             steps {
                 script {
-                    def zipAvailable = sh(script: 'command -v zip || true', returnStatus: true) == 0
-                    if (!zipAvailable) {
-                        echo "WARNING: zip command not found. Frontend artifacts won't be zipped."
+                    // Verify tar is available
+                    def tarAvailable = sh(script: 'command -v tar || true', returnStatus: true) == 0
+                    if (!tarAvailable) {
+                        error "ERROR: tar command not found. This is required for packaging."
                     }
-                    env.ZIP_AVAILABLE = zipAvailable
+                    echo "tar command is available"
                 }
             }
         }
@@ -99,15 +100,12 @@ pipeline {
             steps {
                 dir('Backend') {
                     script {
-                        // Check if package.json exists
                         if (!fileExists('package.json')) {
                             error "package.json not found in Backend directory!"
                         }
                         
-                        // Read package.json
                         def packageJson = readJSON file: 'package.json'
                         
-                        // Validate required fields
                         if (!packageJson.name || !packageJson.version) {
                             error "package.json must contain both 'name' and 'version' fields!"
                         }
@@ -127,12 +125,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'apt-get update && apt-get install -y zip'
-            }
-        }
-
         stage('Publish to Nexus') {
             steps {
                 script {
@@ -141,26 +133,32 @@ pipeline {
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASS'
                     )]) {
-                        // Frontend (ZIP)
+                        // Frontend (using tar)
                         sh """
                             if [ -d "frontendReact/dist" ]; then
-                                zip -r frontend-${BUILD_VERSION}.zip frontendReact/dist/
+                                echo "Packaging frontend files..."
+                                tar -czvf frontend-${BUILD_VERSION}.tar.gz -C frontendReact/dist .
+                                echo "Uploading frontend package to Nexus..."
                                 curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    --upload-file frontend-${BUILD_VERSION}.zip \\
+                                    --upload-file frontend-${BUILD_VERSION}.tar.gz \\
                                     "\$NEXUS_URL/repository/\$NEXUS_REPO/frontend/${BUILD_VERSION}/"
+                                echo "Frontend package uploaded successfully"
                             else
                                 echo "ERROR: frontendReact/dist not found!"
                                 exit 1
                             fi
                         """
 
-                        // Backend (TGZ)
+                        // Backend (using npm pack)
                         sh """
                             if ls Backend/*.tgz 1> /dev/null 2>&1; then
+                                echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
+                                echo "Uploading backend package to Nexus..."
                                 curl -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file \$TGZ_FILE \\
                                     "\$NEXUS_URL/repository/\$NEXUS_REPO/backend/${BUILD_VERSION}/"
+                                echo "Backend package uploaded successfully"
                             else
                                 echo "ERROR: No .tgz file found in Backend/"
                                 exit 1
@@ -174,7 +172,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/dist/**,**/*.tgz', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/dist/**,**/*.tgz,**/*.tar.gz', allowEmptyArchive: true
             cleanWs()
         }
         success {
