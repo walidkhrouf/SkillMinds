@@ -2779,7 +2779,7 @@ const getSkillNames = (skills) => {
             <main className="dashboard-content">{renderSection()}</main>
           </section>
         </div>
-        <Footer />
+
       </>
   );
 };

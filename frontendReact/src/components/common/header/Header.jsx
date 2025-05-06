@@ -15,6 +15,8 @@ const Header = () => {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+
+
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -127,6 +129,10 @@ const Header = () => {
     navigate("/");
   };
 
+  // Hide header on /admin route
+  if (location.pathname === "/admin") {
+    return null; // Skip rendering the header
+  }
   const headerClass = `${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

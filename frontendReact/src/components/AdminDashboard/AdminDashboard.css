@@ -56,6 +56,7 @@ body {
   background: var(--background-color);
   transition: background var(--transition-speed) ease;
   padding-top: var(--header-height);
+  margin-top: -70px;
 }
 
 .admin-dashboard {
