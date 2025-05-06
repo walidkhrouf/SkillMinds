@@ -87,6 +87,20 @@ const AppContent = () => {
           <Route path="/groups/:groupId/requests" element={<GroupRequests />} />
           <Route path="/groups/:groupId/members" element={<GroupMembers />} />
           <Route path="/ai-recommendation" element={<AIRecommendation />} />
+            <Route path="/groups/:groupId/posts/:postId" element={<GroupPostDetails />} />
+            <Route path="/groups/:groupId/posts/:postId/edit" element={<CreateGroupPost />} />
+            <Route path="/groups/:groupId/posts/:postId/comments" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/comments/:commentId" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/comments/:commentId/edit" element={<CreateGroupPost />} />
+            <Route path="/groups/:groupId/posts/:postId/comments/:commentId/delete" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/like" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/dislike" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/share" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/report" element={<GroupPosts />} />
+            <Route path="/groups/:groupId/posts/:postId/save" element={<GroupPosts />} />
+
+
+
 
           {/* Course management */}
           <Route path="/all-courses" element={<AllCourses />} />
