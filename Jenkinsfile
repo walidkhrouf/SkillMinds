@@ -158,11 +158,11 @@ pipeline {
                                 echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
                                 BASE_NAME=\$(basename \$TGZ_FILE .tgz)
-                                VERSION=\$(echo \$BASE_NAME | cut -d '-' -f 2-)
+                                VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')
                                 echo "Uploading backend package to Nexus..."
                                 curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
                                     --upload-file \$TGZ_FILE \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/\${BASE_NAME}.tgz" || {
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/backend-\${VERSION}.tgz" || {
                                         echo "ERROR: Failed to upload backend package to Nexus"
                                         exit 1
                                     }
@@ -192,4 +192,5 @@ pipeline {
             echo 'Pipeline failed! Check logs for details.'
         }
     }
+}
 }
