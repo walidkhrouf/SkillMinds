@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import './AllCourses.css';
 import StripePayment from './StripePayment';
 import CourseRating from './CourseRating';
-import ChatBot from './ChatBot';
 
 const AllCourses = () => {
   const navigate = useNavigate();
@@ -14,7 +13,8 @@ const AllCourses = () => {
   const [enrollments, setEnrollments] = useState({});
   const [error, setError] = useState('');
   const [selectedCourseForPayment, setSelectedCourseForPayment] = useState(null);
-  const [showChatBot, setShowChatBot] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 3;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
@@ -88,6 +88,7 @@ const AllCourses = () => {
   const handleSearch = (event) => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page on new search
 
     if (value.trim() === '') {
       setFilteredCourses([]);
@@ -108,28 +109,35 @@ const AllCourses = () => {
   const sortCoursesByPrice = () => {
     const sortedCourses = [...courses].sort((a, b) => a.price - b.price);
     setCourses(sortedCourses);
+    setCurrentPage(1); // Reset to first page after sorting
   };
 
-  const handleRecommendation = (skill) => {
-    const recommendedCourses = courses.filter(course =>
-      course.skillId?.name.toLowerCase().includes(skill.toLowerCase())
-    );
-    setFilteredCourses(recommendedCourses); 
+  const handlePaymentSuccess = (courseId, enrollmentData) => {
+    setEnrollments(prev => ({
+      ...prev,
+      [courseId]: enrollmentData
+    }));
+    setSelectedCourseForPayment(null);
+    setFilteredCourses([]);
+    setSearchTerm('');
+    setError('');
+    setCurrentPage(1); // Reset to first page after payment
   };
 
-  const handleChatBotClose = () => {
-    setShowChatBot(false);
-    setFilteredCourses(courses);  
-  };
-  
-  const handleShowChatBot = () => {
-    setShowChatBot(prevState => !prevState);
-  };
+  // Pagination logic
+  const indexOfLastCourse = currentPage * coursesPerPage;
+  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+  const currentCourses = (filteredCourses.length > 0 ? filteredCourses : courses).slice(indexOfFirstCourse, indexOfLastCourse);
+  const totalPages = Math.ceil((filteredCourses.length > 0 ? filteredCourses.length : courses.length) / coursesPerPage);
 
-
+  const paginate = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
 
   return (
-    <section className="all-courses">
+    <section className="all-courses"> <br></br> <br></br>
       <h1>All Courses</h1>
       {error && <p className="error">{error}</p>}
 
@@ -146,29 +154,37 @@ const AllCourses = () => {
       </button>
 
       <div className="courses-grid">
-        {(filteredCourses.length > 0 ? filteredCourses : courses).map((course) => (
+        {currentCourses.map((course) => (
           <div className="course-item" key={course._id}>
             <h2>{course.title}</h2>
             <p>{course.description || 'No description available'}</p>
             <p><strong>Price:</strong> ${course.price}</p>
             <p><strong>Created By:</strong> {course.createdBy?.username}</p>
 
-            <button onClick={() => handleUpdate(course._id)} className="update-btn">
-              Update
-            </button>
-            <button onClick={() => handleDelete(course._id)} className="delete-btn">
-              Delete
-            </button>
+            {currentUser._id === course.createdBy?._id && (
+              <>
+                <button onClick={() => handleUpdate(course._id)} className="update-btn">
+                  Update
+                </button>
+                <button onClick={() => handleDelete(course._id)} className="delete-btn">
+                  Delete
+                </button>
+              </>
+            )} <br></br> <br></br>
             <button onClick={() => navigate(`/course-details/${course._id}`)} className="view-btn">
               View Details
             </button>
-            {course.price > 0 && (
+            {course.price > 0 && !enrollments[course._id] && (
               <button onClick={() => setSelectedCourseForPayment(course._id)} className="pay-btn">
                 Pay
               </button>
             )}
+            {course.price === 0 && !enrollments[course._id] && (
+              <button onClick={() => handleEnroll(course._id)} className="enroll-free-btn">
+                Enroll for Free
+              </button>
+            )}
 
-            {/* ✅ Course Rating Component */}
             <CourseRating
               courseId={course._id}
               currentUserId={currentUser._id}
@@ -191,10 +207,38 @@ const AllCourses = () => {
             />
           </div>
         ))}
-        {filteredCourses.length === 0 && searchTerm && (
+        {currentCourses.length === 0 && searchTerm && (
           <p className="no-results">Le cours recherché n est pas disponible.</p>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => paginate(index + 1)}
+              className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {selectedCourseForPayment && (
         <div className="payment-popup">
@@ -202,6 +246,7 @@ const AllCourses = () => {
           <StripePayment
             courseId={selectedCourseForPayment}
             userId={currentUser._id}
+            onPaymentSuccess={handlePaymentSuccess}
           />
           <button onClick={() => setSelectedCourseForPayment(null)} className="cancel-btn">
             Cancel
@@ -209,27 +254,7 @@ const AllCourses = () => {
         </div>
       )}
 
-      <button onClick={handleShowChatBot} className="chat-btn">
-  {showChatBot ? 'Close ChatBot' : 'Open ChatBot'}
-</button>
-
-      {showChatBot && (
-        <ChatBot onRecommend={handleRecommendation} onClose={handleChatBotClose} />
-      )}
-
-{selectedCourseForPayment && (
-  <div className="payment-popup">
-    <h3>Pay for Course</h3>
-    <StripePayment
-      courseId={selectedCourseForPayment}
-      userId={currentUser._id}
-    />
-    <button onClick={() => setSelectedCourseForPayment(null)} className="cancel-btn">
-      Close
-    </button>
-  </div>
-)}
-      <button onClick={() => navigate('/courses')} className="back-btn">
+      <button onClick={() => navigate('/all-courses')} className="back-btn">
         Back to Home
       </button>
     </section>

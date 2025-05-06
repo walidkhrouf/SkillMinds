@@ -184,22 +184,22 @@ body.dark-mode .coursesCard .courses-actions {
 }
 
 .coursesCard .explore-btn {
-  border-color: #007bff;
-  color: #007bff;
+  border-color:  rgb(78, 49, 6);
 }
 
 .coursesCard .explore-btn:hover {
-  background-color: #007bff;
+  background-color:  rgb(78, 49, 6);
   color: white;
 }
 
+
 .coursesCard .add-btn {
-  border-color: #28a745;
-  color: #28a745;
+  border-color:  #a47f18;
+  color:  #a47f18;
 }
 
 .coursesCard .add-btn:hover {
-  background-color: #28a745;
+  background-color:  #a47f18;
   color: white;
 }
 
