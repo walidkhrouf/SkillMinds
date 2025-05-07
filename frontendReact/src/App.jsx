@@ -130,6 +130,7 @@ const AppContent = () => {
           <Route path="/job-details/:jobId" element={<JobOfferDetails />} />
           <Route path="/recommended-jobs" element={<RecommendedJobs />} />
 
+
           {/* Admin dashboard */}
           <Route
               path="/admin"
