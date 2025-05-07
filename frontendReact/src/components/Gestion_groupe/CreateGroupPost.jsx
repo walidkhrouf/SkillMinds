@@ -7,12 +7,18 @@ import "react-quill/dist/quill.snow.css";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 import "./groupStyles.css";
 
+// Constants for Azure and Backend Configuration
+const AZURE_TTS_KEY = import.meta.env.VITE_AZURE_TTS_KEY || "";
+const AZURE_TTS_REGION = import.meta.env.VITE_AZURE_TTS_REGION || "francecentral";
+const AZURE_CONTENT_SAFETY_KEY = import.meta.env.VITE_AZURE_CONTENT_SAFETY_KEY || "";
+const AZURE_CONTENT_SAFETY_ENDPOINT = import.meta.env.VITE_AZURE_CONTENT_SAFETY_ENDPOINT || "https://badwordsdetection.cognitiveservices.azure.com/";
+const BACKEND_URL = "http://localhost:5001/generate-content";
+
+// Local bad words list for preliminary content filtering
+const localBadWords = ["racism", "hate", "violence", "sexism", "discrimination", "merde"];
+
 const CreateGroupPost = () => {
-  const [formData, setFormData] = useState({
-    title: "",
-    subject: "",
-    content: "",
-  });
+  const [formData, setFormData] = useState({ title: "", subject: "", content: "" });
   const [mediaFiles, setMediaFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -28,26 +34,6 @@ const CreateGroupPost = () => {
   const navigate = useNavigate();
   const recognizerRef = useRef(null);
 
-  const AZURE_TTS_KEY = import.meta.env.VITE_AZURE_TTS_KEY || "";
-  const AZURE_TTS_REGION = import.meta.env.VITE_AZURE_TTS_REGION || "francecentral";
-  const AZURE_CONTENT_SAFETY_KEY = import.meta.env.VITE_AZURE_CONTENT_SAFETY_KEY || "";
-  const AZURE_CONTENT_SAFETY_ENDPOINT = import.meta.env.VITE_AZURE_CONTENT_SAFETY_ENDPOINT || "https://badwordsdetection.cognitiveservices.azure.com/";
-  const BACKEND_URL = "http://localhost:5001/generate-content";
-
-  const localBadWords = [
-    "racism",
-    "hate",
-    "violence",
-    "sexism",
-    "discrimination",
-    "merde",
-  ];
-
-  const hasLocalBadWords = (text) => {
-    const badWordPatterns = localBadWords.map((word) => new RegExp(`\\b${word}\\b`, "i"));
-    return badWordPatterns.some((pattern) => pattern.test(text));
-  };
-
   useEffect(() => {
     const jwtToken = localStorage.getItem("jwtToken");
     if (!jwtToken) navigate("/signin");
@@ -58,9 +44,7 @@ const CreateGroupPost = () => {
       try {
         const jwtToken = localStorage.getItem("jwtToken");
         const response = await axios.get(`http://localhost:5000/api/groups/${groupId}`, {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
+          headers: { Authorization: `Bearer ${jwtToken}` },
         });
         setGroupName(response.data.name);
       } catch (error) {
@@ -69,43 +53,34 @@ const CreateGroupPost = () => {
         if (error.response?.status === 401) navigate("/signin");
       }
     };
-
     fetchGroupName();
   }, [groupId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (value.trim()) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleContentChange = (value) => {
-    setFormData({ ...formData, content: value });
+    setFormData((prev) => ({ ...prev, content: value }));
     setRecognizedText(value);
     if (value.trim() && value !== "<p><br></p>") setErrors((prev) => ({ ...prev, content: "" }));
   };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = [];
-    const invalidFiles = [];
-
-    files.forEach((file) => {
-      if (file.type.startsWith("image") || file.type.startsWith("video")) {
-        validFiles.push(file);
-      } else {
-        invalidFiles.push(file.name);
-      }
-    });
+    const validFiles = files.filter((file) => file.type.startsWith("image") || file.type.startsWith("video"));
+    const invalidFiles = files.filter((file) => !file.type.startsWith("image") && !file.type.startsWith("video"));
 
     if (invalidFiles.length > 0) {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        media: `Invalid file types (${invalidFiles.join(", ")}). Only images and videos are allowed.`,
+      setErrors((prev) => ({
+        ...prev,
+        media: `Invalid file types (${invalidFiles.map((file) => file.name).join(", ")}). Only images and videos are allowed.`,
       }));
       setMediaFiles([]);
     } else {
-      setErrors((prevErrors) => ({ ...prevErrors, media: "" }));
+      setErrors((prev) => ({ ...prev, media: "" }));
       setMediaFiles(validFiles);
     }
   };
@@ -119,9 +94,13 @@ const CreateGroupPost = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const hasLocalBadWords = (text) => {
+    const badWordPatterns = localBadWords.map((word) => new RegExp(`\\b${word}\\b`, "i"));
+    return badWordPatterns.some((pattern) => pattern.test(text));
+  };
+
   const checkBadWords = async (text) => {
     if (!AZURE_CONTENT_SAFETY_KEY || !AZURE_CONTENT_SAFETY_ENDPOINT) {
-      console.error("Azure Content Safety configuration is missing: Key or Endpoint not set.");
       setSubmitError("Content safety check unavailable due to missing configuration.");
       return false;
     }
@@ -140,16 +119,11 @@ const CreateGroupPost = () => {
             },
           }
       );
-      const analysis = response.data;
-      const hasBadWords = analysis.categoriesAnalysis.some((category) => category.severity > 0);
-      console.log("Content Safety Response:", analysis);
+      const hasBadWords = response.data.categoriesAnalysis.some((category) => category.severity > 0);
+      console.log("Content Safety Response:", response.data);
       return hasBadWords;
     } catch (error) {
-      console.error("Bad words check failed:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
+      console.error("Bad words check failed:", error.response?.data || error.message);
       setSubmitError(`Content safety check failed: ${error.response?.data?.error?.message || error.message}`);
       return false;
     }
@@ -160,7 +134,6 @@ const CreateGroupPost = () => {
     if (!validateForm()) return;
 
     const textToCheck = `${formData.title} ${formData.subject} ${formData.content.replace(/<[^>]+>/g, " ")}`;
-
     if (hasLocalBadWords(textToCheck)) {
       setSubmitError("Inappropriate language detected! Please revise your content.");
       return;
@@ -168,7 +141,6 @@ const CreateGroupPost = () => {
 
     setIsCheckingBadWords(true);
     setSubmitError("Checking for inappropriate language...");
-
     const hasBadWords = await checkBadWords(textToCheck);
     setIsCheckingBadWords(false);
 
@@ -206,30 +178,26 @@ const CreateGroupPost = () => {
   const handleSpeechToText = () => {
     if (!AZURE_TTS_KEY || !AZURE_TTS_REGION) {
       setSubmitError("Speech-to-Text configuration is missing.");
-      console.error("Missing AZURE_TTS_KEY or AZURE_TTS_REGION");
       return;
     }
 
     if (isRecording) {
-      if (recognizerRef.current) {
-        recognizerRef.current.stopContinuousRecognitionAsync(
-            () => {
-              recognizerRef.current.close();
-              recognizerRef.current = null;
-              setIsRecording(false);
-              setInterimText("");
-              console.log("Recording stopped.");
-            },
-            (error) => {
-              console.error("Stop Recognition Error:", error);
-              setSubmitError("Failed to stop recording.");
-              recognizerRef.current.close();
-              recognizerRef.current = null;
-              setIsRecording(false);
-              setInterimText("");
-            }
-        );
-      }
+      recognizerRef.current?.stopContinuousRecognitionAsync(
+          () => {
+            recognizerRef.current.close();
+            recognizerRef.current = null;
+            setIsRecording(false);
+            setInterimText("");
+          },
+          (error) => {
+            console.error("Stop Recognition Error:", error);
+            setSubmitError("Failed to stop recording.");
+            recognizerRef.current.close();
+            recognizerRef.current = null;
+            setIsRecording(false);
+            setInterimText("");
+          }
+      );
       return;
     }
 
@@ -240,29 +208,19 @@ const CreateGroupPost = () => {
 
     setIsRecording(true);
 
-    recognizerRef.current.recognizing = (s, e) => {
-      setInterimText(e.result.text);
-    };
-
+    recognizerRef.current.recognizing = (s, e) => setInterimText(e.result.text);
     recognizerRef.current.recognized = (s, e) => {
       if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
         const finalText = e.result.text;
-        setRecognizedText((prevText) => {
-          const updatedText =
-              prevText === "" || prevText === "<p><br></p>"
-                  ? `<p>${finalText}</p>`
-                  : `${prevText}<p>${finalText}</p>`;
-          setFormData((prevFormData) => ({
-            ...prevFormData,
-            content: updatedText,
-          }));
+        setRecognizedText((prev) => {
+          const updatedText = prev === "" || prev === "<p><br></p>" ? `<p>${finalText}</p>` : `${prev}<p>${finalText}</p>`;
+          setFormData((prev) => ({ ...prev, content: updatedText }));
           return updatedText;
         });
         setInterimText("");
         setErrors((prev) => ({ ...prev, content: "" }));
       }
     };
-
     recognizerRef.current.canceled = (s, e) => {
       console.error("Recognition Canceled:", e.reason);
       setSubmitError("Recognition canceled. Check microphone or network.");
@@ -271,19 +229,14 @@ const CreateGroupPost = () => {
       setIsRecording(false);
       setInterimText("");
     };
-
     recognizerRef.current.sessionStopped = () => {
-      console.log("Session stopped.");
       recognizerRef.current.close();
       recognizerRef.current = null;
       setIsRecording(false);
       setInterimText("");
     };
-
     recognizerRef.current.startContinuousRecognitionAsync(
-        () => {
-          console.log("Continuous recognition started.");
-        },
+        () => console.log("Continuous recognition started."),
         (error) => {
           console.error("Start Recognition Error:", error);
           setSubmitError("Failed to start recording.");
@@ -312,22 +265,18 @@ const CreateGroupPost = () => {
           formData.content === "<p><br></p>" || !formData.content
               ? `<p>${generatedText}</p>`
               : `${formData.content}<p>${generatedText}</p>`;
-      setFormData({ ...formData, content: newContent });
+      setFormData((prev) => ({ ...prev, content: newContent }));
       setRecognizedText(newContent);
       setErrors((prev) => ({ ...prev, content: "" }));
     } catch (error) {
-      setSubmitError(
-          error.response?.data?.error || "Failed to generate content. Check if backend is running and API key is valid."
-      );
+      setSubmitError(error.response?.data?.error || "Failed to generate content.");
       console.error("Content Generation Error:", error.response?.data || error.message);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const displayContent = isRecording && interimText
-      ? `${formData.content}<p>${interimText}</p>`
-      : formData.content;
+  const displayContent = isRecording && interimText ? `${formData.content}<p>${interimText}</p>` : formData.content;
 
   const quillModules = {
     toolbar: [
@@ -347,6 +296,7 @@ const CreateGroupPost = () => {
           <form onSubmit={handleSubmit} className="group-form">
             <h2 className="group-form__title">Add a Post to {groupName}</h2>
             {submitError && <p className="group-form__error">{submitError}</p>}
+            {/* Title Field */}
             <div className="group-form__field">
               <label className="group-form__label">Title</label>
               <input
@@ -360,6 +310,7 @@ const CreateGroupPost = () => {
               />
               {errors.title && <p className="group-form__field-error">{errors.title}</p>}
             </div>
+            {/* Subject Field */}
             <div className="group-form__field">
               <label className="group-form__label">Subject</label>
               <input
@@ -373,6 +324,7 @@ const CreateGroupPost = () => {
               />
               {errors.subject && <p className="group-form__field-error">{errors.subject}</p>}
             </div>
+            {/* Content Field with Speech-to-Text and AI Generation */}
             <div className="group-form__field">
               <label className="group-form__label">Content</label>
               <ReactQuill
@@ -388,7 +340,7 @@ const CreateGroupPost = () => {
                 <select
                     value={speechLanguage}
                     onChange={(e) => setSpeechLanguage(e.target.value)}
-                    className="group-form__language-select"
+                    className="group-form__select"
                     disabled={isRecording}
                     aria-label="Select speech language"
                 >
@@ -396,31 +348,36 @@ const CreateGroupPost = () => {
                   <option value="fr-FR">French</option>
                   <option value="ar-SA">Arabic (Saudi Arabia)</option>
                 </select>
-                <button
-                    type="button"
-                    onClick={handleSpeechToText}
-                    className={`group-button group-form__record-btn ${isRecording ? "recording" : ""}`}
-                    disabled={loading || isGenerating || isCheckingBadWords}
-                    aria-label={isRecording ? "Stop recording" : "Start recording"}
+                <span
+                    className={`group-emoji group-emoji--record ${loading || isGenerating || isCheckingBadWords ? "group-emoji--disabled" : ""}`}
+                    onClick={loading || isGenerating || isCheckingBadWords ? null : handleSpeechToText}
                     title={isRecording ? "Stop Recording" : "Record Content"}
+                    role="button"
+                    aria-label={isRecording ? "Stop recording" : "Start recording"}
+                    tabIndex={0}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !loading && !isGenerating && !isCheckingBadWords) handleSpeechToText();
+                    }}
                 >
-                  <i className={`fas ${isRecording ? "fa-stop" : "fa-microphone"}`}></i>
-                  {isRecording ? "Stop Recording" : "Record Content"}
-                </button>
-                <button
-                    type="button"
-                    onClick={handleGenerateContent}
-                    className={`group-button group-form__generate-btn ${isGenerating ? "generating" : ""}`}
-                    disabled={loading || isRecording || isCheckingBadWords}
-                    aria-label={isGenerating ? "Generating content" : "Generate content"}
+                {isRecording ? "⏹️" : "🎙️"}
+              </span>
+                <span
+                    className={`group-emoji group-emoji--generate ${loading || isRecording || isCheckingBadWords ? "group-emoji--disabled" : ""}`}
+                    onClick={loading || isRecording || isCheckingBadWords ? null : handleGenerateContent}
                     title={isGenerating ? "Generating..." : "Generate Content"}
+                    role="button"
+                    aria-label={isGenerating ? "Generating content" : "Generate content"}
+                    tabIndex={0}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !loading && !isRecording && !isCheckingBadWords) handleGenerateContent();
+                    }}
                 >
-                  <i className="fas fa-magic"></i>
-                  {isGenerating ? "Generating..." : "Generate Content"}
-                </button>
+                🪄
+              </span>
                 {isRecording && <span className="group-form__recording-indicator">Recording...</span>}
               </div>
             </div>
+            {/* Media Upload Field */}
             <div className="group-form__field">
               <label className="group-form__label">Media (Optional)</label>
               <input
@@ -437,17 +394,9 @@ const CreateGroupPost = () => {
                     {mediaFiles.map((file, index) => (
                         <div key={index} className="group-form__media-item">
                           {file.type.startsWith("image") ? (
-                              <img
-                                  src={URL.createObjectURL(file)}
-                                  alt={file.name}
-                                  className="group-form__media-image"
-                              />
+                              <img src={URL.createObjectURL(file)} alt={file.name} className="group-form__media-image" />
                           ) : (
-                              <video
-                                  src={URL.createObjectURL(file)}
-                                  controls
-                                  className="group-form__media-video"
-                              />
+                              <video src={URL.createObjectURL(file)} controls className="group-form__media-video" />
                           )}
                           <p>{file.name}</p>
                         </div>
@@ -455,27 +404,34 @@ const CreateGroupPost = () => {
                   </div>
               )}
             </div>
+            {/* Form Actions with Emoji Icons */}
             <div className="group-form__actions">
-              <button
-                  type="submit"
-                  disabled={loading || isRecording || isGenerating || isCheckingBadWords}
-                  className="group-button group-form__submit-btn"
-                  aria-label="Create post"
-                  title="Create Post"
-              >
-                <i className="fas fa-paper-plane"></i>
-                {isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
-              </button>
-              <button
-                  type="button"
+            <span
+                className={`group-emoji group-emoji--submit ${loading || isRecording || isGenerating || isCheckingBadWords ? "group-emoji--disabled" : ""}`}
+                onClick={loading || isRecording || isGenerating || isCheckingBadWords ? null : handleSubmit}
+                title={isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
+                role="button"
+                aria-label={isCheckingBadWords ? "Checking..." : loading ? "Posting..." : "Create Post"}
+                tabIndex={0}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && !loading && !isRecording && !isGenerating && !isCheckingBadWords) handleSubmit(e);
+                }}
+            >
+              ✅
+            </span>
+              <span
+                  className="group-emoji group-emoji--cancel"
                   onClick={() => navigate(`/groups/${groupId}`)}
-                  className="group-button group-form__cancel-btn"
-                  aria-label="Cancel and go back"
                   title="Cancel"
+                  role="button"
+                  aria-label="Cancel and go back"
+                  tabIndex={0}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") navigate(`/groups/${groupId}`);
+                  }}
               >
-                <i className="fas fa-times"></i>
-                Cancel
-              </button>
+              ❌
+            </span>
             </div>
           </form>
         </section>

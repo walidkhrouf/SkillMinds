@@ -189,16 +189,20 @@ const EditGroup = () => {
                     <p className="group-form__error">{validationError}</p>
                 )}
                 <div className="group-form__actions">
-                  <button type="submit" className="group-button group-button--submit">
-                    Save Changes
-                  </button>
-                  <button
-                      type="button"
-                      className="group-button group-button--cancel"
-                      onClick={() => navigate("/groups")}
+                  <span
+                      className="group-icon group-icon--submit"
+                      onClick={handleSubmit}
+                      title="Save Changes"
                   >
-                    Cancel
-                  </button>
+                    ✅
+                  </span>
+                  <span
+                      className="group-icon group-icon--cancel"
+                      onClick={() => navigate("/groups")}
+                      title="Cancel"
+                  >
+                    ❌
+                  </span>
                 </div>
               </form>
             </div>

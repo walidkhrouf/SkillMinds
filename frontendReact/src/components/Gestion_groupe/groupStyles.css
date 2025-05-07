@@ -365,9 +365,9 @@ body.dark-mode .group-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  font-size: 1.5rem;
+  width: 3rem; /* Reduced from 3.5rem */
+  height: 3rem; /* Reduced from 3.5rem */
+  font-size: 1.75rem; /* Reduced from 2rem */
   border-radius: 50%;
   cursor: pointer;
   transition: all var(--transition-speed) ease;
@@ -707,6 +707,20 @@ body.dark-mode .group-form__quill .ql-toolbar {
 body.dark-mode .group-form__error,
 body.dark-mode .group-form__field-error {
   color: #ff4040;
+}
+
+/* Form Actions */
+.group-form__actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: var(--spacing-md);
+  padding: 0.5rem;
+  background: rgba(164, 127, 24, 0.05);
+  border-radius: 0.25rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 /* Post Details */
@@ -1387,5 +1401,10 @@ body.dark-mode .ai-recommendation-thinking p {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-md);
+  }
+
+  .group-form__actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
 }
