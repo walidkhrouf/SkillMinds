@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const twilio = require("twilio");
 
 // Twilio credentials (use environment variables for production)
-const client = twilio('AC27d7e1709a833aa34c8ec14f6950e7bc', '500fdc24680bc05801b8c551b17a6fff');  // Use your Twilio SID and Token
+const client = twilio('AC27d7e1709a833aa34c8ec14f6950e7bc', '500fdc24680bc05801b8c551b17a6fff');
 
 exports.createTutorial = async (req, res) => {
   const { title, content, category, userId, media } = req.body;
@@ -15,54 +15,42 @@ exports.createTutorial = async (req, res) => {
   }
 
   try {
-    // Create the tutorial
     const tutorial = new Tutorial({
       title,
       content,
       category,
       authorId: userId,
-      media: media ? JSON.parse(media) : [], // Parse media if provided
+      media: media ? JSON.parse(media) : [],
     });
 
-    // Save the tutorial to the database
     await tutorial.save();
 
-    // Populate tutorial with author details
     const populatedTutorial = await Tutorial.findById(tutorial._id).populate("authorId", "username email");
 
-    // Step 1: Send SMS to notify about the new tutorial
     const message = "A User created a new tutorial Successfully!";
-    const toPhoneNumber = "+21694440966";  // Phone number to receive the SMS
-    const fromPhoneNumber = "+19413901769";  // Your Twilio phone number
+    const toPhoneNumber = "+21694440966";
+    const fromPhoneNumber = "+19413901769";
 
-    // Send the SMS using Twilio
     client.messages
-      .create({
-        body: message,
-        from: fromPhoneNumber,
-        to: toPhoneNumber,
-      })
-      .then((message) => console.log(`SMS sent: ${message.sid}`))
-      .catch((error) => console.error("Error sending SMS:", error));
+        .create({ body: message, from: fromPhoneNumber, to: toPhoneNumber })
+        .then((message) => console.log(`SMS sent: ${message.sid}`))
+        .catch((error) => console.error("Error sending SMS:", error));
 
-    // Step 2: Respond to the client
     res.status(201).json({
       message: "Tutorial created successfully",
       tutorial: populatedTutorial,
     });
-
   } catch (error) {
     console.error("Error creating tutorial:", error);
     res.status(500).json({ message: "Failed to create tutorial", error: error.message });
   }
 };
 
-// Get All Tutorials
 exports.getAllTutorials = async (req, res) => {
   try {
     const tutorials = await Tutorial.find()
-      .populate("authorId", "username email")
-      .sort({ createdAt: -1 });
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 });
     res.status(200).json(tutorials);
   } catch (error) {
     console.error("Error fetching tutorials:", error);
@@ -70,17 +58,15 @@ exports.getAllTutorials = async (req, res) => {
   }
 };
 
-// Get Single Tutorial
 exports.getTutorialById = async (req, res) => {
   const { tutorialId } = req.params;
 
   try {
-    const tutorial = await Tutorial.findOne({ tutorialId })
-      .populate("authorId", "username email");
+    const tutorial = await Tutorial.findById(tutorialId).populate("authorId", "username email");
     if (!tutorial) return res.status(404).json({ message: "Tutorial not found" });
 
     const comments = await TutorialComment.find({ tutorialId: tutorial._id })
-      .populate("userId", "username");
+        .populate("userId", "username");
     const likes = await TutorialLike.find({ tutorialId: tutorial._id }).countDocuments();
 
     res.status(200).json({ tutorial, comments, likes });
@@ -90,7 +76,6 @@ exports.getTutorialById = async (req, res) => {
   }
 };
 
-// Update Tutorial (Owner Only)
 exports.updateTutorial = async (req, res) => {
   const { tutorialId } = req.params;
   const { title, content, category, userId } = req.body;
@@ -100,7 +85,7 @@ exports.updateTutorial = async (req, res) => {
   }
 
   try {
-    const tutorial = await Tutorial.findOne({ tutorialId });
+    const tutorial = await Tutorial.findById(tutorialId);
     if (!tutorial) return res.status(404).json({ message: "Tutorial not found" });
     if (tutorial.authorId.toString() !== userId) {
       return res.status(403).json({ message: "You are not authorized to edit this tutorial" });
@@ -119,7 +104,6 @@ exports.updateTutorial = async (req, res) => {
   }
 };
 
-// Delete Tutorial (Owner Only)
 exports.deleteTutorial = async (req, res) => {
   const { tutorialId } = req.params;
   const { userId } = req.body;
@@ -129,13 +113,13 @@ exports.deleteTutorial = async (req, res) => {
   }
 
   try {
-    const tutorial = await Tutorial.findOne({ tutorialId });
+    const tutorial = await Tutorial.findById(tutorialId);
     if (!tutorial) return res.status(404).json({ message: "Tutorial not found" });
     if (tutorial.authorId.toString() !== userId) {
       return res.status(403).json({ message: "You are not authorized to delete this tutorial" });
     }
 
-    await Tutorial.deleteOne({ tutorialId });
+    await Tutorial.deleteOne({ _id: tutorialId });
     await TutorialComment.deleteMany({ tutorialId: tutorial._id });
     await TutorialLike.deleteMany({ tutorialId: tutorial._id });
 
@@ -146,7 +130,6 @@ exports.deleteTutorial = async (req, res) => {
   }
 };
 
-// Like Tutorial
 exports.likeTutorial = async (req, res) => {
   const { tutorialId } = req.params;
   const { userId } = req.body;
@@ -156,7 +139,7 @@ exports.likeTutorial = async (req, res) => {
   }
 
   try {
-    const tutorial = await Tutorial.findOne({ tutorialId });
+    const tutorial = await Tutorial.findById(tutorialId);
     if (!tutorial) return res.status(404).json({ message: "Tutorial not found" });
 
     const existingLike = await TutorialLike.findOne({ tutorialId: tutorial._id, userId });
@@ -179,7 +162,6 @@ exports.likeTutorial = async (req, res) => {
   }
 };
 
-// Comment on Tutorial
 exports.addComment = async (req, res) => {
   const { tutorialId } = req.params;
   const { content, userId } = req.body;
@@ -192,7 +174,7 @@ exports.addComment = async (req, res) => {
   }
 
   try {
-    const tutorial = await Tutorial.findOne({ tutorialId });
+    const tutorial = await Tutorial.findById(tutorialId);
     if (!tutorial) return res.status(404).json({ message: "Tutorial not found" });
 
     const comment = new TutorialComment({ tutorialId: tutorial._id, userId, content });

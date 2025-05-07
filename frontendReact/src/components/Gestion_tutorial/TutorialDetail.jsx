@@ -12,11 +12,14 @@ const TutorialDetail = () => {
     title: "",
     content: "",
     category: "",
-    userId: ""
+    userId: "",
+    media: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [language, setLanguage] = useState("en");
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
   const userId = JSON.parse(localStorage.getItem("currentUser") || "{}")._id || "";
@@ -26,6 +29,18 @@ const TutorialDetail = () => {
       navigate("/signin");
       return;
     }
+
+    // Fetch categories
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/skills");
+        setCategories(response.data);
+      } catch (err) {
+        console.error("Failed to load categories");
+      }
+    };
+
+    // Fetch tutorial details
     const fetchTutorial = async () => {
       setLoading(true);
       try {
@@ -36,6 +51,7 @@ const TutorialDetail = () => {
           content: response.data.tutorial.content,
           category: response.data.tutorial.category,
           userId,
+          media: response.data.tutorial.media || []
         });
       } catch (err) {
         setError("Failed to load tutorial");
@@ -43,34 +59,33 @@ const TutorialDetail = () => {
         setLoading(false);
       }
     };
+
     fetchTutorial();
+    fetchCategories();
   }, [tutorialId, userId, navigate]);
 
-  // 🔁 Fonction de traduction SYSTRAN
   const changeLanguage = async (lang) => {
     setLanguage(lang);
     if (tutorial && tutorial.content) {
       try {
         const response = await axios.post(
-          "https://api-translate.systran.net/translation/text/translate",
-          {
-            input: [tutorial.content],
-            source: "auto", // Détection automatique de la langue source
-            target: lang
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Key a9b3aa86-93de-4531-ab69-59e997285d3c"
+            "https://api-translate.systran.net/translation/text/translate",
+            {
+              input: [tutorial.content],
+              source: "auto",
+              target: lang,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Key a9b3aa86-93de-4531-ab69-59e997285d3c",
+              },
             }
-          }
         );
-
         const translatedText = response.data.outputs[0].output;
-
-        setTutorial(prev => ({
+        setTutorial((prev) => ({
           ...prev,
-          content: translatedText
+          content: translatedText,
         }));
       } catch (err) {
         console.error("Erreur de traduction :", err);
@@ -79,13 +94,31 @@ const TutorialDetail = () => {
     }
   };
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-  };
+  const handleEditToggle = () => setIsEditing(!isEditing);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const promises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve({
+          name: file.name,
+          type: file.type,
+          data: e.target.result
+        });
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(newFiles => {
+      setMediaFiles(newFiles);
+      setFormData(prev => ({...prev, media: [...(prev.media || []), ...newFiles]}));
+    });
   };
 
   const handleEditSubmit = async (e) => {
@@ -93,8 +126,8 @@ const TutorialDetail = () => {
     try {
       setLoading(true);
       const response = await axios.put(
-        `http://localhost:5000/api/tutorials/${tutorialId}`,
-        formData
+          `http://localhost:5000/api/tutorials/${tutorialId}`,
+          formData
       );
       setTutorial(response.data.tutorial);
       setIsEditing(false);
@@ -109,9 +142,7 @@ const TutorialDetail = () => {
     if (!window.confirm("Are you sure you want to delete this tutorial?")) return;
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/tutorials/${tutorialId}`, {
-        data: { userId },
-      });
+      await axios.delete(`http://localhost:5000/api/tutorials/${tutorialId}`, { data: { userId } });
       navigate("/tutorials");
     } catch (error) {
       setError(error.response?.data?.message || "Failed to delete tutorial");
@@ -123,122 +154,161 @@ const TutorialDetail = () => {
   const handleDownload = (mediaUrl) => {
     const link = document.createElement("a");
     link.href = mediaUrl;
-    link.download = mediaUrl.split("/").pop();
+    link.download = mediaUrl.split("/").pop() || "media_file";
     link.click();
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p className="loading-text">Loading...</p>;
   if (error) return <p className="tutorial-detail__error">{error}</p>;
   if (!tutorial) return null;
 
   const isOwner = tutorial.authorId._id === userId;
 
   return (
-    <>
-      <Back title={tutorial.title} />
-      <section className="tutorial-section">
-        <div>
-          <select
-            onChange={(e) => changeLanguage(e.target.value)}
-            defaultValue={language}
-            className="language-selector"
-          >
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="ar">العربية</option>
-          </select>
-        </div>
-
-        {isEditing ? (
-          <form onSubmit={handleEditSubmit} className="tutorial-form">
-            <h2 className="tutorial-form__title">Edit Tutorial</h2>
-            <div className="tutorial-form__field">
-              <label>Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleEditChange}
-                className="tutorial-form__input"
-              />
-            </div>
-            <div className="tutorial-form__field">
-              <label>Content</label>
-              <textarea
-                name="content"
-                value={formData.content}
-                onChange={handleEditChange}
-                className="tutorial-form__textarea"
-              />
-            </div>
-            <div className="tutorial-form__field">
-              <label>Category</label>
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleEditChange}
-                className="tutorial-form__input"
-              />
-            </div>
-            <button type="submit" disabled={loading} className="tutorial-button">
-              {loading ? "Saving..." : "Save Changes"}
-            </button>
-            <button
-              type="button"
-              onClick={handleEditToggle}
-              className="tutorial-button tutorial-button--secondary"
-            >
-              Cancel
-            </button>
-          </form>
-        ) : (
-          <div className="tutorial-detail">
-            <h2 className="tutorial-detail__title">{tutorial.title}</h2>
-            <p className="tutorial-detail__meta">
-              By {tutorial.authorId.username} | {tutorial.category} |{" "}
-              {new Date(tutorial.createdAt).toLocaleDateString()}
-            </p>
-            <p className="tutorial-detail__content">{tutorial.content}</p>
-            {tutorial.media &&
-              tutorial.media.length > 0 && (
-                <div className="tutorial-detail__media">
-                  {tutorial.media.map((item, index) => (
-                    <div key={index} style={{ marginBottom: "10px" }}>
+      <>
+        <Back title={tutorial.title} />
+        <section className="tutorial-detail">
+          {!isEditing ? (
+              <div className="detail-container">
+                <aside className="detail-media">
+                  {tutorial.media && tutorial.media.map((item, index) => (
                       <img
-                        src={item.data}
-                        alt={`Tutorial media ${index}`}
-                        style={{ maxWidth: "300px", margin: "10px" }}
+                          key={index}
+                          src={item.data}
+                          alt={`Tutorial media ${index + 1}`}
                       />
-                    </div>
                   ))}
-                </div>
-              )}
-            {isOwner && (
-              <div className="tutorial-detail__actions" style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={handleEditToggle} className="tutorial-button">
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="tutorial-button tutorial-button--danger"
-                >
-                  Delete
-                </button>
-                {tutorial.media && tutorial.media.length > 0 && (
-                  <button
-                    onClick={() => handleDownload(tutorial.media[0].data)}
-                    className="tutorial-button tutorial-button--download"
-                  >
-                    Download
-                  </button>
-                )}
+                </aside>
+                <article className="detail-content">
+                  <h1 className="detail-title">{tutorial.title}</h1>
+                  <div className="detail-meta">
+                    <span className="badge">{tutorial.category}</span>
+                    <span>By {tutorial.authorId.username}</span>
+                    <time>{new Date(tutorial.createdAt).toLocaleDateString()}</time>
+                  </div>
+                  <p className="detail-text">{tutorial.content}</p>
+                  {isOwner && (
+                      <div className="detail-actions">
+                        <button onClick={handleEditToggle} className="tutorial-button tutorial-button--primary">
+                          Edit
+                        </button>
+                        <button onClick={handleDelete} className="tutorial-button tutorial-button--danger">
+                          Delete
+                        </button>
+                      </div>
+                  )}
+                  <div className="language-container">
+                    <select
+                        onChange={(e) => changeLanguage(e.target.value)}
+                        value={language}
+                        className="language-selector enhanced"
+                    >
+                      <option value="en">English</option>
+                      <option value="fr">Français</option>
+                      <option value="ar">العربية</option>
+                    </select>
+                  </div>
+                </article>
               </div>
-            )}
-          </div>
-        )}
-      </section>
-    </>
+          ) : (
+              <form onSubmit={handleEditSubmit} className="tutorial-form enhanced">
+                <h2 className="tutorial-detail__title">Edit Your Tutorial</h2>
+                {error && <p className="tutorial-detail__error">{error}</p>}
+
+                <div className="tutorial-form__field">
+                  <label className="tutorial-form__label">Title</label>
+                  <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleEditChange}
+                      className="tutorial-form__input"
+                      placeholder="Enter tutorial title"
+                  />
+                </div>
+
+                <div className="tutorial-form__field">
+                  <label className="tutorial-form__label">Content</label>
+                  <textarea
+                      name="content"
+                      value={formData.content}
+                      onChange={handleEditChange}
+                      className="tutorial-form__textarea"
+                      placeholder="Write your tutorial content here"
+                      rows={10}
+                  />
+                </div>
+
+                <div className="tutorial-form__field">
+                  <label className="tutorial-form__label">Category</label>
+                  <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleEditChange}
+                      className="tutorial-form__select"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                        <option key={category._id} value={category.name}>
+                          {category.name}
+                        </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="tutorial-form__field">
+                  <label className="tutorial-form__label">Media Files</label>
+                  <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="tutorial-form__file-input"
+                  />
+
+                  {tutorial.media && tutorial.media.length > 0 && (
+                      <div className="tutorial-form__media-preview">
+                        <p className="media-preview-label">Current Media:</p>
+                        <div className="media-preview-items">
+                          {tutorial.media.map((item, index) => (
+                              <div key={index} className="media-preview-item">
+                                <img src={item.data} alt={`Current media ${index + 1}`} />
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+                  )}
+
+                  {mediaFiles.length > 0 && (
+                      <div className="tutorial-form__media-preview">
+                        <p className="media-preview-label">New Media:</p>
+                        <div className="media-preview-items">
+                          {mediaFiles.map((file, index) => (
+                              <div key={index} className="media-preview-item new">
+                                <img src={file.data} alt={`New media ${index + 1}`} />
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+                  )}
+                </div>
+
+                <div className="tutorial-form__actions">
+                  <button type="submit" disabled={loading} className="tutorial-button tutorial-button--primary">
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                      type="button"
+                      onClick={handleEditToggle}
+                      className="tutorial-button tutorial-button--danger"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+          )}
+        </section>
+      </>
   );
 };
 
