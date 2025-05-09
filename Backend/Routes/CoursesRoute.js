@@ -2,17 +2,27 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const Skill = require('../models/Skill');
-const Course = require('../models/Course'); 
+const Course = require('../models/Course');
 
 const { 
   createCourse, getAllCourses, getCourseById, updateCourse, 
-  deleteCourse, enrollInCourse, updateProgress, getEnrollmentStatus,searchCourses,
-  processPayment,rateCourse
+  deleteCourse, enrollInCourse, getEnrollmentStatus, searchCourses,
+  processPayment, rateCourse, getVideo, createComment, getComments,
+  createDiscussionMessage, getDiscussionMessages, generateQuizCertificate, generateQuiz
 } = require('../Controllers/CoursesController');
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage, limits: { fileSize: 16 * 1024 * 1024 } }); 
+const upload = multer({ storage, limits: { fileSize: 16 * 1024 * 1024 } });
 
+// Middleware d'authentification
+const authenticate = (req, res, next) => {
+  const userId = req.query.userId || req.body.userId;
+  if (!userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  // TODO: Ajoutez ici une vérification supplémentaire pour valider userId (par exemple, via JWT)
+  next();
+};
 
 router.get('/skills', async (req, res) => {
   try {
@@ -23,42 +33,22 @@ router.get('/skills', async (req, res) => {
   }
 });
 
-
 router.get('/enroll', getEnrollmentStatus);
 router.post('/enroll', enrollInCourse);
-
-
-
-router.get('/video/:courseId/:videoOrder', async (req, res) => {
-    try {
-      const { courseId, videoOrder } = req.params;
-      const course = await Course.findById(courseId);
-      if (!course) return res.status(404).json({ message: 'Course not found' });
-  
-
-      const adjustedOrder = parseInt(videoOrder) + 1;
-      const video = course.videos.find(v => v.order === adjustedOrder);
-      
-      if (!video) return res.status(404).json({ message: 'Video not found' });
-  
-      res.setHeader('Content-Disposition', `attachment; filename="${video.filename}"`);
-      res.setHeader('Content-Type', video.contentType);
-      res.send(video.data);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
- 
-  
-router.post('/', upload.array('videos'), createCourse); 
+router.get('/video/:courseId/:videoOrder', authenticate, getVideo);
+router.post('/', upload.array('videos'), createCourse);
 router.get('/', getAllCourses);
 router.get('/:id', getCourseById);
 router.put('/:id', upload.array('videos'), updateCourse);
 router.delete('/:id', deleteCourse);
-router.put('/progress/:enrollmentId', updateProgress);
 router.get('/search', searchCourses);
 router.post('/pay', processPayment);
 router.post('/rate', rateCourse);
+router.post('/comments/create', authenticate, createComment);
+router.get('/comments/list', getComments);
+router.post('/discussion/create', createDiscussionMessage);
+router.get('/discussion/list', getDiscussionMessages);
+router.post('/quiz-certificate', authenticate, generateQuizCertificate);
+router.get('/quiz/:courseId', generateQuiz);
 
 module.exports = router;

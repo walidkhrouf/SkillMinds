@@ -10,7 +10,7 @@
   .create-course-container h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #333;
+    color: rgb(78, 49, 6);
     font-family: 'Inter', Arial, sans-serif;
   }
   
@@ -80,7 +80,7 @@
   
   .create-course-container .video-section h3 {
     margin: 0 0 15px;
-    color: #007bff;
+    color: rgb(78, 49, 6);
     font-size: 18px;
   }
   
@@ -100,7 +100,7 @@
   
   .create-course-container .add-section-btn {
     padding: 10px 20px;
-    background-color: #28a745;
+    background-color: #a47f18;
     color: white;
     border: none;
     border-radius: 5px;
@@ -109,12 +109,12 @@
   }
   
   .create-course-container .add-section-btn:hover {
-    background-color: #218838;
+    background-color: #a47f18;
   }
   
   .create-course-container .submit-btn {
     padding: 12px 25px;
-    background-color: #007bff;
+    background-color: rgb(78, 49, 6);
     color: white;
     border: none;
     border-radius: 5px;
@@ -124,5 +124,5 @@
   }
   
   .create-course-container .submit-btn:hover {
-    background-color: #0069d9;
+    background-color: rgb(78, 49, 6);
   }

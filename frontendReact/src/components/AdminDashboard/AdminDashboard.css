@@ -56,6 +56,7 @@ body {
   background: var(--background-color);
   transition: background var(--transition-speed) ease;
   padding-top: var(--header-height);
+  margin-top: -70px;
 }
 
 .admin-dashboard {
@@ -1435,3 +1436,28 @@ body.dark-mode .group-stats-header::after {
   font-weight: 500;
   text-align: center;
 }
+
+.statistics {
+  margin: 20px;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+.stat-card {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+.stat-icon {
+  font-size: 24px;
+}
+.loading, .error {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+

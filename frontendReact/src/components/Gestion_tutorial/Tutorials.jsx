@@ -24,6 +24,10 @@ const Tutorials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [shareModal, setShareModal] = useState({ visible: false, url: "" });
 
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const tutorialsPerPage = 3;
+
   const navigate = useNavigate();
   const userId = JSON.parse(localStorage.getItem("currentUser") || "{}")._id || "";
 
@@ -35,20 +39,24 @@ const Tutorials = () => {
         setTutorials(response.data);
         setFilteredTutorials(response.data);
 
+        // Initialize comments and likes
         const initialComments = {};
         const initialLikes = {};
         const initialCommentContent = {};
 
-        response.data.forEach((tutorial) => {
-          initialComments[tutorial.tutorialId] = tutorial.comments || [];
-          initialLikes[tutorial.tutorialId] = tutorial.likes || 0;
-          initialCommentContent[tutorial.tutorialId] = "";
-        });
+        for (const t of response.data) {
+          const detail = await axios.get(
+              `http://localhost:5000/api/tutorials/${t._id}`
+          );
+          initialComments[t._id] = detail.data.comments || [];
+          initialLikes[t._id] = detail.data.likes || 0;
+          initialCommentContent[t._id] = "";
+        }
 
         setComments(initialComments);
         setLikes(initialLikes);
         setCommentContent(initialCommentContent);
-      } catch (err) {
+      } catch {
         setError("Failed to load tutorials");
       } finally {
         setLoading(false);
@@ -57,248 +65,309 @@ const Tutorials = () => {
     fetchTutorials();
   }, []);
 
+  // reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredTutorials]);
+
   const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    if (e.target.value === "") {
+    const term = e.target.value;
+    setSearchTerm(term);
+    if (!term) {
       setFilteredTutorials(tutorials);
     } else {
-      const filtered = tutorials.filter(
-        (tutorial) =>
-          tutorial.title.toLowerCase().includes(e.target.value.toLowerCase()) ||
-          tutorial.category.toLowerCase().includes(e.target.value.toLowerCase())
+      setFilteredTutorials(
+          tutorials.filter(
+              (t) =>
+                  t.title.toLowerCase().includes(term.toLowerCase()) ||
+                  t.category.toLowerCase().includes(term.toLowerCase())
+          )
       );
-      setFilteredTutorials(filtered);
     }
   };
 
-  const handleTutorialClick = (tutorialId) => {
-    navigate(`/tutorials/${tutorialId}`);
+  const handleTutorialClick = (id) => {
+    navigate(`/tutorials/${id}`);
   };
 
-  const handleLike = async (tutorialId) => {
+  const handleLike = async (id) => {
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/tutorials/${tutorialId}/like`,
-        { userId }
+      const res = await axios.post(
+          `http://localhost:5000/api/tutorials/${id}/like`,
+          { userId }
       );
-      setLikes((prevLikes) => ({
-        ...prevLikes,
-        [tutorialId]:
-          response.data.message === "Like removed"
-            ? prevLikes[tutorialId] - 1
-            : prevLikes[tutorialId] + 1,
+      setLikes((prev) => ({
+        ...prev,
+        [id]:
+            res.data.message === "Like removed"
+                ? prev[id] - 1
+                : prev[id] + 1,
       }));
+      const detail = await axios.get(
+          `http://localhost:5000/api/tutorials/${id}`
+      );
+      setLikes((prev) => ({ ...prev, [id]: detail.data.likes }));
     } catch (err) {
       setError(err.response?.data?.message || "Failed to like tutorial");
     }
   };
 
-  // Fonction de vérification des mots offensants avec l'API RapidAPI
   const checkForBadWords = async (comment) => {
-    const apiKey = "97b6f4bf49msh5e3c302c88403e5p14d202jsnfcd1ea32122a"; // Ton API Key de RapidAPI
-    const badWordsAPI = "https://neutrinoapi-bad-word-filter.p.rapidapi.com/bad-word-filter";
-    
-    const encodedParams = new URLSearchParams();
-    encodedParams.set('content', comment);
-    encodedParams.set('censor-character', '*');
-
-    const options = {
-      method: 'POST',
-      url: badWordsAPI,
-      headers: {
-        'x-rapidapi-key': apiKey,
-        'x-rapidapi-host': 'neutrinoapi-bad-word-filter.p.rapidapi.com',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      data: encodedParams,
-    };
-
+    const apiKey = "97b6f4bf49msh5e3c302c88403e5p14d202jsnfcd1ea32122a";
+    const badWordsAPI =
+        "https://neutrinoapi-bad-word-filter.p.rapidapi.com/bad-word-filter";
+    const params = new URLSearchParams();
+    params.set("content", comment);
+    params.set("censor-character", "*");
     try {
-      const response = await axios.request(options);
-      const data = response.data;
-
-      if (data.censored) {
-        return true; // Si censured est true, le commentaire contient des mots offensants
-      }
-      return false; // Si censured est false, le commentaire est propre
-    } catch (error) {
-      console.error("Erreur lors de la vérification des mots : ", error);
-      return false; // En cas d'erreur, considérer comme sans mots offensants
+      const res = await axios.request({
+        method: "POST",
+        url: badWordsAPI,
+        headers: {
+          "x-rapidapi-key": apiKey,
+          "x-rapidapi-host":
+              "neutrinoapi-bad-word-filter.p.rapidapi.com",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: params,
+      });
+      return res.data.censored;
+    } catch {
+      return false;
     }
   };
 
-  const handleCommentSubmit = async (e, tutorialId) => {
+  const handleCommentSubmit = async (e, id) => {
     e.preventDefault();
-
-    if (!commentContent[tutorialId].trim()) return;
-
-    // Vérification des mots offensants dans le commentaire
-    const isSafe = await checkForBadWords(commentContent[tutorialId]);
-    if (isSafe) {
+    const content = commentContent[id]?.trim();
+    if (!content) return;
+    if (await checkForBadWords(content)) {
       alert("Votre commentaire contient un langage inapproprié.");
       return;
     }
-
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/tutorials/${tutorialId}/comment`,
-        { content: commentContent[tutorialId], userId }
+      const res = await axios.post(
+          `http://localhost:5000/api/tutorials/${id}/comment`,
+          { content, userId }
       );
-      setComments((prevComments) => ({
-        ...prevComments,
-        [tutorialId]: [...prevComments[tutorialId], response.data.comment],
+      setComments((prev) => ({
+        ...prev,
+        [id]: [...prev[id], res.data.comment],
       }));
-      setCommentContent((prevContent) => ({ ...prevContent, [tutorialId]: "" }));
+      setCommentContent((prev) => ({ ...prev, [id]: "" }));
+      const detail = await axios.get(
+          `http://localhost:5000/api/tutorials/${id}`
+      );
+      setComments((prev) => ({ ...prev, [id]: detail.data.comments }));
     } catch (err) {
       setError(err.response?.data?.message || "Failed to add comment");
     }
   };
 
-  const handleCommentChange = (tutorialId, value) => {
-    setCommentContent((prevContent) => ({ ...prevContent, [tutorialId]: value }));
-  };
+  const handleCommentChange = (id, val) =>
+      setCommentContent((prev) => ({ ...prev, [id]: val }));
 
-  const handleShareClick = (tutorialId) => {
-    const url = `${window.location.origin}/tutorials/${tutorialId}`;
-    setShareModal({ visible: true, url });
+  const handleShareClick = (id) => {
+    setShareModal({
+      visible: true,
+      url: `${window.location.origin}/tutorials/${id}`,
+    });
   };
 
   const ShareModal = ({ url, onClose }) => (
-    <div className="share-modal-overlay">
-      <div className="share-modal">
-        <h3>Share this Tutorial</h3>
-        <div className="share-buttons">
-          <button
-            onClick={() =>
-              window.open(
-                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-                "_blank"
-              )
-            }
-            className="share-button facebook"
-          >
-            <FaFacebook /> Facebook
-          </button>
-          <button
-            onClick={() =>
-              window.open(`https://www.instagram.com/?url=${encodeURIComponent(url)}`, "_blank")
-            }
-            className="share-button instagram"
-          >
-            <FaInstagram /> Instagram
-          </button>
-          <button
-            onClick={() =>
-              (window.location.href = `mailto:?subject=Check%20this%20tutorial&body=${encodeURIComponent(url)}`) 
-            }
-            className="share-button email"
-          >
-            <FaEnvelope /> Email
+      <div className="share-modal-overlay">
+        <div className="share-modal">
+          <h3>Share this Tutorial</h3>
+          <div className="share-buttons">
+            <button
+                onClick={() =>
+                    window.open(
+                        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                            url
+                        )}`,
+                        "_blank"
+                    )
+                }
+                className="share-button facebook"
+            >
+              <FaFacebook /> Facebook
+            </button>
+            <button
+                onClick={() =>
+                    window.open(
+                        `https://www.instagram.com/?url=${encodeURIComponent(
+                            url
+                        )}`,
+                        "_blank"
+                    )
+                }
+                className="share-button instagram"
+            >
+              <FaInstagram /> Instagram
+            </button>
+            <button
+                onClick={() =>
+                    (window.location.href = `mailto:?subject=Check%20this%20tutorial&body=${encodeURIComponent(
+                        url
+                    )}`)
+                }
+                className="share-button email"
+            >
+              <FaEnvelope /> Email
+            </button>
+          </div>
+          <button className="close-modal" onClick={onClose}>
+            Close
           </button>
         </div>
-        <button className="close-modal" onClick={onClose}>
-          Close
-        </button>
       </div>
-    </div>
+  );
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTutorials.length / tutorialsPerPage);
+  const startIdx = (currentPage - 1) * tutorialsPerPage;
+  const currentTutorials = filteredTutorials.slice(
+      startIdx,
+      startIdx + tutorialsPerPage
   );
 
   return (
-    <>
-      <Back title="Tutorials" />
-      <section className="tutorial-section">
-        <h2 className="tutorial-list__title">All Tutorials</h2>
-        {loading && <p>Loading tutorials...</p>}
-        {error && <p className="tutorial-list__error">{error}</p>}
+      <>
+        <Back title="Tutorials" />
+        <section className="tutorial-section">
+          <h2 className="tutorial-list__title">All Tutorials</h2>
+          {loading && <p>Loading tutorials...</p>}
+          {error && <p className="tutorial-list__error">{error}</p>}
 
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Search tutorials..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="search-input"
-          />
-        </div>
+          <div className="search-container">
+            <input
+                type="text"
+                placeholder="Search tutorials..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="search-input"
+            />
+          </div>
 
-        <div className="tutorial-list">
-          {filteredTutorials.map((tutorial) => (
-            <div key={tutorial.tutorialId} className="tutorial-card">
-              <h3
-                className="tutorial-card__title"
-                onClick={() => handleTutorialClick(tutorial.tutorialId)}
-              >
-                {tutorial.title}
-              </h3>
-              <p className="tutorial-card__category">{tutorial.category}</p>
-              <p className="tutorial-card__author">
-                By {tutorial.authorId?.username || "Unknown"}
-              </p>
-              <p className="tutorial-card__date">
-                {new Date(tutorial.createdAt).toLocaleDateString()}
-              </p>
+          <div className="tutorial-list">
+            {currentTutorials.map((t) => (
+                <div key={t._id} className="tutorial-card">
+                  <h3
+                      className="tutorial-card__title"
+                      onClick={() => handleTutorialClick(t._id)}
+                  >
+                    {t.title}
+                  </h3>
+                  <p className="tutorial-card__category">{t.category}</p>
+                  <p className="tutorial-card__author">
+                    By {t.authorId?.username || "Unknown"}
+                  </p>
+                  <p className="tutorial-card__date">
+                    {new Date(t.createdAt).toLocaleDateString()}
+                  </p>
 
-              <div className="tutorial-reactions-summary">
-                <AiFillLike className="reaction-icon blue" />
-                <AiFillHeart className="reaction-icon red" />
-                <span className="reaction-count">{likes[tutorial.tutorialId]}</span>
-                <span className="comment-share-count">
-                  {(comments[tutorial.tutorialId] || []).length} 💬
+                  <div className="tutorial-reactions-summary">
+                    <AiFillLike className="reaction-icon blue" />
+                    <AiFillHeart className="reaction-icon red" />
+                    <span className="reaction-count">{likes[t._id]}</span>
+                    <span className="comment-share-count">
+                  {(comments[t._id] || []).length} 💬
                 </span>
-              </div>
-
-              <div className="tutorial-card__actions">
-                <button
-                  className={`action-button ${likes[tutorial.tutorialId] > 0 ? "liked" : ""}`}
-                  onClick={() => handleLike(tutorial.tutorialId)}
-                >
-                  <FaRegThumbsUp className="action-icon" />
-                  <span>LIKE</span>
-                </button>
-
-                <button
-                  className="action-button"
-                  onClick={(e) => handleCommentSubmit(e, tutorial.tutorialId)}
-                >
-                  <FaRegCommentAlt className="action-icon" />
-                  <span>Comment</span>
-                </button>
-
-                <button className="action-button" onClick={() => handleShareClick(tutorial.tutorialId)}>
-                  <FaShare /> Share
-                </button>
-              </div>
-
-              <div className="tutorial-card__comments">
-                {(comments[tutorial.tutorialId] || []).map((comment) => (
-                  <div key={comment._id} className="tutorial-comment">
-                    <p>{comment.content}</p>
-                    <p className="tutorial-comment__meta">
-                      By {comment.userId?.username || "Anonymous"} |{" "}
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </p>
                   </div>
+
+                  <div className="tutorial-card__actions">
+                    <button
+                        className={`action-button ${
+                            likes[t._id] > 0 ? "liked" : ""
+                        }`}
+                        onClick={() => handleLike(t._id)}
+                    >
+                      <FaRegThumbsUp className="action-icon" />
+                      <span>LIKE</span>
+                    </button>
+                    <button
+                        className="action-button"
+                        onClick={(e) => handleCommentSubmit(e, t._id)}
+                    >
+                      <FaRegCommentAlt className="action-icon" />
+                      <span>Comment</span>
+                    </button>
+                    <button
+                        className="action-button"
+                        onClick={() => handleShareClick(t._id)}
+                    >
+                      <FaShare /> Share
+                    </button>
+                  </div>
+
+                  <div className="tutorial-card__comments">
+                    {(comments[t._id] || []).map((c) => (
+                        <div key={c._id} className="tutorial-comment">
+                          <p>{c.content}</p>
+                          <p className="tutorial-comment__meta">
+                            By {c.userId?.username || "Anonymous"} |{" "}
+                            {new Date(c.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                    ))}
+                    <textarea
+                        value={commentContent[t._id] || ""}
+                        onChange={(e) =>
+                            handleCommentChange(t._id, e.target.value)
+                        }
+                        placeholder="Add a comment..."
+                        className="tutorial-form__textarea"
+                    />
+                  </div>
+                </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                        key={i + 1}
+                        className={currentPage === i + 1 ? "active" : ""}
+                        onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
                 ))}
-
-                <textarea
-                  value={commentContent[tutorial.tutorialId]}
-                  onChange={(e) => handleCommentChange(tutorial.tutorialId, e.target.value)}
-                  placeholder="Add a comment..."
-                  className="tutorial-form__textarea"
-                />
+                <button
+                    onClick={() =>
+                        setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
               </div>
-            </div>
-          ))}
-        </div>
+          )}
 
-        <button className="tutorial-button" onClick={() => navigate("/tutorials/create")}>
-          Create New Tutorial
-        </button>
-        {shareModal.visible && (
-          <ShareModal url={shareModal.url} onClose={() => setShareModal({ visible: false, url: "" })} />
-        )}
-      </section>
-    </>
+          <button
+              className="tutorial-button"
+              onClick={() => navigate("/tutorials/create")}
+          >
+            Create New Tutorial
+          </button>
+          {shareModal.visible && (
+              <ShareModal
+                  url={shareModal.url}
+                  onClose={() =>
+                      setShareModal({ visible: false, url: "" })
+                  }
+              />
+          )}
+        </section>
+      </>
   );
 };
 
