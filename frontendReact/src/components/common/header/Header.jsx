@@ -15,6 +15,8 @@ const Header = () => {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+
+
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -127,6 +129,10 @@ const Header = () => {
     navigate("/");
   };
 
+  // Hide header on /admin route
+  if (location.pathname === "/admin") {
+    return null; // Skip rendering the header
+  }
   const headerClass = `${location.pathname.startsWith("/admin") ? "admin-header" : ""}`;
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -147,7 +153,7 @@ const Header = () => {
               </li>
               <li>
                 <NavLink to="/courses" className={({ isActive }) => (isActive ? "active" : "")}>
-                  All Courses
+                  Courses
                 </NavLink>
               </li>
               <li>
@@ -166,7 +172,7 @@ const Header = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/groups" className={({ isActive }) => (isActive ? "active" : "")}>
                   Groups
                 </NavLink>
               </li>
@@ -177,16 +183,26 @@ const Header = () => {
               </li>
          
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                <a href="/activities" className={({ isActive }) => (isActive ? "active" : "")}>
                   Events
                 </a>
               </li>
+
               <li>
-                <a href="/" className={({ isActive }) => (isActive ? "active" : "")}>
+                
+                <NavLink to="/tutorials" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Tutorials
+                </NavLink>
+                
+              </li>
+
+              <li>
+                <a href="/all-job-offers" className={({ isActive }) => (isActive ? "active" : "")}>
                   Recruitment
                 </a>
               </li>
               <li>
+
                 ||
               </li>
               {currentUser?.role === "admin" && (

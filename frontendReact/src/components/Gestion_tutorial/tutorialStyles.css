@@ -1,0 +1,761 @@
+/* ==========================================================================
+   CSS Variables
+   ========================================================================== */
+:root {
+  /* Colors - Light Mode */
+  --primary-color: #6a4e23; /* Earthy brown for accents */
+  --secondary-color: #eeba5b; /* Warm gold for highlights */
+  --background-color: #f5f5f5; /* Light gray background */
+  --card-bg: #ffffff; /* White for cards */
+  --text-color: #333333; /* Dark gray for text */
+  --meta-text-color: #888888; /* Lighter gray for meta info */
+  --border-color: #cccccc; /* Light border */
+  --shadow-color: rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  --error-color: #d9534f; /* Red for errors */
+  --button-bg: #c29a3a; /* Gold for buttons */
+  --button-bg-hover: #a87f1b; /* Darker gold on hover */
+  --input-bg: #f0f0f0; /* Light input background */
+  --modal-bg: #ffffff; /* White for modals */
+  --overlay-bg: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+
+  /* Colors - Dark Mode */
+  --dark-bg: #1a1a1a; /* Dark background */
+  --dark-card-bg: #2a2a2a; /* Darker card background */
+  --dark-text: #e0e0e0; /* Light text for dark mode */
+  --dark-meta-text: #b0b0b0; /* Lighter gray for meta info */
+  --dark-border: #555555; /* Darker border */
+  --dark-shadow: rgba(255, 255, 255, 0.1); /* Subtle shadow in dark mode */
+  --dark-input-bg: #333333; /* Dark input background */
+  --dark-modal-bg: #2a2a2a; /* Dark modal background */
+  --dark-overlay-bg: rgba(0, 0, 0, 0.8); /* Darker overlay */
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Typography */
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1.125rem;
+  --font-size-lg: 1.5rem;
+  --font-size-xl: 2rem;
+  --font-size-xxl: 2.5rem;
+
+  /* Transitions */
+  --transition-speed: 0.3s;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode {
+  --background-color: var(--dark-bg);
+  --card-bg: var(--dark-card-bg);
+  --text-color: var(--dark-text);
+  --meta-text-color: var(--dark-meta-text);
+  --border-color: var(--dark-border);
+  --shadow-color: var(--dark-shadow);
+  --input-bg: var(--dark-input-bg);
+  --modal-bg: var(--dark-modal-bg);
+  --overlay-bg: var(--dark-overlay-bg);
+}
+
+/* ==========================================================================
+   Layout Styles
+   ========================================================================== */
+.tutorial-section {
+  max-width: 87.5rem; /* 1400px */
+  margin: var(--spacing-xl) auto;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--background-color) 0%, #e8e8e8 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  align-items: stretch;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition-speed) ease;
+}
+
+body.dark-mode .tutorial-section {
+  background: linear-gradient(135deg, var(--background-color) 0%, #2f2f2f 100%);
+}
+
+/* Grid Layout for Tutorial List */
+.tutorial-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Typography Styles
+   ========================================================================== */
+.tutorial-list__title {
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
+  color: var(--primary-color);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.125rem;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+  position: relative;
+  transition: color var(--transition-speed) ease, text-shadow var(--transition-speed) ease;
+}
+
+body.dark-mode .tutorial-list__title {
+  color: var(--secondary-color);
+}
+
+.tutorial-list__title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 5rem;
+  height: 0.1875rem;
+  background-color: var(--secondary-color);
+  transform: translateX(-50%);
+}
+
+.tutorial-list__title:hover {
+  color: var(--secondary-color);
+  text-shadow: 0 0 0.625rem rgba(226, 158, 70, 0.5);
+}
+
+.tutorial-card__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+  transition: color var(--transition-speed) ease;
+}
+
+body.dark-mode .tutorial-card__title {
+  color: var(--secondary-color);
+}
+
+.tutorial-card__category,
+.tutorial-card__author,
+.tutorial-card__date {
+  color: var(--meta-text-color);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Form and Detail Titles */
+.tutorial-form__title,
+.tutorial-detail__title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+body.dark-mode .tutorial-form__title,
+body.dark-mode .tutorial-detail__title {
+  color: var(--secondary-color);
+}
+
+/* ==========================================================================
+   Component Styles
+   ========================================================================== */
+/* Tutorial Card */
+.tutorial-card {
+  background: var(--card-bg);
+  padding: var(--spacing-md);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.375rem 0.9375rem var(--shadow-color);
+  text-align: center;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  border: 1px solid var(--border-color);
+  animation: slideUp 0.5s ease-in-out forwards;
+}
+
+body.dark-mode .tutorial-card {
+  border-color: var(--dark-border);
+}
+
+.tutorial-card:hover {
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.625rem 1.25rem var(--shadow-color);
+}
+
+/* Form and Detail Containers */
+.tutorial-form,
+.tutorial-detail {
+  background: var(--card-bg);
+  padding: var(--spacing-lg);
+  border-radius: 0.625rem;
+  box-shadow: 0 0.25rem 0.625rem var(--shadow-color);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+  transition: background var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+body.dark-mode .tutorial-form,
+body.dark-mode .tutorial-detail {
+  border-color: var(--dark-border);
+}
+
+/* Search Container */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 25rem;
+  margin: 0 auto var(--spacing-lg);
+  padding: 0 var(--spacing-sm);
+}
+
+/* Search Input */
+.search-container input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: 1.875rem;
+  font-size: var(--font-size-base);
+  background: var(--input-bg);
+  color: var(--text-color);
+  outline: none;
+  transition: all var(--transition-speed) ease;
+}
+
+body.dark-mode .search-container input {
+  background: var(--dark-input-bg);
+}
+
+.search-container input:focus {
+  box-shadow: 0 0 0.3125rem rgba(228, 134, 58, 0.514);
+  border-color: var(--secondary-color);
+}
+
+.search-container input::placeholder {
+  color: #aaaaaa;
+  font-style: italic;
+}
+
+/* Search Label */
+.search-label {
+  position: absolute;
+  top: -0.625rem;
+  left: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--meta-text-color);
+  background: var(--card-bg);
+  padding: 0 var(--spacing-xs);
+  transition: all var(--transition-speed) ease;
+}
+
+body.dark-mode .search-label {
+  background: var(--dark-card-bg);
+}
+
+.search-container input:focus + .search-label,
+.search-container input:not(:placeholder-shown) + .search-label {
+  top: -1.25rem;
+  font-size: var(--font-size-sm);
+}
+
+/* Language Selector */
+.language-selector {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  width: 9.375rem;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+body.dark-mode .language-selector {
+  background: var(--dark-input-bg);
+}
+
+.language-selector:hover {
+  background: #e5e5e5;
+  border-color: var(--secondary-color);
+}
+
+body.dark-mode .language-selector:hover {
+  background: #444444;
+}
+
+/* Tutorial Reactions Summary */
+.tutorial-reactions-summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
+}
+
+.reaction-icon {
+  font-size: var(--font-size-md);
+}
+
+.reaction-icon.blue {
+  color: #2196f3;
+}
+
+.reaction-icon.red {
+  color: #e91e63;
+}
+
+.reaction-count,
+.comment-share-count {
+  font-size: var(--font-size-sm);
+  color: var(--meta-text-color);
+}
+
+/* Tutorial Comments */
+.tutorial-card__comments {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--input-bg);
+  border-radius: 0.375rem;
+}
+
+body.dark-mode .tutorial-card__comments {
+  background: var(--dark-input-bg);
+}
+
+.tutorial-comment {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+body.dark-mode .tutorial-comment {
+  border-color: var(--dark-border);
+}
+
+.tutorial-comment:last-child {
+  border-bottom: none;
+}
+
+.tutorial-comment p {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tutorial-comment__meta {
+  font-size: 0.75rem;
+  color: var(--meta-text-color);
+}
+
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
+.tutorial-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.tutorial-form__label {
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.tutorial-form__input,
+.tutorial-form__textarea,
+.tutorial-form__select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-size: var(--font-size-base);
+  background: var(--input-bg);
+  color: var(--text-color);
+  transition: border-color var(--transition-speed) ease;
+}
+
+body.dark-mode .tutorial-form__input,
+body.dark-mode .tutorial-form__textarea,
+body.dark-mode .tutorial-form__select {
+  background: var(--dark-input-bg);
+}
+
+.tutorial-form__input:focus,
+.tutorial-form__textarea:focus,
+.tutorial-form__select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.tutorial-form__input {
+  height: 2.5rem;
+}
+
+.tutorial-form__textarea {
+  height: 9.375rem;
+  resize: vertical;
+}
+
+.tutorial-form__input::placeholder,
+.tutorial-form__textarea::placeholder {
+  color: #aaaaaa;
+}
+
+/* Errors */
+.tutorial-form__error,
+.tutorial-form__field-error,
+.tutorial-detail__error,
+.tutorial-list__error {
+  color: var(--error-color);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+  text-align: center;
+}
+
+/* ==========================================================================
+   Button Styles
+   ========================================================================== */
+.tutorial-button,
+.action-button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  border-radius: 0.5rem;
+  background: var(--button-bg);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.tutorial-button:hover,
+.action-button:hover {
+  background: var(--button-bg-hover);
+  transform: scale(1.05);
+}
+
+.tutorial-button:focus,
+.action-button:focus {
+  outline: none;
+  box-shadow: 0 0 0.3125rem rgba(226, 158, 70, 0.7);
+}
+
+/* Secondary and Danger Buttons */
+.tutorial-button--secondary {
+  background: #cccccc;
+  color: #333333;
+}
+
+.tutorial-button--secondary:hover {
+  background: #b0b0b0;
+}
+
+body.dark-mode .tutorial-button--secondary {
+  background: #555555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .tutorial-button--secondary:hover {
+  background: #666666;
+}
+
+.tutorial-button--danger {
+  background: #d9534f;
+}
+
+.tutorial-button--danger:hover {
+  background: #c9302c;
+}
+
+/* Download Button */
+.tutorial-button--download {
+  background: #2196f3;
+}
+
+.tutorial-button--download:hover {
+  background: #1976d2;
+}
+
+/* Action Button */
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #e0e0e0;
+  color: #333333;
+}
+
+.action-button:hover {
+  background: #d0d0d0;
+  transform: scale(1.05);
+}
+
+body.dark-mode .action-button {
+  background: #444444;
+  color: #e0e0e0;
+}
+
+body.dark-mode .action-button:hover {
+  background: #555555;
+}
+
+.action-button.liked {
+  background: #2196f3;
+  color: #ffffff;
+}
+
+.action-button.liked:hover {
+  background: #1976d2;
+}
+
+/* Card Actions */
+.tutorial-card__actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* Detail Actions */
+.tutorial-detail__actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  justify-content: center;
+}
+
+/* Share Modal Buttons */
+.share-button {
+  background: #007bff;
+  color: #ffffff;
+  padding: var(--spacing-sm);
+  border: none;
+  border-radius: 0.3125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.share-button:hover {
+  background: #0056b3;
+}
+
+.share-button.facebook {
+  background: #3b5998;
+}
+
+.share-button.facebook:hover {
+  background: #2d4373;
+}
+
+.share-button.instagram {
+  background: #e1306c;
+}
+
+.share-button.instagram:hover {
+  background: #c13584;
+}
+
+.share-button.email {
+  background: #666666;
+}
+
+.share-button.email:hover {
+  background: #555555;
+}
+
+.close-modal {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  background: #cccccc;
+  color: #333333;
+  border-radius: 0.3125rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.close-modal:hover {
+  background: #999999;
+}
+
+body.dark-mode .close-modal {
+  background: #555555;
+  color: #e0e0e0;
+}
+
+body.dark-mode .close-modal:hover {
+  background: #666666;
+}
+
+/* ==========================================================================
+   Media Styles
+   ========================================================================== */
+.tutorial-detail__media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.tutorial-detail__media img {
+  max-width: 18.75rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.25rem 0.625rem var(--shadow-color);
+  transition: transform var(--transition-speed) ease;
+}
+
+.tutorial-detail__media img:hover {
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   Modal Styles
+   ========================================================================== */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.share-modal {
+  background: var(--modal-bg);
+  padding: var(--spacing-lg);
+  border-radius: 0.625rem;
+  width: 18.75rem;
+  max-width: 90%;
+  box-shadow: 0 0.25rem 0.625rem var(--shadow-color);
+  border: 1px solid var(--border-color);
+  transition: background var(--transition-speed) ease;
+}
+
+body.dark-mode .share-modal {
+  border-color: var(--dark-border);
+}
+
+.share-modal h3 {
+  font-size: var(--font-size-lg);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.share-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@keyframes slideUp {
+  from { transform: translateY(2rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+@media screen and (max-width: 64rem) { /* 1024px */
+  .tutorial-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 48rem) { /* 768px */
+  .tutorial-list {
+    grid-template-columns: 1fr;
+  }
+
+  .tutorial-section {
+    padding: var(--spacing-sm);
+    margin: var(--spacing-md) auto;
+  }
+
+  .tutorial-card {
+    padding: var(--spacing-sm);
+  }
+
+  .tutorial-card__title {
+    font-size: var(--font-size-md);
+  }
+
+  .tutorial-form__title,
+  .tutorial-detail__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .tutorial-form__field {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .tutorial-detail__actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tutorial-form,
+  .tutorial-detail {
+    max-width: 100%;
+  }
+
+  .tutorial-list__title {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* Enhanced form styling */
+.tutorial-form.enhanced {
+  background: linear-gradient(to bottom right, var(--card-bg), #f8f8f8);
+  border-left: 4px solid var(--primary-color);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tutorial-form.enhanced:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+/* Improved input focus styles */
+.tutorial-form.enhanced .tutorial-form__input:focus,
+.tutorial-form.enhanced .tutorial-form__textarea:focus,
+.tutorial-form.enhanced .tutorial-form__select:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px rgba(238, 186, 91, 0.2);
+}
+
+/* Title with icon */
+.tutorial-form.enhanced .tutorial-detail__title i {
+  margin-right: 8px;
+  color: var(--secondary-color);
+}
+
+/* File input styling */
+.tutorial-form.enhanced input[type="file"] {
+  background: var(--input-bg);
+  border: 1px dashed var(--border-color);
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+}
+
+
+

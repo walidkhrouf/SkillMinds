@@ -15,4 +15,5 @@ tutorialCommentSchema.pre('validate', function(next) {
   }
   next();
 });
+
 module.exports = mongoose.model('TutorialComment', tutorialCommentSchema);

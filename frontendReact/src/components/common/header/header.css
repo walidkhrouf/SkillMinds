@@ -20,6 +20,16 @@
 .head .icon {
   margin-left: 10px;
 }
+header.admin-header {
+  display: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.admin-mode .main-content {
+  padding-top: 0 !important;
+}
 
 header {
   background-color: rgb(78, 49, 6);

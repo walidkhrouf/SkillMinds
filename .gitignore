@@ -2,3 +2,4 @@
 Backend/node_modules/
 frontendReact/node_modules/
 Backend/package-lock.json
+frontendReact/package-lock.json
