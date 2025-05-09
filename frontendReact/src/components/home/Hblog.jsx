@@ -1,10 +1,11 @@
 import "../blog/blog.css"
 import { blog } from "../../dummydata"
 import Heading from "../common/heading/Heading"
-
+import Hero from "./hero/Hero"
 const Hblog = () => {
   return (
     <>
+     <Hero />
       <section className='blog'>
         <div className='container'>
           <Heading subtitle='OUR BLOG' title='Recent From Blog' />

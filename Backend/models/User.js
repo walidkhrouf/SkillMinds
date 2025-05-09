@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -6,12 +5,14 @@ const profileImageSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId } 
+  fileId: { type: Schema.Types.ObjectId }
 }, { _id: false });
 
-const linkedAccountsSchema = new Schema({
-  google: String,
-  facebook: String
+const certificateImageSchema = new Schema({
+  filename: String,
+  contentType: String,
+  length: Number,
+  fileId: { type: Schema.Types.ObjectId }
 }, { _id: false });
 
 const userSchema = new Schema({
@@ -20,11 +21,16 @@ const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   phoneNumber: String,
   password: { type: String, required: true },
-  role: { type: String, enum: ["learner", "mentor", "admin"], required: true },
+  role: { type: String, enum: ["learner", "mentor", "admin", "unverified mentor"], required: true },
   bio: String,
   location: String,
   profileImage: profileImageSchema,
-  linkedAccounts: linkedAccountsSchema,
+  certificateImage: { type: [certificateImageSchema], default: [] },
+  linkedAccounts: {
+    google: String,
+    linkedin: String
+  },
+  hasChosenSkills: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

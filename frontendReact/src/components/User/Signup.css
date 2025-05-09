@@ -1,69 +1,356 @@
-.auth-container {
-  max-width: 400px;
-  margin: 120px auto 40px;
-  padding: 20px;
-  background-color: #fff;
+.signup-container {
+  display: flex;
+  width: 1000px;
+  margin: 50px auto;
+  background-color: #f8f8f8;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-height: 950px;
+  align-items: stretch;
 }
 
-.auth-container h2 {
+.left-box, .right-box {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.left-box {
+  border-right: 1px solid #eee;
+}
+
+.right-box {
+  background-image: url("/public/images/bgfinale.jpg");
+  color: white;
   text-align: center;
-  margin-bottom: 20px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+}
+
+h1 {
+  font-weight: bold;
+  font-size: 4em;
+  color: rgb(78, 49, 6);
+}
+
+h2 {  
+  color: rgb(126, 83, 20);
+}
+
+.auth-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+}
+
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
 }
 
 .form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 20px;
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.auth-btn, .back-btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .auth-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #a47f18;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  background-color: #E9E1D5; 
+  color: white; 
 }
 
 .auth-btn:hover {
-  background-color: #8f6713;
+  background-color: #a47f18; 
 }
 
-.switch-auth {
+.back-btn {
+  background-color: white; 
+  color: #a47f18; 
+  border: 2px solid #a47f18; 
+}
+
+.back-btn:hover {
+  background-color: #a47f18; 
+  color: white; 
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.file-upload-container input[type="file"] {
+  display: none;
+}
+
+.file-upload-label {
+  background-color: #a47f18; 
+  color: white; 
+  padding: 12px 20px; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: background-color 0.3s, transform 0.3s; 
+  flex: 0 0 auto; 
+  min-width: 150px; 
+  text-align: center; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-upload-label:hover {
+  background-color: #8c6414; 
+  transform: scale(1.05);
+}
+
+.file-name {
+  margin-left: 10px; 
+  color: #333; 
+  white-space: nowrap; 
+  font-size: 14px;
+  flex: 1;
+}
+
+.image-indicator {
+  margin-left: 10px; 
+  font-size: 12px; 
+  color: #888; 
+}
+
+.mentor-skills-section {
   margin-top: 20px;
+}
+
+.mentor-skills-section h3 {
+  color: #a47f18;
+  margin-bottom: 15px;
+}
+
+.mentor-skills-section h4 {
+  color: #a47f18;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.mentor-skills-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mentor-skill-pill {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border-radius: 20px; 
+  border: 2px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
   text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mentor-skill-pill:hover {
+  background-color: #e0e0e0;
+  border-color: #a47f18;
+}
+
+.mentor-skill-pill.selected {
+  background-color: #a47f18;
+  color: white;
+  border-color: #a47f18;
+  transform: scale(1.05); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mentor-skill-pill.selected:hover {
+  background-color: #8c6414; 
+}
+
+.mentor-certificates-grid {
+  margin-top: 20px;
+}
+
+.mentor-certificates-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.certificate-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.certificate-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.certificate-card h5 {
+  color: #a47f18;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+@media (max-width: 1024px) {
+  .signup-container {
+    flex-direction: column;
+    min-height: auto; 
+  }
+  .left-box {
+    border-right: none;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5em;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: calc(100% - 12px);
+  }
+
+  .auth-btn {
+    font-size: 14px;
+  }
+
+  .mentor-skill-pill {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+
+  .mentor-certificates-list {
+    grid-template-columns: 1fr;
+  }
+
+  .certificate-card {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .signup-container {
+    width: 100%;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  .right-box {
+    padding: 20px;
+  }
+
+  .mentor-skills-pill-list {
+    gap: 8px;
+  }
+
+  .mentor-skill-pill {
+    padding: 6px 12px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+
+  .file-upload-label {
+    padding: 10px 16px;
+    min-width: 120px;
+    font-size: 14px;
+  }
+
+  .certificate-card {
+    padding: 10px;
+  }
+
+  .certificate-card h5 {
+    font-size: 14px;
+  }
+}
+
+.progress-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.progress-step {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #ddd;
+  margin: 0 8px;
+  transition: background-color 0.3s;
+}
+
+.progress-step.active {
+  background-color: #a47f18;
+}
+
+.form-navigation {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between; 
 }
 
 .error {
   color: red;
+  margin-bottom: 15px;
   text-align: center;
 }
 
 .success {
   color: green;
+  margin-bottom: 15px;
   text-align: center;
 }
-

@@ -1,0 +1,25 @@
+services:
+  frontend:
+    build:
+      context: frontendReact  # Ensure this path is correct
+      dockerfile: Dockerfile
+    image: walidkhrouf/devminds_4twin5_pidev-frontend:latest
+    ports:
+      - "5173:80"
+
+  backend:
+    build:
+      context: Backend        # Ensure this path is correct
+      dockerfile: Dockerfile
+    image: walidkhrouf/devminds_4twin5_pidev-backend:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/devminds_db
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
