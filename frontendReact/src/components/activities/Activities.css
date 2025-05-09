@@ -1,0 +1,163 @@
+.activities-wrapper {
+  padding-top: 5rem; /* 80px converted to rem, space below navbar */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem; /* 20px */
+}
+
+.activities-wrapper .header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 75rem; /* 1200px */
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.activities-wrapper .search-wrapper {
+  flex-grow: 1;
+  margin-right: 1.25rem; /* 20px */
+}
+
+.activities-wrapper .search-input {
+  width: 100%;
+  max-width: 31.25rem; /* 500px */
+  padding: 0.625rem; /* 10px */
+  font-size: 1rem; /* Matches global base */
+  border-radius: 0.3125rem; /* 5px */
+  border: 1px solid #ccc; /* Specific border, not overriding global */
+}
+
+.activities-wrapper .button-container {
+  display: flex;
+  gap: 0.625rem; /* 10px - Space between buttons */
+  align-items: center;
+}
+
+.activities-wrapper .recommend-btn {
+  padding: 0.75rem 1.25rem; /* Matches add-event-btn */
+  font-size: 1rem;
+  background-color: #159e8b; /* Green color, matching add-event-btn */
+  color: #fff;
+  border: none;
+  border-radius: 0.3125rem; /* 5px */
+  cursor: pointer;
+  text-decoration: none; /* Consistent with add-event-btn */
+  display: inline-flex; /* Align text and icon */
+  align-items: center;
+  gap: 0.625rem; /* Space between text and icon */
+  transition: background-color 0.3s ease;
+}
+
+.activities-wrapper .recommend-btn:hover {
+  background-color: #127a6d; /* Darker green on hover, matching add-event-btn */
+}
+
+.activities-wrapper .add-event-btn {
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  font-size: 1rem;
+  background-color: rgb(78, 49, 6); /* Green color */
+  color: #fff;
+  border: none;
+  border-radius: 0.3125rem; /* 5px */
+  cursor: pointer;
+  text-decoration: none; /* For Link */
+  display: inline-flex; /* Align text and icon */
+  align-items: center;
+  gap: 0.625rem; /* Space between text and icon */
+  transition: background-color 0.3s ease;
+  position: relative; /* Ensure it stays in flow */
+}
+
+.activities-wrapper .add-event-btn:hover {
+  background-color: #127a6d; /* Darker green on hover */
+}
+
+/* Filter Container */
+.activities-wrapper .filter-container {
+  display: flex;
+  gap: 0.625rem; /* 10px */
+  justify-content: center;
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.activities-wrapper .filter-btn {
+  padding: 0.625rem 1rem; /* 10px 16px */
+  font-size: 1rem;
+  background-color: #f8f9fa; /* Light gray, matches recommended section */
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 0.3125rem; /* 5px */
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.activities-wrapper .filter-btn:hover {
+  background-color: #e9ecef; /* Slightly darker gray on hover */
+}
+
+.activities-wrapper .filter-btn.active {
+  background-color:rgb(78, 49, 6); /* Green to match add-event-btn */
+  color: #fff;
+  border-color: rgb(78, 49, 6); /* Updated to match green theme */
+}
+
+.activities-wrapper .cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem; /* 20px */
+  width: 100%;
+}
+
+@media (max-width: 48rem) { /* 768px */
+  .activities-wrapper .button-container {
+    flex-direction: column; /* Stack buttons vertically on smaller screens */
+    align-items: flex-end;
+  }
+
+  .activities-wrapper .recommend-btn,
+  .activities-wrapper .add-event-btn {
+    margin-right: 0.625rem; /* 10px */
+    padding: 0.625rem 1rem; /* Slightly smaller */
+    width: 100%; /* Full width for consistency */
+    text-align: center;
+  }
+
+  .activities-wrapper .filter-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .activities-wrapper .filter-btn {
+    width: 100%;
+    max-width: 15rem; /* 240px */
+  }
+
+  .activities-wrapper {
+    padding-top: 3.75rem; /* 60px */
+    gap: 0.9375rem; /* 15px */
+  }
+
+  .activities-wrapper .cards-container {
+    justify-content: flex-start;
+    gap: 0.9375rem; /* 15px */
+  }
+}
+
+@media (max-width: 30rem) { /* 480px */
+  .activities-wrapper .recommend-btn,
+  .activities-wrapper .add-event-btn,
+  .activities-wrapper .filter-btn {
+    padding: 0.5rem 0.9375rem; /* 8px 15px */
+  }
+
+  .activities-wrapper {
+    gap: 0.625rem; /* 10px */
+  }
+
+  .activities-wrapper .cards-container {
+    justify-content: center;
+  }
+}

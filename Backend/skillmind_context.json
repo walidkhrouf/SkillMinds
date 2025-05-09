@@ -1,0 +1,40 @@
+{
+  "platform": "SkillMind",
+  "description": "SkillMind is an innovative skill exchange platform designed to empower users in learning, community collaboration, and career advancement. Built by the DevMinds team at ESPRIT, it integrates artificial intelligence for personalized skill matching, a gamification system with badges, and robust DevOps practices for scalability. The platform facilitates peer-to-peer skill sharing, structured course enrollment, job applications based on verified skills, and vibrant community interactions through groups, events, and tutorials. Aligned with SDGs 4 (Quality Education), 8 (Decent Work and Economic Growth), and 9 (Industry, Innovation, and Infrastructure), SkillMind offers a flexible, accessible, and secure environment for learners, mentors, and recruiters.",
+  "features": {
+    "skill_verification": "Users can verify their skills through certificates, quizzes, or mentor reviews, earning badges to showcase expertise.",
+    "course_enrollment": "Enroll in diverse courses with various levels and schedules, tracking progress and completing with certificates.",
+    "job_applications": "Apply for jobs or mentorship roles based on verified skills, with recruiters filtering candidates via AI-driven matching.",
+    "community": "Engage with peers via groups, forums, and events, fostering collaboration and knowledge exchange.",
+    "tutorials": "Create, discover, and follow user-generated tutorials with comments and likes, enhancing learning resources.",
+    "activity_management": "Organize and join webinars, workshops, and meetups, with optional paid events and participant tracking.",
+    "cart_payment": "Purchase paid courses or event creation fees securely, managed through a user-specific cart and payment system.",
+    "notifications": "Receive real-time updates on account changes, course progress, skill verification, job statuses, and event reminders."
+  },
+  "common_queries": {
+    "how_to_enroll": "To enroll in a course, visit the Courses section, select a course, and click 'Enroll Now'. Track your progress in your profile.",
+    "skill_verification_process": "Upload your certificate in the Profile section under Skills, take a quiz, or request a mentor review to get verified.",
+    "job_opportunities": "Check the Jobs tab for opportunities matching your verified skills, apply with a cover letter and resume.",
+    "create_group": "Create a group by navigating to the Groups section, setting a name, description, and privacy (public/private), then inviting members.",
+    "join_event": "Browse the Activities section, filter by topic or date, and register for events with confirmation emails and reminders.",
+    "tutorial_contribution": "Write a tutorial in the Tutorials section, select a category, and submit for admin approval to share with the community.",
+    "payment_process": "Add paid courses to your Cart, proceed to Payment, and complete the transaction using a supported method like credit card or PayPal."
+  },
+  "technical_context": {
+    "architecture": "N-tier client-server model with a React frontend, Node.js backend, and MongoDB database, enhanced by AI for recommendations and DevOps with Docker and GitHub Actions.",
+    "data_models": {
+      "user": "Stores user details (ID, username, email, role, profile image) with linked accounts (Google, LinkedIn).",
+      "skill": "Central skill repository (ID, name, category, description) linked to user skills and courses.",
+      "course": "Details courses (ID, title, skill, price) with enrollment tracking.",
+      "group": "Manages communities (ID, name, privacy) with posts, comments, and likes.",
+      "job_offer": "Lists job opportunities (ID, title, required skills) with application tracking.",
+      "tutorial": "Holds user-created tutorials (ID, title, content) with interaction data.",
+      "activity": "Manages events (ID, title, date) with participant records.",
+      "cart": "Tracks user purchases (course IDs, prices) with payment history."
+    },
+    "security": "Secured with JWT authentication, MFA, and data encryption, ensuring user privacy and platform integrity."
+  },
+  "user_journey": {
+    "example": "A learner selects 'JavaScript' to learn, enrolls in a course, completes it, requests mentor review for verification, earns a badge, and applies for a related job, receiving notifications throughout."
+  }
+}

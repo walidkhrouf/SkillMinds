@@ -1,0 +1,177 @@
+/* CourseDetails.css */
+.course-details {
+  
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Style pour le titre principal (ancien h1, maintenant h2) */
+.course-details h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* Style pour les sous-titres (ancien h2, maintenant h3) */
+.course-details h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* Style pour les sous-titres de niveau inférieur (ancien h3, maintenant h4) */
+.course-details h4 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 24px;
+  margin-top: 50px;
+}
+
+.video-section {
+  margin: 20px 0;
+}
+
+.video-section p {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.active-video {
+  border: 2px solid rgb(78, 49, 6);;
+}
+
+.video-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.next-btn, .play-next-btn, .download-btn, .enroll-btn, .comment-submit-btn, .back-btn {
+  padding: 10px 20px;
+  margin: 10px 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.next-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.next-btn:hover {
+  background-color: #0056b3;
+}
+
+.play-next-btn {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.play-next-btn:hover {
+  background-color: #117a8b;
+}
+
+.download-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.download-btn:hover {
+  background-color: #545b62;
+}
+
+.enroll-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.enroll-btn:hover {
+  background-color: #218838;
+}
+
+.comment-submit-btn {
+  background-color: rgb(78, 49, 6);
+  color: white;
+}
+
+.comment-submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.back-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.back-btn:hover {
+  background-color: #545b62;
+}
+
+.certificate-section {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.certificate-section p {
+  color: #28a745;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.owned-message, .completed-message {
+  color: #28a745;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.comments-section {
+  margin-top: 30px;
+}
+
+.comments-section textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.comment {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.comment p {
+  margin: 5px 0;
+}
+
+.comment small {
+  color: #6c757d;
+}
+
+.enrollment-card {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.error {
+  color: red;
+  margin: 10px 0;
+}
+
+.quiz-btn {
+  background-color: rgb(78, 49, 6);
+  color: white;
+}

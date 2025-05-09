@@ -2,7 +2,7 @@ const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
 const JobOffer = require('../models/JobOffer');
-const User = require('../models/User'); // ⬅️ Ajout du modèle User
+const User = require('../models/User');
 const GestionRecruitementRoute = require('../Routes/GestionRecruitementRoute');
 
 const app = express();
@@ -11,33 +11,45 @@ app.use('/api/recruitment', GestionRecruitementRoute);
 
 let server;
 
+// ✅ Augmente le timeout Jest pour les opérations Mongo lentes
+jest.setTimeout(15000);
+
 beforeAll(async () => {
-  await mongoose.connect('mongodb://127.0.0.1:27017/jobTestDB');
-  server = app.listen(4000); // lancement du serveur pour supertest
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect('mongodb://127.0.0.1:27017/jobTestDB');
+  }
+  server = app.listen(4000);
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  server.close();
+  try {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+
+    if (server && server.close) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+  } catch (err) {
+    console.error("Error during afterAll cleanup:", err);
+  }
 });
 
 describe('Create Job Offer', () => {
   let userId;
 
   beforeEach(async () => {
-    // Nettoyage des anciennes données
     await User.deleteMany({});
     await JobOffer.deleteMany({});
 
-    // Création d’un utilisateur temporaire
     const user = new User({
-        username: 'testuser',
-        email: 'test@example.com',
-        password: '123456',
-        role: 'mentor' // ou 'candidate', selon ton schéma User
-      });
-      
+      username: 'testuser',
+      email: 'test@example.com',
+      password: '123456',
+      role: 'mentor'
+    });
+
     await user.save();
     userId = user._id;
   });
@@ -58,8 +70,9 @@ describe('Create Job Offer', () => {
       .post('/api/recruitment/job-offers')
       .send(newJob);
 
-    console.log(res.body); 
+    console.log(res.body); // Pour debug
     expect(res.statusCode).toBe(201);
     expect(res.body.title).toBe('Développeur Web');
+    expect(res.body.postedBy).toBe(userId.toString());
   });
 });

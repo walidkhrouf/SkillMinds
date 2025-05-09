@@ -45,11 +45,13 @@ const ApplyToJob = () => {
       setError(err.response?.data.message || 'Error submitting application');
     }
   };
+  const [loadingLetter, setLoadingLetter] = useState(false);
+
 
   return (
-    <div className="signup-container3"> <br /> <br />
+    <div className="signup-container3" style={{height:'100%'}}> <br /> 
       <div className="left-box3" style={{ height: '650px', width: '60%' }}>
-        <h2 style={{ textAlign: 'center' }}>Apply to Job</h2>
+        <h2 style={{ textAlign: 'center' }} className='form-title'>Apply to Job</h2>
         {error && <p className="message error">{error}</p>}
         {success && <p className="message success">{success}</p>}
 
@@ -62,6 +64,31 @@ const ApplyToJob = () => {
               required
               style={{ width: '100%', padding: '8px', height: '100px' }}
             />
+            <button
+  type="button"
+  
+  onClick={async () => {
+    if (!currentUser.username) return setError('Nom utilisateur requis pour générer la lettre');
+    setLoadingLetter(true);
+    try {
+      const res = await axios.post('http://localhost:5000/api/recruitment/generate-cover-letter', {
+        jobId: jobId, // ✅ correspond au backend
+        username: currentUser.username // ✅ correspond au backend
+      });
+      
+      setCoverLetter(res.data.coverLetter);
+    } catch (err) {
+      setError("Erreur génération lettre");
+    } finally {
+      setLoadingLetter(false);
+    }
+  }}
+  disabled={loadingLetter}
+  style={{ marginBottom: '10px', backgroundColor: '#a47f18' ,width:'40%'  }}
+>
+  {loadingLetter ? 'Generating...' : 'Generate Cover letter'}
+</button>
+
           </div>
 
           <div className="form-group">
@@ -77,8 +104,7 @@ const ApplyToJob = () => {
 
           <button
             type="submit"
-            className="auth-btn"
-            style={{ backgroundColor: '#a47f18' }}
+            style={{ backgroundColor: '#a47f18' ,width:'auto' }} className='boutton1'
           >
             Submit
           </button>
@@ -92,4 +118,4 @@ const ApplyToJob = () => {
   );
 };
 
-export default ApplyToJob;
+export default ApplyToJob; 

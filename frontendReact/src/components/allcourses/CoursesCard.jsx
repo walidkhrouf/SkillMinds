@@ -1,8 +1,12 @@
-import React from "react";
-import "./courses.css";
-import { coursesCard } from "../../dummydata";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import './courses.css';
+import { coursesCard } from '../../dummydata';
 
 const CoursesCard = () => {
+  const navigate = useNavigate();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+
   return (
     <section className="coursesCard">
       <div className="container grid2">
@@ -49,6 +53,22 @@ const CoursesCard = () => {
             <button className="outline-btn">ENROLL NOW !</button>
           </div>
         ))}
+      </div>
+      <div className="courses-actions">
+        <button
+          onClick={() => navigate('/all-courses')}
+          className="explore-btn outline-btn"
+        >
+          EXPLORE MORE COURSES
+        </button>
+        {currentUser._id && (
+          <button
+            onClick={() => navigate('/create-course')}
+            className="add-btn outline-btn"
+          >
+            ADD COURSES
+          </button>
+        )}
       </div>
     </section>
   );

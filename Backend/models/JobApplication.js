@@ -14,8 +14,16 @@ const jobApplicationSchema = new Schema({
   applicantId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   coverLetter: { type: String, required: true },
   resume: resumeSchema,
-  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
+  status: {
+    type: String,
+    enum: ['pending', 'accepted', 'rejected', 'hired'],
+    default: 'pending'
+  },  createdAt: { type: Date, default: Date.now },
+  interviewDate: { type: Date },
+  confirmedInterview: { type: String, enum: ['pending', 'confirmed', 'declined'], default: 'pending' },
+  meetLink: { type: String },
+
+  
 });
 
 jobApplicationSchema.pre('validate', function(next) {
