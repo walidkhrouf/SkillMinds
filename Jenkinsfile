@@ -143,6 +143,17 @@ pipeline {
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASS'
                     )]) {
+                        // Create directory structure for frontend
+                        sh """
+                            echo "Creating frontend directory structure in Nexus..."
+                            curl -X POST -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                -H "Content-Type: application/json" \\
+                                -d '{"action":"mkdir","path":"com/devminds/frontend/${BUILD_VERSION}"}' \\
+                                "\$NEXUS_URL/service/rest/v1/components?repository=\$NEXUS_REPO" || {
+                                    echo "WARNING: Failed to create frontend directory, proceeding with upload..."
+                                }
+                        """
+
                         // Frontend (using tar)
                         sh """
                             if [ -d "frontendReact/dist" ]; then
@@ -160,6 +171,17 @@ pipeline {
                                 echo "ERROR: frontendReact/dist not found!"
                                 exit 1
                             fi
+                        """
+
+                        // Create directory structure for backend
+                        sh """
+                            echo "Creating backend directory structure in Nexus..."
+                            curl -X POST -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                -H "Content-Type: application/json" \\
+                                -d '{"action":"mkdir","path":"com/devminds/backend/${BUILD_VERSION}"}' \\
+                                "\$NEXUS_URL/service/rest/v1/components?repository=\$NEXUS_REPO" || {
+                                    echo "WARNING: Failed to create backend directory, proceeding with upload..."
+                                }
                         """
 
                         // Backend (using npm pack)
