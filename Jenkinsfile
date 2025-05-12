@@ -143,13 +143,18 @@ pipeline {
                         usernameVariable: 'NEXUS_USER',
                         passwordVariable: 'NEXUS_PASS'
                     )]) {
+                        // Create a dummy file for directory creation
+                        sh """
+                            echo "Creating dummy file for directory creation..."
+                            echo "" > dummy.txt
+                        """
+
                         // Create directory structure for frontend
                         sh """
                             echo "Creating frontend directory structure in Nexus..."
-                            curl -v -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                -X PUT \\
-                                --data "" \\
-                                "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/frontend/${BUILD_VERSION}/" || {
+                            curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                --upload-file dummy.txt \\
+                                "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/frontend/${BUILD_VERSION}/dummy.txt" || {
                                     echo "ERROR: Failed to create frontend directory structure"
                                     exit 1
                                 }
@@ -182,10 +187,9 @@ pipeline {
                                 BASE_NAME=\$(basename \$TGZ_FILE .tgz)
                                 VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')-${BUILD_VERSION}
                                 echo "Creating backend directory structure in Nexus..."
-                                curl -v -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                    -X PUT \\
-                                    --data "" \\
-                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/" || {
+                                curl -v -f -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                    --upload-file dummy.txt \\
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/dummy.txt" || {
                                         echo "ERROR: Failed to create backend directory structure"
                                         exit 1
                                     }
@@ -214,6 +218,12 @@ pipeline {
                                 echo "ERROR: No .tgz file found in Backend/"
                                 exit 1
                             fi
+                        """
+
+                        // Clean up dummy file
+                        sh """
+                            echo "Cleaning up dummy file..."
+                            rm -f dummy.txt
                         """
                     }
                 }
