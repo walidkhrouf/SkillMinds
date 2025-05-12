@@ -177,6 +177,7 @@ pipeline {
                         // Create directory structure for backend
                         sh """
                             if ls Backend/*.tgz 1> /dev/null 2>&1; then
+                                echo "Found backend package..."
                                 TGZ_FILE=\$(ls Backend/*.tgz | head -1)
                                 BASE_NAME=\$(basename \$TGZ_FILE .tgz)
                                 VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')-${BUILD_VERSION}
