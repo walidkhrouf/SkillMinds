@@ -125,17 +125,6 @@ pipeline {
             }
         }
 
-        stage('Test Prometheus Metrics') {
-            steps {
-                script {
-                    def prometheus_url = 'http://192.168.33.10:9090/targets'
-                    def query = 'up{job="jenkins"}'
-                    def response = sh(script: "curl -s '${prometheus_url}?query=${URLEncoder.encode(query, 'UTF-8')}'", returnStdout: true)
-                    echo "Prometheus Response: ${response}"
-                }
-            }
-        }
-
         stage('Publish to Nexus') {
             steps {
                 script {
@@ -184,6 +173,17 @@ pipeline {
                             fi
                         """
                     }
+                }
+            }
+        }
+
+        stage('Test Prometheus Metrics') {
+            steps {
+                script {
+                    def prometheus_url = 'http://192.168.33.10:9090/targets'
+                    def query = 'up{job="jenkins"}'
+                    def response = sh(script: "curl -s '${prometheus_url}?query=${URLEncoder.encode(query, 'UTF-8')}'", returnStdout: true)
+                    echo "Prometheus Response: ${response}"
                 }
             }
         }
