@@ -146,11 +146,12 @@ pipeline {
                         // Create directory structure for frontend
                         sh """
                             echo "Creating frontend directory structure in Nexus..."
-                            curl -X POST -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                -H "Content-Type: application/json" \\
-                                -d '{"action":"mkdir","path":"com/devminds/frontend/${BUILD_VERSION}"}' \\
-                                "\$NEXUS_URL/service/rest/v1/components?repository=\$NEXUS_REPO" || {
-                                    echo "WARNING: Failed to create frontend directory, proceeding with upload..."
+                            curl -v -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                -X PUT \\
+                                --data "" \\
+                                "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/frontend/${BUILD_VERSION}/" || {
+                                    echo "ERROR: Failed to create frontend directory structure"
+                                    exit 1
                                 }
                         """
 
@@ -175,13 +176,22 @@ pipeline {
 
                         // Create directory structure for backend
                         sh """
-                            echo "Creating backend directory structure in Nexus..."
-                            curl -X POST -u \$NEXUS_USER:\$NEXUS_PASS \\
-                                -H "Content-Type: application/json" \\
-                                -d '{"action":"mkdir","path":"com/devminds/backend/${BUILD_VERSION}"}' \\
-                                "\$NEXUS_URL/service/rest/v1/components?repository=\$NEXUS_REPO" || {
-                                    echo "WARNING: Failed to create backend directory, proceeding with upload..."
-                                }
+                            if ls Backend/*.tgz 1> /dev/null 2>&1; then
+                                TGZ_FILE=\$(ls Backend/*.tgz | head -1)
+                                BASE_NAME=\$(basename \$TGZ_FILE .tgz)
+                                VERSION=\$(echo \$BASE_NAME | sed 's/.*-//')-${BUILD_VERSION}
+                                echo "Creating backend directory structure in Nexus..."
+                                curl -v -u \$NEXUS_USER:\$NEXUS_PASS \\
+                                    -X PUT \\
+                                    --data "" \\
+                                    "\$NEXUS_URL/repository/\$NEXUS_REPO/com/devminds/backend/\${VERSION}/" || {
+                                        echo "ERROR: Failed to create backend directory structure"
+                                        exit 1
+                                    }
+                            else
+                                echo "ERROR: No .tgz file found in Backend/"
+                                exit 1
+                            fi
                         """
 
                         // Backend (using npm pack)
