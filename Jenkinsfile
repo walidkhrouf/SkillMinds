@@ -79,7 +79,6 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=DevMinds_4TWIN5_pidev \
                             -Dsonar.projectName=DevMinds_4TWIN5_pidev \
-                            -Dsonar.sources=Backend/Controllers \
                             -Dsonar.tests=Backend/tests,Backend/test
                         """
                     }
@@ -121,6 +120,17 @@ pipeline {
                 dir('Backend') {
                     sh 'npm install'
                     sh 'npm pack' 
+                }
+            }
+        }
+
+        stage('Test Prometheus Metrics') {
+            steps {
+                script {
+                    def prometheus_url = 'http://192.168.33.10:9090/targets'
+                    def query = 'up{job="jenkins"}'
+                    def response = sh(script: "curl -s '${prometheus_url}?query=${URLEncoder.encode(query, 'UTF-8')}'", returnStdout: true)
+                    echo "Prometheus Response: ${response}"
                 }
             }
         }
