@@ -2384,24 +2384,6 @@ const getSkillNames = (skills) => {
 </div>
 
                       <div className="stats-card">
-                        <h3>Course Categories</h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                          <PieChart>
-                            <Pie
-                                data={statsData.courses.categories}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                fill="var(--accent-color)"
-                                label={({ name, value }) => `${name}: ${Math.floor(value)}`}
-                            />
-                            <Tooltip formatter={(value) => Math.floor(value)} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="stats-card">
                         <h3>Activity Categories</h3>
                         <ResponsiveContainer width="100%" height={250}>
                           <PieChart>
@@ -2419,6 +2401,7 @@ const getSkillNames = (skills) => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
+
                       <div className="stats-card metric-group">
                         <div className="metric-box">
                           <h4>Total Users</h4>
