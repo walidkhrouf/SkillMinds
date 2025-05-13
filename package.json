@@ -1,0 +1,26 @@
+{
+  "name": "devminds_4twin5_pidev",
+  "version": "1.0.0",
+  "description": "SkillMinds – Skill Exchange Platform\r #Esprit_school_of_engineering",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev/issues"
+  },
+  "homepage": "https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev#readme",
+  "dependencies": {
+    "body-parser": "^2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
