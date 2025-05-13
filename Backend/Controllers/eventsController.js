@@ -255,6 +255,7 @@ const confirmPayment = async (req, res) => {
 
 
 
+
 const recommendActivities = async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -275,8 +276,8 @@ const recommendActivities = async (req, res) => {
 
     // Fetch activities with date >= today and available places
     const allActivities = await Activity.find({
-      date: { $gt: today }, // Only future activities
-      numberOfPlaces: { $gt: 0 }
+      date: { $gt: today },
+      numberOfPlaces: { $gt: 0 },
     })
       .populate('createdBy', 'username')
       .populate('participants', '_id username');
@@ -292,9 +293,9 @@ const recommendActivities = async (req, res) => {
 
     if (availableActivities.length === 0) {
       console.log('No activities found after filtering: past dates, participants, or no places');
-      return res.status(200).json({ 
-        message: 'No available activities to recommend', 
-        recommendations: [] 
+      return res.status(200).json({
+        message: 'No available activities to recommend',
+        recommendations: [],
       });
     }
 
@@ -320,22 +321,52 @@ const recommendActivities = async (req, res) => {
 
     // Extract user preferences
     const userTitles = userActivities.map((activity) => activity.title.toLowerCase());
-    const userLocations = [...new Set(userActivities.map((activity) => activity.location))];
+    const userLocations = [...new Set(userActivities.map((activity) => activity.location.toLowerCase()))];
+
+    // Define programming-related keywords to boost relevant events
+    const programmingKeywords = [
+      'react', 'javascript', 'python', 'java', 'coding', 'programming',
+      'web development', 'software', 'algorithm', 'data science', 'machine learning',
+      'typescript', 'node', 'angular', 'vue'
+    ];
 
     // Score each available activity
     const recommendations = availableActivities.map((activity) => {
       let score = 0;
 
       // 1. Title similarity (50%)
+      const activityTitle = activity.title.toLowerCase();
       const titleSimilarity = userTitles.reduce((maxSim, userTitle) => {
-        const sim = natural.JaroWinklerDistance(userTitle, activity.title.toLowerCase());
+        const sim = natural.JaroWinklerDistance(userTitle, activityTitle);
         return Math.max(maxSim, sim);
       }, 0);
       score += titleSimilarity * 50;
 
-      // 2. Location match (30%)
-      if (userLocations.includes(activity.location)) {
-        score += 30;
+      // Boost score if title contains programming keywords
+      const hasProgrammingKeyword = programmingKeywords.some((keyword) =>
+        activityTitle.includes(keyword)
+      );
+      if (hasProgrammingKeyword) {
+        score += 10;
+      }
+
+      // 2. Location proximity (40%)
+      const activityLocation = activity.location.toLowerCase();
+      let locationScore = 0;
+      if (userLocations.includes(activityLocation)) {
+        locationScore = 40; // Exact match
+      } else {
+        const isSimilarLocation = userLocations.some((userLoc) =>
+          natural.JaroWinklerDistance(userLoc, activityLocation) > 0.8
+        );
+        locationScore = isSimilarLocation ? 20 : 5; // Partial or low score for distant
+      }
+      score += locationScore;
+
+      // 3. Rating bonus (10%): Optional, boost for high ratings
+      if (activity.averageRating > 0) {
+        // Scale rating (1-5) to 0-10 points
+        score += (activity.averageRating / 5) * 10;
       }
 
       return { ...activity._doc, recommendationScore: score };
@@ -343,7 +374,21 @@ const recommendActivities = async (req, res) => {
 
     // Sort and return top 3
     const sortedRecommendations = recommendations
-      .sort((a, b) => b.recommendationScore - a.recommendationScore)
+      .sort((a, b) => {
+        // Prioritize programming-related events if user history includes them
+        const aHasKeyword = programmingKeywords.some((keyword) =>
+          a.title.toLowerCase().includes(keyword)
+        );
+        const bHasKeyword = programmingKeywords.some((keyword) =>
+          b.title.toLowerCase().includes(keyword)
+        );
+        const userHasProgramming = userTitles.some((title) =>
+          programmingKeywords.some((keyword) => title.includes(keyword))
+        );
+        if (userHasProgramming && aHasKeyword && !bHasKeyword) return -1;
+        if (userHasProgramming && !aHasKeyword && bHasKeyword) return 1;
+        return b.recommendationScore - a.recommendationScore;
+      })
       .slice(0, 3);
 
     res.status(200).json({
