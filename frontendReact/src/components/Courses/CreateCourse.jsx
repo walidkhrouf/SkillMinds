@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './CreateCourse.css';
@@ -13,6 +13,8 @@ const CreateCourse = () => {
   const [skills, setSkills] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [autoGenerate, setAutoGenerate] = useState(true);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
   useEffect(() => {
@@ -20,12 +22,49 @@ const CreateCourse = () => {
       try {
         const response = await axios.get('http://localhost:5000/api/courses/skills');
         setSkills(response.data);
-      } catch (err) {
+      } catch {
         setError('Error fetching skills');
       }
     };
     fetchSkills();
   }, []);
+
+  const generateDescription = useCallback(async () => {
+    if (!title || !skillId) {
+      setError('Please enter a title and select a skill before generating a description');
+      return;
+    }
+
+    const selectedSkill = skills.find(skill => skill._id === skillId);
+    if (!selectedSkill) {
+      setError('Selected skill not found');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      console.log('Sending request to generate description:', { title, skillName: selectedSkill.name });
+      const response = await axios.post('http://localhost:5000/api/courses/generate-description', {
+        title,
+        skillName: selectedSkill.name
+      });
+      const generatedDescription = response.data.description;
+      setDescription(generatedDescription);
+      setError('');
+      setSuccess('Description generated successfully!');
+    } catch (err) {
+      console.error('Error generating description:', err.response?.data);
+      setError(err.response?.data.message || 'Failed to generate description. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [title, skillId, skills]);
+
+  useEffect(() => {
+    if (autoGenerate && title.trim().length >= 3 && skillId) {
+      generateDescription();
+    }
+  }, [title, skillId, autoGenerate, generateDescription]);
 
   const handleSectionChange = (index, field, value) => {
     const newSections = [...sections];
@@ -70,7 +109,7 @@ const CreateCourse = () => {
     });
 
     try {
-      const response = await axios.post('http://localhost:5000/api/courses', formData, {
+      await axios.post('http://localhost:5000/api/courses', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSuccess('Course created successfully!');
@@ -102,7 +141,26 @@ const CreateCourse = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter course description"
+            disabled={isGenerating}
           />
+          <div className="description-controls">
+            <label>
+              <input
+                type="checkbox"
+                checked={autoGenerate}
+                onChange={() => setAutoGenerate(!autoGenerate)}
+              />
+              Auto-generate description
+            </label>
+            <button
+              type="button"
+              className="generate-btn"
+              onClick={generateDescription}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Generating...' : 'Generate Description with AI'}
+            </button>
+          </div>
         </div>
         <div className="form-group">
           <label>Skill:</label>
