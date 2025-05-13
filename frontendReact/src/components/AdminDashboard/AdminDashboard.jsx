@@ -1153,6 +1153,10 @@ const GroupManager = () => {
       return;
     }
     const post = selectedGroup.posts.find((p) => p._id === postId);
+    if (!post) {
+      showMessage("Post not found", "error");
+      return;
+    }
     setSelectedPost(post);
   };
 
@@ -1344,14 +1348,30 @@ const GroupManager = () => {
                                               </div>
                                               {selectedPost && selectedPost._id === post._id && (
                                                   <div className="post-details">
-                                                    <p><strong>Subject:</strong> {post.subject}</p>
-                                                    <p><strong>Content:</strong> {post.content}</p>
-                                                    <p><strong>Likes:</strong> {post.likesCount}</p>
-                                                    <p><strong>Dislikes:</strong> {post.dislikesCount}</p>
-                                                    <p><strong>Comments:</strong> {post.commentsCount}</p>
-                                                    <p><strong>Reports:</strong> {post.reports?.length || 0}</p>
-                                                    <p><strong>Posted by:</strong> {post.userId?.username || "Unknown"}</p>
-                                                    <p><strong>Created:</strong> {new Date(post.createdAt).toLocaleString()}</p>
+                                                    <p><strong>Subject:</strong> {selectedPost.subject}</p>
+                                                    <p><strong>Content:</strong> {selectedPost.content}</p>
+                                                    <p><strong>Likes:</strong> {selectedPost.likesCount}</p>
+                                                    <p><strong>Dislikes:</strong> {selectedPost.dislikesCount}</p>
+                                                    <p><strong>Comments:</strong> {selectedPost.commentsCount}</p>
+                                                    <p><strong>Reports:</strong> {selectedPost.reports?.length || 0}</p>
+                                                    <p><strong>Posted by:</strong> {selectedPost.userId?.username || "Unknown"}</p>
+                                                    <p><strong>Created:</strong> {new Date(selectedPost.createdAt).toLocaleString()}</p>
+                                                    <div className="reports-section">
+                                                      <p><strong>Reports:</strong></p>
+                                                      {selectedPost.reports && selectedPost.reports.length > 0 ? (
+                                                          <ul className="reports-list">
+                                                            {selectedPost.reports.map((report, index) => (
+                                                                <li key={index} className="report-item">
+                                                                  <span><strong>Reported By:</strong> {report.userId?.username || "Unknown"}</span>
+                                                                  <span><strong>Reason:</strong> {report.reason || "N/A"}</span>
+                                                                  <span><strong>Details:</strong> {report.details || "No details provided"}</span>
+                                                                </li>
+                                                            ))}
+                                                          </ul>
+                                                      ) : (
+                                                          <p className="no-data">No reports for this post</p>
+                                                      )}
+                                                    </div>
                                                     <button
                                                         className="delete-btn"
                                                         onClick={(e) => {
