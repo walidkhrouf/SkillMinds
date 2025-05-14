@@ -8,7 +8,8 @@ const {
   createCourse, getAllCourses, getCourseById, updateCourse, 
   deleteCourse, enrollInCourse, getEnrollmentStatus, searchCourses,
   processPayment, rateCourse, getVideo, createComment, getComments,
-  createDiscussionMessage, getDiscussionMessages, generateQuizCertificate, generateQuiz
+  createDiscussionMessage, getDiscussionMessages, generateQuizCertificate, 
+  generateQuiz, generateCourseDescription
 } = require('../Controllers/CoursesController');
 
 const storage = multer.memoryStorage();
@@ -50,5 +51,6 @@ router.post('/discussion/create', createDiscussionMessage);
 router.get('/discussion/list', getDiscussionMessages);
 router.post('/quiz-certificate', authenticate, generateQuizCertificate);
 router.get('/quiz/:courseId', generateQuiz);
+router.post('/generate-description', generateCourseDescription);
 
 module.exports = router;

@@ -1,6 +1,5 @@
 /* CourseDetails.css */
 .course-details {
-  
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
@@ -45,7 +44,7 @@
 }
 
 .active-video {
-  border: 2px solid rgb(78, 49, 6);;
+  border: 2px solid rgb(78, 49, 6);
 }
 
 .video-buttons {
@@ -174,4 +173,23 @@
 .quiz-btn {
   background-color: rgb(78, 49, 6);
   color: white;
+}
+
+.description-section {
+  margin: 10px 0;
+}
+
+.toggle-description-btn {
+  background-color: #28a745; /* Changed to green */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.toggle-description-btn:hover {
+  background-color: rgb(78, 49, 6); 
 }

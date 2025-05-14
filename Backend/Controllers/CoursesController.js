@@ -19,7 +19,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS || 'your-email-password'
   },
   tls: {
-    // For development only - don't use in production
     rejectUnauthorized: false
   }
 });
@@ -34,6 +33,9 @@ transporter.verify((error, success) => {
 });
 
 // Configuration de Gemini
+if (!process.env.GEMINI_API_KEY) {
+  console.error('GEMINI_API_KEY is not defined in environment variables');
+}
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -130,6 +132,7 @@ const updateCourse = async (req, res) => {
 
     res.status(200).json(updatedCourse);
   } catch (error) {
+    console.error('Error updating course:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -148,6 +151,7 @@ const deleteCourse = async (req, res) => {
     await Course.findByIdAndDelete(id);
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (error) {
+    console.error('Error deleting course:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -175,6 +179,7 @@ const enrollInCourse = async (req, res) => {
 
     res.status(201).json(enrollment);
   } catch (error) {
+    console.error('Error enrolling in course:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -198,6 +203,7 @@ const getEnrollmentStatus = async (req, res) => {
     
     res.status(200).json({ enrolled: true });
   } catch (error) {
+    console.error('Error checking enrollment status:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -206,7 +212,6 @@ const generateQuizCertificate = async (req, res) => {
   try {
     const { courseId, userId } = req.body;
 
-    // Validate input
     if (!courseId || !userId) {
       console.error('Missing courseId or userId:', { courseId, userId });
       return res.status(400).json({ message: 'courseId and userId are required' });
@@ -217,7 +222,6 @@ const generateQuizCertificate = async (req, res) => {
       return res.status(400).json({ message: 'Invalid courseId or userId format' });
     }
 
-    // Fetch course with necessary populated fields
     const course = await Course.findById(courseId)
       .populate('createdBy', 'username')
       .populate('skillId', 'name');
@@ -226,7 +230,6 @@ const generateQuizCertificate = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // Fetch enrollment with populated user data
     const enrollment = await CourseEnrollment.findOne({ userId, courseId })
       .populate('userId', 'email username');
     if (!enrollment) {
@@ -239,7 +242,6 @@ const generateQuizCertificate = async (req, res) => {
       return res.status(400).json({ message: 'User email or username missing' });
     }
 
-    // Generate PDF certificate
     const doc = new PDFDocument({
       size: 'A4',
       layout: 'landscape',
@@ -293,7 +295,6 @@ const generateQuizCertificate = async (req, res) => {
       });
     });
 
-    // Send email with certificate
     const emailList = [enrollment.userId.email, 'admin@example.com'].filter(email => email);
     console.log('Sending certificate to emails:', emailList);
 
@@ -317,7 +318,6 @@ const generateQuizCertificate = async (req, res) => {
         console.log(`Certificate email sent to ${email}`);
       } catch (emailError) {
         console.error(`Failed to send email to ${email}:`, emailError);
-        // Continue with other emails instead of failing the entire request
       }
     }
 
@@ -347,6 +347,7 @@ const searchCourses = async (req, res) => {
 
     res.status(200).json(courses);
   } catch (error) {
+    console.error('Error searching courses:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -421,7 +422,7 @@ const rateCourse = async (req, res) => {
       totalRatings: course.ratings.length
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error rating course:', error);
     res.status(500).json({ message: "Erreur serveur." });
   }
 };
@@ -453,6 +454,7 @@ const getVideo = async (req, res) => {
     res.setHeader('Content-Type', video.contentType);
     res.send(video.data);
   } catch (error) {
+    console.error('Error getting video:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -467,7 +469,7 @@ const createComment = async (req, res) => {
 
     const prompt = `
       Analyze the following text for inappropriate content, including bad words, offensive language, or harmful content. 
-      Return a JSON object with a boolean field "isInappropriate" indicating whether the content is inappropriate, and a "message" field explaining why if it is inappropriate. Do not include Markdown or code blocks in the response.
+      Return a JSON object with a boolean field "isInappropriate" and a "message" field explaining why if it is inappropriate. Do not include Markdown or code blocks in the response.
       
       Text to analyze: "${content}"
     `;
@@ -522,6 +524,7 @@ const getComments = async (req, res) => {
       
     res.status(200).json(comments);
   } catch (error) {
+    console.error('Error getting comments:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -539,10 +542,9 @@ const createDiscussionMessage = async (req, res) => {
       return res.status(403).json({ message: 'You must be enrolled to post in the discussion' });
     }
 
-    // Moderation with Gemini API
     const prompt = `
       Analyze the following text for inappropriate content, including bad words, offensive language, or harmful content. 
-      Return a JSON object with a boolean field "isInappropriate" indicating whether the content is inappropriate, and a "message" field explaining why if it is inappropriate. Do not include Markdown or code blocks in the response.
+      Return a JSON object with a boolean field "isInappropriate" and a "message" field explaining why if it is inappropriate. Do not include Markdown or code blocks in the response.
       
       Text to analyze: "${content}"
     `;
@@ -577,7 +579,6 @@ const createDiscussionMessage = async (req, res) => {
     
     const populatedMessage = await DiscussionMessage.findById(message._id).populate('userId', 'username');
     
-    // Emit the message via Socket.IO
     req.io.emit('newMessage', populatedMessage);
     
     res.status(201).json(populatedMessage);
@@ -606,6 +607,7 @@ const getDiscussionMessages = async (req, res) => {
       
     res.status(200).json(messages);
   } catch (error) {
+    console.error('Error getting discussion messages:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -620,14 +622,15 @@ const generateQuiz = async (req, res) => {
     }
 
     const prompt = `
-      Create a quiz with exactly 5 multiple-choice questions based on the following course information. Each question must have 4 answer options, with only one correct answer. Return the quiz in a JSON object with the following structure:
+      Create a quiz with exactly 5 multiple-choice questions based on the following course information. Each question must have 4 answer options, with only one correct answer. Include an explanation for the correct answer. Return the quiz in a JSON object with the following structure:
       {
         "courseTitle": "Course Title",
         "questions": [
           {
             "text": "Question text",
             "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-            "correctAnswer": 0
+            "correctAnswer": 0,
+            "explanation": "Explanation for the correct answer"
           },
           ...
         ]
@@ -659,7 +662,15 @@ const generateQuiz = async (req, res) => {
     }
 
     for (const question of quiz.questions) {
-      if (!question.text || !question.options || question.options.length !== 4 || question.correctAnswer == null || question.correctAnswer < 0 || question.correctAnswer > 3) {
+      if (
+        !question.text ||
+        !question.options ||
+        question.options.length !== 4 ||
+        question.correctAnswer == null ||
+        question.correctAnswer < 0 ||
+        question.correctAnswer > 3 ||
+        !question.explanation
+      ) {
         return res.status(500).json({ message: 'Invalid question structure' });
       }
     }
@@ -668,6 +679,70 @@ const generateQuiz = async (req, res) => {
   } catch (error) {
     console.error('Error generating quiz:', error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+const generateCourseDescription = async (req, res) => {
+  try {
+    const { title, skillName } = req.body;
+
+    console.log('Received request to generate description:', { title, skillName });
+
+    if (!title || !skillName) {
+      console.error('Missing title or skillName:', { title, skillName });
+      return res.status(400).json({ message: 'Title and skillName are required' });
+    }
+
+    if (typeof title !== 'string' || typeof skillName !== 'string') {
+      console.error('Invalid data types:', { titleType: typeof title, skillNameType: typeof skillName });
+      return res.status(400).json({ message: 'Title and skillName must be strings' });
+    }
+
+    if (title.trim().length < 3 || skillName.trim().length < 3) {
+      console.error('Title or skillName too short:', { titleLength: title.length, skillNameLength: skillName.length });
+      return res.status(400).json({ message: 'Title and skillName must be at least 3 characters long' });
+    }
+
+    const prompt = `
+      Generate a detailed course description (100-150 words) for a course titled "${title}" focused on the skill "${skillName}". 
+      The description should include:
+      - A clear overview of the course objectives.
+      - The target audience (e.g., beginners, professionals).
+      - Any prerequisites or required prior knowledge.
+      - Key benefits or skills learners will gain.
+      - A professional and engaging tone suitable for an educational platform.
+      Ensure the description is concise, informative, and avoids overly technical jargon unless necessary.
+      Return the description as plain text.
+    `;
+
+    console.log('Sending prompt to Gemini API:', prompt.substring(0, 100) + '...');
+
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+    } catch (apiError) {
+      console.error('Gemini API error:', apiError);
+      return res.status(500).json({ message: 'Failed to communicate with AI service' });
+    }
+
+    const response = await result.response;
+    let description = response.text().trim();
+
+    // Ensure the description is within 1000 characters
+    if (description.length > 1000) {
+      description = description.substring(0, 997) + '...';
+    }
+
+    if (!description) {
+      console.error('Empty description received from Gemini');
+      return res.status(500).json({ message: 'No description generated by AI service' });
+    }
+
+    console.log('Generated description:', description.substring(0, 100) + '...');
+    res.status(200).json({ description });
+  } catch (error) {
+    console.error('Error generating course description:', error);
+    res.status(500).json({ message: error.message || 'Internal server error while generating description' });
   }
 };
 
@@ -688,5 +763,6 @@ module.exports = {
   createDiscussionMessage,
   getDiscussionMessages,
   generateQuizCertificate,
-  generateQuiz
+  generateQuiz,
+  generateCourseDescription
 };

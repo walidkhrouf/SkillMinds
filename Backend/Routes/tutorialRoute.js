@@ -9,5 +9,7 @@ router.put("/:tutorialId", tutorialController.updateTutorial);
 router.delete("/:tutorialId", tutorialController.deleteTutorial);
 router.post("/:tutorialId/like", tutorialController.likeTutorial);
 router.post("/:tutorialId/comment", tutorialController.addComment);
+router.post("/generate-image", tutorialController.generateImage);  // Cette ligne doit exister
+ console.log("Tutorial routes loaded");
 
 module.exports = router;
