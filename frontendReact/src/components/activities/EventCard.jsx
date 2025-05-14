@@ -264,10 +264,7 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                         <i className="fa fa-calendar-alt"></i>
                         <label>{new Date(activity.date).toLocaleDateString()}</label>
                       </span>
-                      <span>
-                        <i className="fa fa-map-marker-alt"></i>
-                        <label>{activity.location}</label>
-                      </span>
+                     
                       <span>
                         <i className="fa fa-users"></i>
                         <label>{activity.numberOfPlaces || 'N/A'} Places</label>
@@ -362,10 +359,7 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                           <i className="fa fa-calendar-alt"></i>
                           <label>{new Date(activity.date).toLocaleDateString()}</label>
                         </span>
-                        <span>
-                          <i className="fa fa-map-marker-alt"></i>
-                          <label>{activity.location}</label>
-                        </span>
+                       
                         <span>
                           <i className="fa fa-users"></i>
                           <label>{activity.numberOfPlaces || 'N/A'} Places</label>
@@ -458,10 +452,7 @@ const EventCard = ({ searchTerm, userRole, userId, recommendedActivities, setRec
                           <i className="fa fa-calendar-alt"></i>
                           <label>{new Date(activity.date).toLocaleDateString()}</label>
                         </span>
-                        <span>
-                          <i className="fa fa-map-marker-alt"></i>
-                          <label>{activity.location}</label>
-                        </span>
+                       
                         <span>
                           <i className="fa fa-users"></i>
                           <label>{activity.numberOfPlaces || 'N/A'} Places</label>
