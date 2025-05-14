@@ -1,3 +1,5 @@
+const axios = require('axios');
+const FormData = require('form-data');
 const Tutorial = require("../models/Tutorial");
 const TutorialComment = require("../models/TutorialComment");
 const TutorialLike = require("../models/TutorialLike");
@@ -6,6 +8,175 @@ const twilio = require("twilio");
 
 // Twilio credentials (use environment variables for production)
 const client = twilio('AC27d7e1709a833aa34c8ec14f6950e7bc', '500fdc24680bc05801b8c551b17a6fff');
+const generateImageFromDescription = async (content) => {
+  try {
+    const apiUrl = 'https://api.stability.ai/v2beta/stable-image/generate/sd3';
+    
+    if (!apiUrl || !apiUrl.startsWith('http')) {
+      console.error('❌ Invalid API URL');
+      throw new Error('API configuration error');
+    }
+
+    const form = new FormData();
+    form.append('prompt', content);
+    form.append('output_format', 'jpeg');
+
+    const response = await axios.post(
+      apiUrl,
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+          'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
+          'Accept': 'image/*'
+        },
+        responseType: 'arraybuffer'
+      }
+    );
+
+    return `data:image/jpeg;base64,${Buffer.from(response.data).toString('base64')}`;
+    
+  } catch (error) {
+    console.error("❌ Stability AI Error:", {
+      status: error.response?.status,
+      message: error.message,
+      responseData: error.response?.data?.toString()
+    });
+    throw new Error('Image generation failed');
+  }
+};
+
+exports.generateImage = async (req, res) => {
+  const { content } = req.body;
+  console.log("Received content:", content);
+  
+  if (!content) {
+    return res.status(400).json({ 
+      success: false,
+      message: "Prompt is required" 
+    });
+  }
+
+  try {
+    const imageUrl = await generateImageFromDescription(content); // Fixed variable name here
+    res.json({ 
+      success: true,
+      imageUrl 
+    });
+    
+  } catch (error) {
+    console.error("Full error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Image generation failed",
+      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
+  }
+};
+// Fonction pour générer l'image à partir de la description
+// const generateImageFromDescription = async (content) => {
+//   try {
+//     const response = await axios.post(
+//       process.env.IMAGE_API_KEY,  // Utilisation de l'URL de l'API définie dans le fichier .env
+//       {
+//         prompt: content,  // Le texte pour générer l'image
+//         n: 1,  // Nombre d'images à générer
+//         size: '1024x1024',  // Taille de l'image
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${process.env.IMAGE_API_KEY}`,  // Utilisation de la clé API de l'environnement
+//           'Content-Type': 'application/json',
+//         },
+//       }
+//     );
+//     return response.data.data[0].url;  // Retourne l'URL de l'image générée
+//   } catch (error) {
+//     console.error("Erreur lors de la génération de l'image:", error);
+//     throw new Error('Impossible de générer l\'image.');
+//   }
+// };
+
+
+// const generateImageFromDescription = async (content) => {
+//   try {
+//     const apiUrl = "https://api.openai.com/v1/images/generations"; // Removed trailing space
+    
+//     // Validate the API URL
+//     if (!apiUrl || !apiUrl.startsWith('http')) {
+//       console.error('❌ IMAGE_API_URL is not a valid URL:', apiUrl);
+//       throw new Error('IMAGE_API_URL is missing or invalid.');
+//     }
+
+//     console.log('✅ Using image generation API URL:', apiUrl);
+
+//     const response = await axios.post(
+//       apiUrl,
+//       {
+//         prompt: content,
+//         n: 1,
+//         size: '1024x1024',
+//       },
+//       {
+//         headers: {
+//           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`, // Use environment variable
+//           'Content-Type': 'application/json',
+//         },
+//       }
+//     );
+    
+//     if (response.data?.data?.[0]?.url) {
+//       return response.data.data[0].url;
+//     } else {
+//       throw new Error('No image URL found in the API response');
+//     }
+//   } catch (error) {
+//     if (error.response) {
+//       console.error("❌ Full error response:", error.response.data);
+//     } else {
+//       console.error("❌ Error:", error.message);
+//     }
+//     throw new Error('Unable to generate the image.');
+//   }
+// };
+
+// exports.generateImage = async (req, res) => {
+//   const { content } = req.body;
+//   console.log("📥 Received content for image generation:", content);
+
+//   if (!content) {
+//     return res.status(400).json({ message: "Content is required to generate an image." });
+//   }
+
+//   try {
+//     const imageUrl = await generateImageFromDescription(content);
+//     res.status(200).json({ imageUrl });
+//   } catch (error) {
+//     console.error(error.message);
+//     res.status(500).json({ 
+//       message: "Error during image generation.",
+//       error: error.message 
+//     });
+//   }
+// };
+
+// exports.generateImage = async (req, res) => {
+//   const { content } = req.body;
+//  console.log("aaaaaaa",content);
+//   if (!content) {
+//     console.log("yassine");
+//     return res.status(400).json({ message: "Le contenu est requis pour générer une image." });
+//   }
+
+//   try {
+//     const imageUrl = await generateImageFromDescription(content);  // Générer l'image depuis la description
+//     res.status(200).json({ imageUrl });  // Retourner l'URL de l'image générée
+//   } catch (error) {
+//     console.error("Erreur lors de la génération de l'image:", error);
+//     res.status(500).json({ message: "Erreur lors de la génération de l'image." });
+//   }
+// };
 
 exports.createTutorial = async (req, res) => {
   const { title, content, category, userId, media } = req.body;
@@ -188,4 +359,70 @@ exports.addComment = async (req, res) => {
   }
 };
 
+// Delete a comment (owner only)
+exports.deleteComment = async (req, res) => {
+  const { commentId } = req.params;
+  const { userId } = req.body;
+
+  if (!userId || !commentId) {
+    return res.status(400).json({ message: "User ID and Comment ID are required" });
+  }
+
+  try {
+    const comment = await TutorialComment.findById(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+    if (comment.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Unauthorized to delete this comment" });
+    }
+
+    await TutorialComment.deleteOne({ _id: commentId });
+    res.status(200).json({ message: "Comment deleted" });
+  } catch (error) {
+    console.error("Error deleting comment:", error.message);
+    res.status(500).json({
+      message: "Failed to delete comment",
+      error: error.message,
+    });
+  }
+};
+// Edit a comment (owner only)
+exports.editComment = async (req, res) => {
+  const { commentId } = req.params;
+  const { content, userId } = req.body;
+
+  if (!userId || !content?.trim() || !commentId) {
+    return res.status(400).json({ message: "All required fields must be provided" });
+  }
+
+  try {
+    const comment = await TutorialComment.findById(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+    if (comment.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Unauthorized to edit this comment" });
+    }
+
+    const badWordCheck = await checkForBadWords(content);
+    if (badWordCheck.isBad) {
+      return res.status(400).json({
+        message: "Comment contains inappropriate language",
+        censoredContent: badWordCheck.censoredContent,
+      });
+    }
+
+    comment.content = content;
+    await comment.save();
+
+    const populatedComment = await TutorialComment.findById(comment._id).populate(
+      "userId",
+      "username"
+    );
+    res.status(200).json({ message: "Comment updated", comment: populatedComment });
+  } catch (error) {
+    console.error("Error editing comment:", error.message);
+    res.status(500).json({
+      message: "Failed to edit comment",
+      error: error.message,
+    });
+  }
+};
 module.exports = exports;
