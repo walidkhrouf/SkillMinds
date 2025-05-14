@@ -2,137 +2,161 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Back from "../common/back/Back";
 import axios from "axios";
+import {
+  FaRegThumbsUp,
+  FaRegCommentAlt,
+  FaShare,
+  FaFacebook,
+  FaInstagram,
+  FaEnvelope,
+  FaRegEdit,
+  FaTrashAlt,
+  FaDownload
+} from "react-icons/fa";
+import { AiFillLike } from "react-icons/ai";
 import "./tutorialStyles.css";
 
 const TutorialDetail = () => {
   const { tutorialId } = useParams();
+  const navigate = useNavigate();
   const [tutorial, setTutorial] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [likes, setLikes] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     category: "",
-    userId: "",
+      userId: "",
     media: []
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [commentContent, setCommentContent] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
   const [language, setLanguage] = useState("en");
-  const [mediaFiles, setMediaFiles] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const navigate = useNavigate();
+  const [shareModal, setShareModal] = useState({ visible: false, url: "" });
+  const [selectedContent, setSelectedContent] = useState("");
+  const [showFullContent, setShowFullContent] = useState(false);
 
-  const userId = JSON.parse(localStorage.getItem("currentUser") || "{}")._id || "";
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  const userId = currentUser._id || "";
 
   useEffect(() => {
     if (!userId) {
       navigate("/signin");
       return;
     }
-
-    // Fetch categories
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/skills");
-        setCategories(response.data);
-      } catch (err) {
-        console.error("Failed to load categories");
-      }
-    };
-
-    // Fetch tutorial details
-    const fetchTutorial = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/tutorials/${tutorialId}`);
-        setTutorial(response.data.tutorial);
+        const { data } = await axios.get(
+          `http://localhost:5000/api/tutorials/${tutorialId}`
+        );
+        setTutorial(data.tutorial);
+        setComments(data.comments);
+        setLikes(data.likes);
         setFormData({
-          title: response.data.tutorial.title,
-          content: response.data.tutorial.content,
-          category: response.data.tutorial.category,
-          userId,
-          media: response.data.tutorial.media || []
+          title: data.tutorial.title,
+          content: data.tutorial.content,
+          category: data.tutorial.category,
         });
-      } catch (err) {
-        setError("Failed to load tutorial");
+      } catch (e) {
+        setError("Unable to load the tutorial.");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchTutorial();
-    fetchCategories();
+    fetchData();
   }, [tutorialId, userId, navigate]);
 
-  const changeLanguage = async (lang) => {
-    setLanguage(lang);
-    if (tutorial && tutorial.content) {
-      try {
-        const response = await axios.post(
-            "https://api-translate.systran.net/translation/text/translate",
-            {
-              input: [tutorial.content],
-              source: "auto",
-              target: lang,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Key a9b3aa86-93de-4531-ab69-59e997285d3c",
-              },
-            }
-        );
-        const translatedText = response.data.outputs[0].output;
-        setTutorial((prev) => ({
-          ...prev,
-          content: translatedText,
-        }));
-      } catch (err) {
-        console.error("Erreur de traduction :", err);
-        setError("Traduction échouée. Vérifiez votre connexion ou clé API.");
-      }
+  const handleLike = async () => {
+    try {
+      const { data } = await axios.post(
+        `http://localhost:5000/api/tutorials/${tutorialId}/like`,
+        { userId }
+      );
+      setLikes(data.likes);
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to like.");
     }
   };
 
-  const handleEditToggle = () => setIsEditing(!isEditing);
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentContent.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
 
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    try {
+      const { data } = await axios.post(
+        `http://localhost:5000/api/tutorials/${tutorialId}/comment`,
+        {
+          content: commentContent,
+          userId: userId,
+        }
+      );
+      setComments((c) => [...c, data.comment]);
+      setCommentContent("");
+      setError("");
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to add comment.");
+    }
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    const promises = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve({
-          name: file.name,
-          type: file.type,
-          data: e.target.result
-        });
-        reader.readAsDataURL(file);
-      });
-    });
+  const handleEditComment = async (id) => {
+    if (!editingCommentContent.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
 
-    Promise.all(promises).then(newFiles => {
-      setMediaFiles(newFiles);
-      setFormData(prev => ({...prev, media: [...(prev.media || []), ...newFiles]}));
-    });
+    try {
+      const { data } = await axios.put(
+        `http://localhost:5000/api/tutorials/comment/${id}`,
+        { content: editingCommentContent, userId }
+      );
+      setComments((c) => c.map((cm) => (cm._id === id ? data.comment : cm)));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      setError("");
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to edit comment.");
+    }
+  };
+
+  const handleDeleteComment = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/tutorials/comment/${id}`, {
+        data: { userId },
+      });
+      setComments((c) => c.filter((cm) => cm._id !== id));
+      setError("");
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to delete comment.");
+    }
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing((e) => !e);
+    setError("");
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.put(
-          `http://localhost:5000/api/tutorials/${tutorialId}`,
-          formData
+      const { data } = await axios.put(
+        `http://localhost:5000/api/tutorials/${tutorialId}`,
+        { ...formData, userId }
       );
-      setTutorial(response.data.tutorial);
+      setTutorial(data.tutorial);
       setIsEditing(false);
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to update tutorial");
+      setError("");
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to update tutorial.");
     } finally {
       setLoading(false);
     }
@@ -142,174 +166,382 @@ const TutorialDetail = () => {
     if (!window.confirm("Are you sure you want to delete this tutorial?")) return;
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/tutorials/${tutorialId}`, { data: { userId } });
+      await axios.delete(`http://localhost:5000/api/tutorials/${tutorialId}`, {
+        data: { userId },
+      });
       navigate("/tutorials");
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to delete tutorial");
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to delete tutorial.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownload = (mediaUrl) => {
-    const link = document.createElement("a");
-    link.href = mediaUrl;
-    link.download = mediaUrl.split("/").pop() || "media_file";
-    link.click();
+  const handleDownload = (url) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = url.split("/").pop();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
-  if (loading) return <p className="loading-text">Loading...</p>;
-  if (error) return <p className="tutorial-detail__error">{error}</p>;
-  if (!tutorial) return null;
+   // Traduction du contenu
+  const changeLanguage = async (lang) => {
+    setLanguage(lang);
+    try {
+      const { data } = await axios.post(
+        "https://api-translate.systran.net/translation/text/translate",
+        { input: [tutorial.content], source: "auto", target: lang },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Key a9b3aa86-93de-4531-ab69-59e997285d3c",
+          },
+        }
+      );
+      setTutorial((t) => ({ ...t, content: data.outputs[0].output }));
+    } catch {
+      setError("Échec de la traduction.");
+    }
+  };
+
+  const handleShareClick = () => {
+    setShareModal({
+      visible: true,
+      url: `${window.location.origin}/tutorials/${tutorialId}`,
+    });
+  };
+
+  const ShareModal = ({ url, onClose }) => (
+    <div className="share-modal-overlay">
+      <div className="share-modal">
+        <h3>Share this tutorial</h3>
+        <div className="share-buttons">
+          <button
+            onClick={() =>
+              window.open(
+                `https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+                "_blank"
+              )
+            }
+          >
+            <FaFacebook /> Facebook
+          </button>
+          <button
+            onClick={() =>
+              window.open(
+                `https://instagram.com/?url=${encodeURIComponent(url)}`,
+                "_blank"
+              )
+            }
+          >
+            <FaInstagram /> Instagram
+          </button>
+          <button
+            onClick={() =>
+              (window.location.href = `mailto:?subject=Tutorial&body=${encodeURIComponent(
+                url
+              )}`)
+            }
+          >
+            <FaEnvelope /> Email
+          </button>
+        </div>
+        <button className="close-modal" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
+  );
+
+  if (loading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error-message">{error}</div>;
+  if (!tutorial) return <div className="not-found">Tutorial not found</div>;
 
   const isOwner = tutorial.authorId._id === userId;
 
   return (
-      <>
-        <Back title={tutorial.title} />
-        <section className="tutorial-detail">
-          {!isEditing ? (
-              <div className="detail-container">
-                <aside className="detail-media">
-                  {tutorial.media && tutorial.media.map((item, index) => (
-                      <img
-                          key={index}
-                          src={item.data}
-                          alt={`Tutorial media ${index + 1}`}
-                      />
-                  ))}
-                </aside>
-                <article className="detail-content">
-                  <h1 className="detail-title">{tutorial.title}</h1>
-                  <div className="detail-meta">
-                    <span className="badge">{tutorial.category}</span>
-                    <span>By {tutorial.authorId.username}</span>
-                    <time>{new Date(tutorial.createdAt).toLocaleDateString()}</time>
-                  </div>
-                  <p className="detail-text">{tutorial.content}</p>
-                  {isOwner && (
-                      <div className="detail-actions">
-                        <button onClick={handleEditToggle} className="tutorial-button tutorial-button--primary">
-                          Edit
-                        </button>
-                        <button onClick={handleDelete} className="tutorial-button tutorial-button--danger">
-                          Delete
-                        </button>
-                      </div>
-                  )}
-                  <div className="language-container">
-                    <select
-                        onChange={(e) => changeLanguage(e.target.value)}
-                        value={language}
-                        className="language-selector enhanced"
-                    >
-                      <option value="en">English</option>
-                      <option value="fr">Français</option>
-                      <option value="ar">العربية</option>
-                    </select>
-                  </div>
-                </article>
+    <>
+      <Back title={tutorial.title} />
+      <section className="tutorial-detail-container">
+        {isEditing ? (
+          
+          <form onSubmit={handleEditSubmit} className="edit-tutorial-form">
+            
+            <h2>Edit Tutorial</h2>
+            <div className="form-group">
+              <label>Title</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Content</label>
+              <textarea
+                name="content"
+                value={formData.content}
+                onChange={(e) =>
+                  setFormData({ ...formData, content: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Category</label>
+              <input
+                type="text"
+                name="category"
+                value={formData.category}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="save-btn">
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={handleEditToggle}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <article className="tutorial-content">
+              
+<div className="tutorial-header">
+                <h1>{tutorial.title}</h1>
+                
               </div>
-          ) : (
-              <form onSubmit={handleEditSubmit} className="tutorial-form enhanced">
-                <h2 className="tutorial-detail__title">Edit Your Tutorial</h2>
-                {error && <p className="tutorial-detail__error">{error}</p>}
-
-                <div className="tutorial-form__field">
-                  <label className="tutorial-form__label">Title</label>
-                  <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleEditChange}
-                      className="tutorial-form__input"
-                      placeholder="Enter tutorial title"
-                  />
+              <div className="tutorial-meta">
+                  <span className="author">
+                    By {tutorial.authorId.username}
+                  </span>
+                  <span className="category">{tutorial.category}</span>
+                  <span className="date">
+                    {new Date(tutorial.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
+              <div className="language-selector">
+                <select
+                  value={language}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                >
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </div>
 
-                <div className="tutorial-form__field">
-                  <label className="tutorial-form__label">Content</label>
-                  <textarea
-                      name="content"
-                      value={formData.content}
-                      onChange={handleEditChange}
-                      className="tutorial-form__textarea"
-                      placeholder="Write your tutorial content here"
-                      rows={10}
-                  />
-                </div>
-
-                <div className="tutorial-form__field">
-                  <label className="tutorial-form__label">Category</label>
-                  <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleEditChange}
-                      className="tutorial-form__select"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                        <option key={category._id} value={category.name}>
-                          {category.name}
-                        </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="tutorial-form__field">
-                  <label className="tutorial-form__label">Media Files</label>
-                  <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="tutorial-form__file-input"
-                  />
-
-                  {tutorial.media && tutorial.media.length > 0 && (
-                      <div className="tutorial-form__media-preview">
-                        <p className="media-preview-label">Current Media:</p>
-                        <div className="media-preview-items">
-                          {tutorial.media.map((item, index) => (
-                              <div key={index} className="media-preview-item">
-                                <img src={item.data} alt={`Current media ${index + 1}`} />
-                              </div>
-                          ))}
-                        </div>
-                      </div>
-                  )}
-
-                  {mediaFiles.length > 0 && (
-                      <div className="tutorial-form__media-preview">
-                        <p className="media-preview-label">New Media:</p>
-                        <div className="media-preview-items">
-                          {mediaFiles.map((file, index) => (
-                              <div key={index} className="media-preview-item new">
-                                <img src={file.data} alt={`New media ${index + 1}`} />
-                              </div>
-                          ))}
-                        </div>
-                      </div>
+              <div className="tutorial-body">
+                <div className="content-section">
+                  {showFullContent ? (
+                    <div className="full-content">
+                      {tutorial.content}
+                      <button
+                        className="show-less-btn"
+                        onClick={() => setShowFullContent(false)}
+                      >
+                        Show Less
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="preview-content">
+                      {tutorial.content.length > 500
+                        ? `${tutorial.content.substring(0, 500)}...`
+                        : tutorial.content}
+                      {tutorial.content.length > 500 && (
+                        <button
+                          className="show-more-btn"
+                          onClick={() => {
+                            setSelectedContent(tutorial.content);
+                            setShowFullContent(true);
+                          }}
+                        >
+                          Read More
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                <div className="tutorial-form__actions">
-                  <button type="submit" disabled={loading} className="tutorial-button tutorial-button--primary">
-                    {loading ? "Saving..." : "Save Changes"}
-                  </button>
-                  <button
-                      type="button"
-                      onClick={handleEditToggle}
-                      className="tutorial-button tutorial-button--danger"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                {tutorial.media && tutorial.media.length > 0 && (
+                  <div className="media-gallery">
+                    <h3>Media</h3>
+                    <div className="media-grid">
+                      {tutorial.media.map((media, index) => (
+                        <div key={index} className="media-item">
+                          {media.contentType.startsWith("image") ? (
+                            <img
+                              src={media.data}
+                              alt={`Tutorial media ${index + 1}`}
+                              className="media-image"
+                            />
+                          ) : (
+                            <div className="media-placeholder">
+                              <p>Media content</p>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleDownload(media.data)}
+                            className="download-media-btn"
+                          >
+                            <FaDownload /> Download
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+             <div className="tutorial-actions">
+  <button
+    className={`like-btn ${likes > 0 ? "liked" : ""}`}
+    onClick={handleLike}
+  >
+    <AiFillLike /> {likes} 
+  </button>
+  <button className="comment-btn">
+    <FaRegCommentAlt /> {comments.length} 
+  </button>
+  <button className="share-btn" onClick={handleShareClick}>
+    <FaShare /> Share
+  </button>
+
+  {isOwner && (
+    <>
+      <button className="edit-btn" onClick={handleEditToggle}>
+        <FaRegEdit /> Edit
+      </button>
+      <button className="delete-btn" onClick={handleDelete}>
+        <FaTrashAlt /> Delete
+      </button>
+    </>
+  )}
+</div>
+            </article>
+
+            <section className="comments-section">
+              <h2>Comments ({comments.length})</h2>
+              <div className="comments-list">
+                {comments.map((comment) => (
+                  <div key={comment._id} className="comment-card">
+                    <div className="comment-header">
+                      <span className="comment-author">
+                        {comment.userId.username}
+                      </span>
+                      <span className="comment-date">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {editingCommentId === comment._id ? (
+                      <div className="edit-comment-form">
+                        <textarea
+                          value={editingCommentContent}
+                          onChange={(e) =>
+                            setEditingCommentContent(e.target.value)
+                          }
+                        />
+                        <div className="edit-comment-actions">
+                          <button
+                            className="save-edit-btn"
+                            onClick={() => handleEditComment(comment._id)}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="cancel-edit-btn"
+                            onClick={() => setEditingCommentId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="comment-content">
+                          {comment.content}
+                        </div>
+                        {comment.userId._id === userId && (
+                          <div className="comment-actions">
+                            <button
+                              className="edit-comment-btn"
+                              onClick={() => {
+                                setEditingCommentId(comment._id);
+                                setEditingCommentContent(comment.content);
+                              }}
+                            >
+                              <FaRegEdit /> Edit
+                            </button>
+                            <button
+                              className="delete-comment-btn"
+                              onClick={() => handleDeleteComment(comment._id)}
+                            >
+                              <FaTrashAlt /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleCommentSubmit} className="add-comment-form">
+                <textarea
+                  placeholder="Write your comment..."
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  required
+                />
+                <button type="submit" className="submit-comment-btn">
+                  Post Comment
+                </button>
               </form>
-          )}
-        </section>
-      </>
+            </section>
+          </>
+        )}
+
+        {shareModal.visible && (
+          <ShareModal
+            url={shareModal.url}
+            onClose={() => setShareModal({ visible: false, url: "" })}
+          />
+        )}
+
+        {showFullContent && (
+          <div className="full-content-modal">
+            <div className="modal-content">
+              <h3>{tutorial.title}</h3>
+              <div className="modal-body">
+                {selectedContent}
+              </div>
+              <button
+                className="close-modal-btn"
+                onClick={() => setShowFullContent(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+    </>
   );
 };
 
-export default TutorialDetail;
+export default TutorialDetail;  
