@@ -86,32 +86,21 @@ function Activities() {
 
   return (
     <div className="activities-wrapper">
-      <div className="header-container">
-        <div className="search-wrapper">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search events..."
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-        <div className="button-container">
-          {isLoggedIn && (
-            <>
-              {userRole === 'learner' && (
-                <button onClick={handleRecommendActivities} className="recommend-btn">
-                  {isWaiting ? 'Generating Recommendations...' : 'Recommend Activities with AI'}
-                </button>
-              )}
-              {(userRole === 'admin' || userRole === 'mentor') && (
-                <Link to="/add-activity" className="add-event-btn">
-                  ADD EVENT <i className="fa fa-long-arrow-alt-right"></i>
-                </Link>
-              )}
-            </>
-          )}
-        </div>
+      <div className="top-button-container">
+        {isLoggedIn && (
+          <div className="button-container">
+            {userRole === 'learner' && (
+              <button onClick={handleRecommendActivities} className="recommend-btn">
+                {isWaiting ? 'Generating Recommendations...' : 'Recommend Activities with AI'}
+              </button>
+            )}
+            {(userRole === 'admin' || userRole === 'mentor') && (
+              <Link to="/add-activity" className="add-event-btn">
+                ADD EVENT <i className="fa fa-long-arrow-alt-right"></i>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="filter-container">
@@ -133,6 +122,18 @@ function Activities() {
         >
           Paid Activities
         </button>
+      </div>
+
+      <div className="header-container">
+        <div className="search-wrapper">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search events..."
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
       </div>
 
       <div className="cards-container">

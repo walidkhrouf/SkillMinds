@@ -22,6 +22,7 @@ const tutorialRoutes = require("./Routes/tutorialRoute");
 const chatRoutes = require("./Routes/chatRoute");
 
 const User = require("./models/User");
+const { default: axios } = require("axios");
 require("dotenv").config({ path: __dirname + "/.env" });
 require("./config/databaseConnection");
 
@@ -163,6 +164,7 @@ passport.use(
   )
 );
 
+
 // Passport serialization
 passport.serializeUser((user, done) => {
   done(null, user.id);
@@ -261,6 +263,60 @@ app.get(
     }
   }
 );
+
+app.post("/generate-our-images-brotha", async (req, res) => {
+  const { text_prompts, cfg_scale, sampler, seed, steps } = req.body;
+
+  if (!text_prompts || !text_prompts[0]?.text) {
+    return res.status(400).json({ message: "Text prompt is required" });
+  }
+
+  try {
+    const nvidiaApiUrl = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-xl";
+    const response = await axios.post(
+      nvidiaApiUrl,
+      {
+        text_prompts,
+        cfg_scale,
+        sampler,
+        seed,
+        steps,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    // Log the response for debugging
+    console.log("NVIDIA API Response:", response.data);
+
+    let imageData;
+    if (response.data?.artifacts?.[0]?.base64) {
+      imageData = response.data.artifacts[0].base64;
+    } else if (response.data?.image) {
+      imageData = response.data.image;
+    } else {
+      throw new Error("Unexpected response format from NVIDIA API");
+    }
+
+    if (!imageData) {
+      throw new Error("No image data received from API");
+    }
+
+    res.status(200).json({ image: imageData });
+  } catch (error) {
+    console.error("Image generation error:", error.response?.data || error.message);
+    res.status(500).json({
+      message: "Failed to generate image",
+      error: error.response?.data?.message || error.message,
+    });
+  }
+});
+
 
 app.get("/auth/linkedin", require("./Controllers/UserController").linkedinLogin);
 app.get("/linkedin-callback", require("./Controllers/UserController").linkedinCallback);
