@@ -1,91 +1,78 @@
 .activities-wrapper {
-  padding-top: 5rem; /* 80px converted to rem, space below navbar */
+  padding-top: 5rem; /* 80px, space below navbar */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.25rem; /* 20px */
+  position: relative; /* Allow absolute positioning of top-button-container */
 }
 
-.activities-wrapper .header-container {
+.activities-wrapper .top-button-container {
+  position: absolute;
+  top: 6rem; /* Below 5rem navbar, with 1rem offset */
+  right: 1rem; /* Space from right */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 75rem; /* 1200px */
-  margin-bottom: 1.25rem; /* 20px */
-}
-
-.activities-wrapper .search-wrapper {
-  flex-grow: 1;
-  margin-right: 1.25rem; /* 20px */
-}
-
-.activities-wrapper .search-input {
-  width: 100%;
-  max-width: 31.25rem; /* 500px */
-  padding: 0.625rem; /* 10px */
-  font-size: 1rem; /* Matches global base */
-  border-radius: 0.3125rem; /* 5px */
-  border: 1px solid #ccc; /* Specific border, not overriding global */
+  justify-content: flex-end;
+  z-index: 10; /* Ensure buttons appear above other content */
 }
 
 .activities-wrapper .button-container {
   display: flex;
   gap: 0.625rem; /* 10px - Space between buttons */
   align-items: center;
+  flex-shrink: 0;
 }
 
 .activities-wrapper .recommend-btn {
-  padding: 0.75rem 1.25rem; /* Matches add-event-btn */
+  padding: 0.75rem 1.25rem;
   font-size: 1rem;
-  background-color: #159e8b; /* Green color, matching add-event-btn */
+  background-color: rgb(78, 49, 6);
   color: #fff;
   border: none;
   border-radius: 0.3125rem; /* 5px */
   cursor: pointer;
-  text-decoration: none; /* Consistent with add-event-btn */
-  display: inline-flex; /* Align text and icon */
+  text-decoration: none;
+  display: inline-flex;
   align-items: center;
   gap: 0.625rem; /* Space between text and icon */
   transition: background-color 0.3s ease;
+  white-space: nowrap;
 }
 
 .activities-wrapper .recommend-btn:hover {
-  background-color: #127a6d; /* Darker green on hover, matching add-event-btn */
+  background-color: #127a6d;
 }
 
 .activities-wrapper .add-event-btn {
-  padding: 0.75rem 1.25rem; /* 12px 20px */
+  padding: 0.75rem 1.25rem;
   font-size: 1rem;
-  background-color: rgb(78, 49, 6); /* Green color */
+  background-color: rgb(78, 49, 6);
   color: #fff;
   border: none;
   border-radius: 0.3125rem; /* 5px */
   cursor: pointer;
-  text-decoration: none; /* For Link */
-  display: inline-flex; /* Align text and icon */
+  text-decoration: none;
+  display: inline-flex;
   align-items: center;
-  gap: 0.625rem; /* Space between text and icon */
+  gap: 0.625rem;
   transition: background-color 0.3s ease;
-  position: relative; /* Ensure it stays in flow */
 }
 
 .activities-wrapper .add-event-btn:hover {
-  background-color: #127a6d; /* Darker green on hover */
+  background-color: #127a6d;
 }
 
-/* Filter Container */
 .activities-wrapper .filter-container {
   display: flex;
   gap: 0.625rem; /* 10px */
   justify-content: center;
-  margin-bottom: 1.25rem; /* 20px */
+  margin-bottom: 0.625rem; /* 10px */
 }
 
 .activities-wrapper .filter-btn {
-  padding: 0.625rem 1rem; /* 10px 16px */
+  padding: 0.625rem 1rem;
   font-size: 1rem;
-  background-color: #f8f9fa; /* Light gray, matches recommended section */
+  background-color: #f8f9fa;
   color: #333;
   border: 1px solid #ddd;
   border-radius: 0.3125rem; /* 5px */
@@ -94,13 +81,37 @@
 }
 
 .activities-wrapper .filter-btn:hover {
-  background-color: #e9ecef; /* Slightly darker gray on hover */
+  background-color: #e9ecef;
 }
 
 .activities-wrapper .filter-btn.active {
-  background-color:rgb(78, 49, 6); /* Green to match add-event-btn */
+  background-color: rgb(78, 49, 6);
   color: #fff;
-  border-color: rgb(78, 49, 6); /* Updated to match green theme */
+  border-color: rgb(78, 49, 6);
+}
+
+.activities-wrapper .header-container {
+  display: flex;
+  justify-content: center; /* Center the search bar */
+  width: 100%;
+  max-width: 75rem; /* 1200px */
+  margin-bottom: 1.25rem; /* 20px */
+  padding: 0 1rem;
+}
+
+.activities-wrapper .search-wrapper {
+  width: 100%;
+  margin-bottom: 1rem;
+  max-width: 31.25rem; /* 500px */
+}
+
+.activities-wrapper .search-input {
+  width: 100%;
+  padding: 0.625rem; /* 10px */
+  font-size: 1rem;
+  border-radius: 0.3125rem; /* 5px */
+  border: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 .activities-wrapper .cards-container {
@@ -111,23 +122,42 @@
   width: 100%;
 }
 
+/* Tablet and smaller screens */
 @media (max-width: 48rem) { /* 768px */
+  .activities-wrapper {
+    padding-top: 3.75rem; /* 60px */
+    gap: 0.9375rem; /* 15px */
+  }
+
+  .activities-wrapper .top-button-container {
+    position: static; /* Remove absolute positioning */
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4rem; /* Push below ~3.75rem navbar */
+    margin-bottom: 1rem; /* Increased for spacing before filters */
+    padding: 0 0.625rem; /* 10px */
+  }
+
   .activities-wrapper .button-container {
-    flex-direction: column; /* Stack buttons vertically on smaller screens */
-    align-items: flex-end;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.625rem;
   }
 
   .activities-wrapper .recommend-btn,
   .activities-wrapper .add-event-btn {
-    margin-right: 0.625rem; /* 10px */
-    padding: 0.625rem 1rem; /* Slightly smaller */
-    width: 100%; /* Full width for consistency */
-    text-align: center;
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+    flex: 1;
+    max-width: 12rem;
   }
 
   .activities-wrapper .filter-container {
     flex-direction: column;
     align-items: center;
+    margin-bottom: 0.9375rem; /* 15px */
   }
 
   .activities-wrapper .filter-btn {
@@ -135,9 +165,16 @@
     max-width: 15rem; /* 240px */
   }
 
-  .activities-wrapper {
-    padding-top: 3.75rem; /* 60px */
-    gap: 0.9375rem; /* 15px */
+  .activities-wrapper .header-container {
+    padding: 0 0.625rem; /* 10px */
+  }
+
+  .activities-wrapper .search-wrapper {
+    max-width: none; /* Full width */
+  }
+
+  .activities-wrapper .search-input {
+    font-size: 0.9375rem; /* Slightly smaller */
   }
 
   .activities-wrapper .cards-container {
@@ -146,15 +183,47 @@
   }
 }
 
+/* Mobile screens */
 @media (max-width: 30rem) { /* 480px */
+  .activities-wrapper {
+    gap: 0.625rem; /* 10px */
+  }
+
+  .activities-wrapper .top-button-container {
+    margin-top: 4rem; /* Push below ~3.75rem navbar */
+    margin-bottom: 1rem; /* Increased for spacing */
+    padding: 0 0.5rem; /* 8px */
+  }
+
+  .activities-wrapper .button-container {
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: stretch;
+    gap: 0.5rem; /* 8px */
+  }
+
   .activities-wrapper .recommend-btn,
-  .activities-wrapper .add-event-btn,
+  .activities-wrapper .add-event-btn {
+    padding: 0.5rem 0.9375rem; /* 8px 15px */
+    font-size: 0.875rem;
+    max-width: none;
+    width: 100%;
+  }
+
+  .activities-wrapper .filter-container {
+    margin-bottom: 0.625rem; /* 10px */
+  }
+
   .activities-wrapper .filter-btn {
     padding: 0.5rem 0.9375rem; /* 8px 15px */
   }
 
-  .activities-wrapper {
-    gap: 0.625rem; /* 10px */
+  .activities-wrapper .header-container {
+    padding: 0 0.5rem; /* 8px */
+  }
+
+  .activities-wrapper .search-input {
+    padding: 0.5rem; /* 8px */
+    font-size: 0.875rem;
   }
 
   .activities-wrapper .cards-container {

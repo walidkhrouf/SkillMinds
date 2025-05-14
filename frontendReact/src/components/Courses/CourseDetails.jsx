@@ -15,7 +15,8 @@ const CourseDetails = () => {
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState('');
   const [showQuiz, setShowQuiz] = useState(false);
-  const [playingIndex, setPlayingIndex] = useState(null); // État pour suivre la vidéo en cours de lecture
+  const [playingIndex, setPlayingIndex] = useState(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const videoRefs = useRef([]);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
@@ -149,16 +150,29 @@ const CourseDetails = () => {
     }
   };
 
+  const toggleDescription = () => {
+    setIsDescriptionExpanded(!isDescriptionExpanded);
+  };
+
   if (!course) return <div className="loading">Loading...</div>;
 
   const isEnrolled = !!enrollment;
   const isCreator = course.createdBy?._id === currentUser._id;
   const canDownload = isEnrolled || isCreator;
+  const description = course.description || 'No description available';
+  const truncatedDescription = description.length > 100 ? description.slice(0, 100) + '...' : description;
 
   return (
     <div className="course-details">  <br/>  <br/>
-      <h1>{course.title}</h1> 
-      <p>{course.description || 'No description available'}</p>
+      <h1>{course.title}</h1>
+      <div className="description-section">
+        <p>{isDescriptionExpanded ? description : truncatedDescription}</p>
+        {description.length > 100 && (
+          <button onClick={toggleDescription} className="toggle-description-btn">
+            {isDescriptionExpanded ? 'Show Less' : 'Show More'}
+          </button>
+        )}
+      </div>
       <p><strong>Skill:</strong> {course.skillId?.name}</p>
       <p><strong>Price:</strong> ${course.price}</p>
       <p><strong>Created By:</strong> {course.createdBy?.username}</p>

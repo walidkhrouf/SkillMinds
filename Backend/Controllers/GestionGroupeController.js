@@ -263,6 +263,7 @@ const getGroupPosts = async (req, res) => {
 
 const getGroupPostById = async (req, res) => {
   const { groupId, postId } = req.params;
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
   if (!objectIdRegex.test(groupId) || !objectIdRegex.test(postId)) {
     return res.status(400).json({ message: "Invalid groupId or postId format" });
   }
@@ -271,6 +272,7 @@ const getGroupPostById = async (req, res) => {
 
     const post = await GroupPost.findOne({ groupId, _id: postId })
         .populate("userId", "username")
+        .populate("reports.userId", "username") // Populate reporting users' usernames
         .lean();
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -290,7 +292,7 @@ const getGroupPostById = async (req, res) => {
     // Map comments to include reportCount and exclude reports array
     const commentsWithReportCount = comments.map((comment) => {
       const reportCount = comment.reports ? comment.reports.length : 0;
-      const { reports, ...commentWithoutReports } = comment; // Exclude the reports array
+      const { reports, ...commentWithoutReports } = comment;
       return {
         ...commentWithoutReports,
         reportCount,
@@ -305,6 +307,7 @@ const getGroupPostById = async (req, res) => {
       hasLiked,
       hasDisliked,
       isGroupOwner,
+      reports: post.reports || [], // Ensure reports are included
     });
   } catch (error) {
     console.error("Error fetching group post:", error.message);
