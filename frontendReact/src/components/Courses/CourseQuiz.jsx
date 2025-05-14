@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import PropTypes from 'prop-types'; // Import PropTypes
+import PropTypes from 'prop-types';
 import './CourseQuiz.css';
 
 const CourseQuiz = ({ courseId, onClose }) => {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(null);
+  const [showCorrections, setShowCorrections] = useState(false);
   const [error, setError] = useState('');
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
@@ -44,9 +45,10 @@ const CourseQuiz = ({ courseId, onClose }) => {
 
     const finalScore = (correctCount / quiz.questions.length) * 100;
     setScore(finalScore);
+    setShowCorrections(true); // Afficher les corrections quel que soit le score
     setError('');
 
-    if (finalScore === 100) {
+    if (finalScore >= 80 && finalScore <= 100) {
       try {
         if (!currentUser._id) {
           throw new Error('User not logged in');
@@ -55,12 +57,22 @@ const CourseQuiz = ({ courseId, onClose }) => {
           courseId,
           userId: currentUser._id
         });
-        alert(`Congratulations! You scored 100% and a certificate has been sent to your email: ${currentUser.email}`);
       } catch (err) {
         console.error('Certificate generation error:', err);
         setError(err.response?.data.message || 'Failed to generate certificate. Please try again or contact support.');
       }
     }
+  };
+
+  const handleRetry = () => {
+    setAnswers({});
+    setScore(null);
+    setShowCorrections(false);
+    setError('');
+  };
+
+  const handleClose = () => {
+    onClose();
   };
 
   if (!quiz) return <div className="loading">Loading quiz...</div>;
@@ -72,8 +84,45 @@ const CourseQuiz = ({ courseId, onClose }) => {
       {score !== null ? (
         <div className="quiz-result">
           <h3>Your Score: {score.toFixed(2)}%</h3>
-          {score === 100 && <p>A certificate has been sent to your email.</p>}
-          <button onClick={onClose} className="close-quiz-btn">Close</button>
+          {score >= 80 && (
+            <p>A certificate has been sent to your email.</p>
+          )}
+          {showCorrections && (
+            <div className="corrections">
+              <h4>Corrections</h4>
+              {quiz.questions.map((question, qIndex) => {
+                const userAnswer = answers[qIndex];
+                const isCorrect = userAnswer === question.correctAnswer;
+                
+                return (
+                  <div key={qIndex} className={`correction-item ${!isCorrect ? 'incorrect' : ''}`}>
+                    <p><strong>Question {qIndex + 1}:</strong> {question.text}</p>
+                    <p>
+                      <strong>Your Answer:</strong>{' '}
+                      {userAnswer !== undefined
+                        ? question.options[userAnswer]
+                        : 'Not answered'}
+                      {!isCorrect && ' ❌'}
+                    </p>
+                    {!isCorrect && (
+                      <>
+                        <p><strong>Correct Answer:</strong> {question.options[question.correctAnswer]} ✅</p>
+                        <p><strong>Explanation:</strong> {question.explanation}</p>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="quiz-actions">
+            <button onClick={handleRetry} className="retry-quiz-btn">
+              Retry Quiz
+            </button>
+            <button onClick={handleClose} className="close-quiz-btn">
+              Close
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -95,8 +144,12 @@ const CourseQuiz = ({ courseId, onClose }) => {
             </div>
           ))}
           <div className="quiz-actions">
-            <button onClick={handleSubmit} className="submit-quiz-btn">Submit</button>
-            <button onClick={onClose} className="cancel-quiz-btn">Cancel</button>
+            <button onClick={handleSubmit} className="submit-quiz-btn">
+              Submit
+            </button>
+            <button onClick={handleClose} className="cancel-quiz-btn">
+              Cancel
+            </button>
           </div>
         </>
       )}
@@ -104,10 +157,9 @@ const CourseQuiz = ({ courseId, onClose }) => {
   );
 };
 
-// Add PropTypes validation
 CourseQuiz.propTypes = {
-  courseId: PropTypes.string.isRequired, // Assuming courseId is a string
-  onClose: PropTypes.func.isRequired, // onClose is a function
+  courseId: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default CourseQuiz;

@@ -14,6 +14,8 @@ const AllCourses = () => {
   const [error, setError] = useState('');
   const [selectedCourseForPayment, setSelectedCourseForPayment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [descriptionExpanded, setDescriptionExpanded] = useState({});
+  const [courseToDelete, setCourseToDelete] = useState(null); // Nouvel état pour le cours à supprimer
   const coursesPerPage = 3;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
@@ -72,23 +74,33 @@ const AllCourses = () => {
     navigate(`/update-course/${courseId}`);
   };
 
-  const handleDelete = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
+  const handleDelete = (courseId) => {
+    setCourseToDelete(courseId); // Affiche le popup de confirmation
+  };
+
+  const confirmDelete = async () => {
+    if (courseToDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/courses/${courseId}`, {
+        await axios.delete(`http://localhost:5000/api/courses/${courseToDelete}`, {
           params: { userId: currentUser._id }
         });
-        setCourses(courses.filter(course => course._id !== courseId));
+        setCourses(courses.filter(course => course._id !== courseToDelete));
+        setCourseToDelete(null); // Ferme le popup
       } catch (err) {
         setError(err.response?.data.message || 'Error deleting course');
+        setCourseToDelete(null); // Ferme le popup même en cas d'erreur
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setCourseToDelete(null); // Ferme le popup sans supprimer
   };
 
   const handleSearch = (event) => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
 
     if (value.trim() === '') {
       setFilteredCourses([]);
@@ -109,7 +121,7 @@ const AllCourses = () => {
   const sortCoursesByPrice = () => {
     const sortedCourses = [...courses].sort((a, b) => a.price - b.price);
     setCourses(sortedCourses);
-    setCurrentPage(1); // Reset to first page after sorting
+    setCurrentPage(1);
   };
 
   const handlePaymentSuccess = (courseId, enrollmentData) => {
@@ -121,10 +133,16 @@ const AllCourses = () => {
     setFilteredCourses([]);
     setSearchTerm('');
     setError('');
-    setCurrentPage(1); // Reset to first page after payment
+    setCurrentPage(1);
   };
 
-  // Pagination logic
+  const toggleDescription = (courseId) => {
+    setDescriptionExpanded(prev => ({
+      ...prev,
+      [courseId]: !prev[courseId]
+    }));
+  };
+
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
   const currentCourses = (filteredCourses.length > 0 ? filteredCourses : courses).slice(indexOfFirstCourse, indexOfLastCourse);
@@ -154,59 +172,72 @@ const AllCourses = () => {
       </button>
 
       <div className="courses-grid">
-        {currentCourses.map((course) => (
-          <div className="course-item" key={course._id}>
-            <h2>{course.title}</h2>
-            <p>{course.description || 'No description available'}</p>
-            <p><strong>Price:</strong> ${course.price}</p>
-            <p><strong>Created By:</strong> {course.createdBy?.username}</p>
+        {currentCourses.map((course) => {
+          const description = course.description || 'No description available';
+          const truncatedDescription = description.length > 100 ? description.slice(0, 100) + '...' : description;
+          const isExpanded = descriptionExpanded[course._id];
 
-            {currentUser._id === course.createdBy?._id && (
-              <>
-                <button onClick={() => handleUpdate(course._id)} className="update-btn">
-                  Update
-                </button>
-                <button onClick={() => handleDelete(course._id)} className="delete-btn">
-                  Delete
-                </button>
-              </>
-            )} <br></br> <br></br>
-            <button onClick={() => navigate(`/course-details/${course._id}`)} className="view-btn">
-              View Details
-            </button>
-            {course.price > 0 && !enrollments[course._id] && (
-              <button onClick={() => setSelectedCourseForPayment(course._id)} className="pay-btn">
-                Pay
-              </button>
-            )}
-            {course.price === 0 && !enrollments[course._id] && (
-              <button onClick={() => handleEnroll(course._id)} className="enroll-free-btn">
-                Enroll for Free
-              </button>
-            )}
+          return (
+            <div className="course-item" key={course._id}>
+              <h2>{course.title}</h2>
+              <div className="description-section">
+                <p>{isExpanded ? description : truncatedDescription}</p>
+                {description.length > 100 && (
+                  <button onClick={() => toggleDescription(course._id)} className="toggle-description-btn">
+                    {isExpanded ? 'Show Less' : 'Show More'}
+                  </button>
+                )}
+              </div>
+              <p><strong>Price:</strong> ${course.price}</p>
+              <p><strong>Created By:</strong> {course.createdBy?.username}</p>
 
-            <CourseRating
-              courseId={course._id}
-              currentUserId={currentUser._id}
-              existingRatings={course.ratings || []}
-              onRatingSubmit={(newRating) => {
-                setCourses(prevCourses =>
-                  prevCourses.map(c =>
-                    c._id === course._id
-                      ? {
-                          ...c,
-                          ratings: [
-                            ...(c.ratings || []).filter(r => r.userId !== currentUser._id),
-                            { userId: currentUser._id, rating: newRating }
-                          ]
-                        }
-                      : c
-                  )
-                );
-              }}
-            />
-          </div>
-        ))}
+              {currentUser._id === course.createdBy?._id && (
+                <>
+                  <button onClick={() => handleUpdate(course._id)} className="update-btn">
+                    Update
+                  </button>
+                  <button onClick={() => handleDelete(course._id)} className="delete-btn">
+                    Delete
+                  </button>
+                </>
+              )} <br></br> <br></br>
+              <button onClick={() => navigate(`/course-details/${course._id}`)} className="view-btn">
+                View Details
+              </button>
+              {course.price > 0 && !enrollments[course._id] && (
+                <button onClick={() => setSelectedCourseForPayment(course._id)} className="pay-btn">
+                  Pay
+                </button>
+              )}
+              {course.price === 0 && !enrollments[course._id] && (
+                <button onClick={() => handleEnroll(course._id)} className="enroll-free-btn">
+                  Enroll for Free
+                </button>
+              )}
+
+              <CourseRating
+                courseId={course._id}
+                currentUserId={currentUser._id}
+                existingRatings={course.ratings || []}
+                onRatingSubmit={(newRating) => {
+                  setCourses(prevCourses =>
+                    prevCourses.map(c =>
+                      c._id === course._id
+                        ? {
+                            ...c,
+                            ratings: [
+                              ...(c.ratings || []).filter(r => r.userId !== currentUser._id),
+                              { userId: currentUser._id, rating: newRating }
+                            ]
+                          }
+                        : c
+                    )
+                  );
+                }}
+              />
+            </div>
+          );
+        })}
         {currentCourses.length === 0 && searchTerm && (
           <p className="no-results">Le cours recherché n est pas disponible.</p>
         )}
@@ -254,7 +285,20 @@ const AllCourses = () => {
         </div>
       )}
 
-      <button onClick={() => navigate('/all-courses')} className="back-btn">
+      {courseToDelete && (
+        <div className="confirmation-popup">
+          <h3>Confirmer la suppression</h3>
+          <p>Êtes-vous sûr de vouloir supprimer ce cours ?</p>
+          <button onClick={confirmDelete} className="confirm-btn">
+            Confirmer
+          </button>
+          <button onClick={cancelDelete} className="cancel-btn">
+            Annuler
+          </button>
+        </div>
+      )}
+
+      <button onClick={() => navigate('/courses')} className="back-btn">
         Back to Home
       </button>
     </section>
