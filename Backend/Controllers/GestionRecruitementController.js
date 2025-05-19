@@ -531,6 +531,23 @@ const generateCoverLetter = async (req, res) => {
 };
 
 
+const getCitiesByCountry = async (req, res) => {
+  try {
+    const { country } = req.body;
+
+    if (!country) {
+      return res.status(400).json({ message: 'Country name is required' });
+    }
+
+    const response = await axios.post('https://countriesnow.space/api/v0.1/countries/cities', { country });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching cities:', error.message);
+    res.status(500).json({ message: 'Failed to fetch cities' });
+  }
+};
+
+
 
 module.exports = {
   createJobOffer,
@@ -547,5 +564,7 @@ module.exports = {
   getUserInterviewInvites,
   updateFinalDecision,
   generateDescription,
-  generateCoverLetter
+  generateCoverLetter,
+  getCitiesByCountry
+
 };

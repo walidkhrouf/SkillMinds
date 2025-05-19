@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { createJobOffer, getAllJobOffers, getJobOfferById, updateJobOffer, deleteJobOffer, createJobApplication, getAllJobApplications,updateApplicationStatus, getRecommendedJobsBySkills,updateInterviewDate,confirmInterviewStatus,getUserInterviewInvites,updateFinalDecision,generateDescription,generateCoverLetter} = require('../Controllers/GestionRecruitementController');
+const { createJobOffer, getAllJobOffers, getJobOfferById, updateJobOffer, deleteJobOffer, createJobApplication, getAllJobApplications,updateApplicationStatus, getRecommendedJobsBySkills,updateInterviewDate,confirmInterviewStatus,getUserInterviewInvites,updateFinalDecision,generateDescription,generateCoverLetter,  getCitiesByCountry} = require('../Controllers/GestionRecruitementController');
 const JobApplication = require('../models/JobApplication'); // Import the model
 const JobOffer = require('../models/JobOffer');
 const UserSkill = require('../models/UserSkill');
@@ -21,6 +21,7 @@ router.put('/job-offers/:id', updateJobOffer);
 router.delete('/job-offers/:id', deleteJobOffer);
 router.post('/job-applications', upload.single('resume'), createJobApplication);
 router.get('/job-applications', getAllJobApplications);
+router.post('/cities', getCitiesByCountry);
 router.put('/applications/:applicationId/status', updateApplicationStatus);
 router.put('/applications/:id/interview-date', updateInterviewDate);
 router.put('/applications/:id/interview-confirm', confirmInterviewStatus);

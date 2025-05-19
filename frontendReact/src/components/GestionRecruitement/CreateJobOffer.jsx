@@ -45,14 +45,14 @@ const CreateJobOffer = () => {
   // 📍 Récupération des villes selon le pays
   const fetchCities = async (country) => {
     try {
-      const response = await axios.post('https://countriesnow.space/api/v0.1/countries/cities', { country });
+      const response = await axios.post('http://localhost:5000/api/recruitment/cities', { country });
       if (response.data && response.data.data) {
         setCities(response.data.data);
       } else {
         setCities([]);
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des villes :", error);
+      console.error("Erreur lors de la récupération des villes:", error);
       setCities([]);
     }
   };
