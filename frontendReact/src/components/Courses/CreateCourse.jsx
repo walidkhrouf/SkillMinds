@@ -17,6 +17,14 @@ const CreateCourse = () => {
   const [autoGenerate, setAutoGenerate] = useState(true);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser._id) {
+      setError('Please log in to create a course');
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
+
   useEffect(() => {
     const fetchSkills = async () => {
       try {
@@ -35,6 +43,11 @@ const CreateCourse = () => {
       return;
     }
 
+    if (!currentUser._id) {
+      setError('You must be logged in to generate a description');
+      return;
+    }
+
     const selectedSkill = skills.find(skill => skill._id === skillId);
     if (!selectedSkill) {
       setError('Selected skill not found');
@@ -43,10 +56,11 @@ const CreateCourse = () => {
 
     setIsGenerating(true);
     try {
-      console.log('Sending request to generate description:', { title, skillName: selectedSkill.name });
-      const response = await axios.post('http://localhost:5000/api/courses/generate-description', {
+      console.log('Sending request to generate description:', { title, skillName: selectedSkill.name, userId: currentUser._id });
+      const response = await axios.post(`http://localhost:5000/api/courses/generate-description?userId=${currentUser._id}`, {
         title,
-        skillName: selectedSkill.name
+        skillName: selectedSkill.name,
+        userId: currentUser._id
       });
       const generatedDescription = response.data.description;
       setDescription(generatedDescription);
@@ -58,7 +72,7 @@ const CreateCourse = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [title, skillId, skills]);
+  }, [title, skillId, skills, currentUser._id]);
 
   useEffect(() => {
     if (autoGenerate && title.trim().length >= 3 && skillId) {
@@ -93,7 +107,12 @@ const CreateCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!currentUser._id) return setError('Please log in to create a course');
+    console.log('Submitting course with user:', currentUser); // Debug currentUser
+    if (!currentUser._id) {
+      setError('Please log in to create a course');
+      navigate('/login');
+      return;
+    }
     if (!title || !skillId || sections.some(s => !s.title || !s.video)) {
       return setError('All fields and at least one video section are required');
     }
@@ -109,12 +128,13 @@ const CreateCourse = () => {
     });
 
     try {
-      await axios.post('http://localhost:5000/api/courses', formData, {
+      await axios.post(`http://localhost:5000/api/courses?userId=${currentUser._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSuccess('Course created successfully!');
       setTimeout(() => navigate('/courses'), 2000);
     } catch (err) {
+      console.error('Error creating course:', err.response?.data);
       setError(err.response?.data.message || 'Error creating course');
     }
   };
@@ -144,6 +164,7 @@ const CreateCourse = () => {
             disabled={isGenerating}
           />
           <div className="description-controls">
+            <p className="info-message">Enter the course title and skill to generate a description with AI.</p>
             <label>
               <input
                 type="checkbox"

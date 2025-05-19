@@ -54,6 +54,11 @@ const UpdateCourse = () => {
       return;
     }
 
+    if (!currentUser._id) {
+      setError('You must be logged in to generate a description');
+      return;
+    }
+
     const selectedSkill = skills.find(skill => skill._id === skillId);
     if (!selectedSkill) {
       setError('Selected skill not found');
@@ -62,10 +67,11 @@ const UpdateCourse = () => {
 
     setIsGenerating(true);
     try {
-      console.log('Sending request to generate description:', { title, skillName: selectedSkill.name });
+      console.log('Sending request to generate description:', { title, skillName: selectedSkill.name, userId: currentUser._id });
       const response = await axios.post('http://localhost:5000/api/courses/generate-description', {
         title,
-        skillName: selectedSkill.name
+        skillName: selectedSkill.name,
+        userId: currentUser._id
       });
       const generatedDescription = response.data.description;
       setDescription(generatedDescription);
@@ -77,7 +83,7 @@ const UpdateCourse = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [title, skillId, skills]);
+  }, [title, skillId, skills, currentUser._id]);
 
   useEffect(() => {
     if (autoGenerate && title.trim().length >= 3 && skillId) {
@@ -128,7 +134,7 @@ const UpdateCourse = () => {
     });
 
     try {
-      await axios.put(`http://localhost:5000/api/courses/${id}`, formData, {
+      await axios.put(`http://localhost:5000/api/courses/${id}?userId=${currentUser._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSuccess('Course updated successfully!');
@@ -145,14 +151,14 @@ const UpdateCourse = () => {
       {success && <p className="success">{success}</p>}
       <form onSubmit={handleSubmit} className="create-course-form">
         <div className="form-group">
-        <label>Title:</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          placeholder="Enter course title"
-        />
+          <label>Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            placeholder="Enter course title"
+          />
         </div>
         <div className="form-group">
           <label>Description:</label>
@@ -163,6 +169,7 @@ const UpdateCourse = () => {
             disabled={isGenerating}
           />
           <div className="description-controls">
+            <p className="info-message">Entrez le titre et la compétence du cours pour générer une description avec l'IA.</p>
             <label>
               <input
                 type="checkbox"

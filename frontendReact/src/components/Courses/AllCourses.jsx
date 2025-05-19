@@ -15,7 +15,7 @@ const AllCourses = () => {
   const [selectedCourseForPayment, setSelectedCourseForPayment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [descriptionExpanded, setDescriptionExpanded] = useState({});
-  const [courseToDelete, setCourseToDelete] = useState(null); // Nouvel état pour le cours à supprimer
+  const [courseToDelete, setCourseToDelete] = useState(null);
   const coursesPerPage = 3;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
@@ -75,7 +75,7 @@ const AllCourses = () => {
   };
 
   const handleDelete = (courseId) => {
-    setCourseToDelete(courseId); // Affiche le popup de confirmation
+    setCourseToDelete(courseId);
   };
 
   const confirmDelete = async () => {
@@ -85,16 +85,16 @@ const AllCourses = () => {
           params: { userId: currentUser._id }
         });
         setCourses(courses.filter(course => course._id !== courseToDelete));
-        setCourseToDelete(null); // Ferme le popup
+        setCourseToDelete(null);
       } catch (err) {
         setError(err.response?.data.message || 'Error deleting course');
-        setCourseToDelete(null); // Ferme le popup même en cas d'erreur
+        setCourseToDelete(null);
       }
     }
   };
 
   const cancelDelete = () => {
-    setCourseToDelete(null); // Ferme le popup sans supprimer
+    setCourseToDelete(null);
   };
 
   const handleSearch = (event) => {
@@ -192,15 +192,15 @@ const AllCourses = () => {
               <p><strong>Created By:</strong> {course.createdBy?.username}</p>
 
               {currentUser._id === course.createdBy?._id && (
-                <>
+                <div className="course-actions">
                   <button onClick={() => handleUpdate(course._id)} className="update-btn">
                     Update
                   </button>
                   <button onClick={() => handleDelete(course._id)} className="delete-btn">
                     Delete
                   </button>
-                </>
-              )} <br></br> <br></br>
+                </div>
+              )}
               <button onClick={() => navigate(`/course-details/${course._id}`)} className="view-btn">
                 View Details
               </button>

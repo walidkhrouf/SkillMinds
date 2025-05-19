@@ -18,10 +18,11 @@ const upload = multer({ storage, limits: { fileSize: 16 * 1024 * 1024 } });
 // Middleware d'authentification
 const authenticate = (req, res, next) => {
   const userId = req.query.userId || req.body.userId;
+  console.log('Authenticate Middleware - userId:', userId, 'Query:', req.query, 'Body:', req.body); // Debug logging
   if (!userId) {
     return res.status(401).json({ message: 'Authentication required' });
   }
-  // TODO: Ajoutez ici une vérification supplémentaire pour valider userId (par exemple, via JWT)
+  // TODO: Implement JWT validation for enhanced security
   next();
 };
 
@@ -35,22 +36,22 @@ router.get('/skills', async (req, res) => {
 });
 
 router.get('/enroll', getEnrollmentStatus);
-router.post('/enroll', enrollInCourse);
+router.post('/enroll', authenticate, enrollInCourse);
 router.get('/video/:courseId/:videoOrder', authenticate, getVideo);
-router.post('/', upload.array('videos'), createCourse);
+router.post('/', authenticate, upload.array('videos'), createCourse);
 router.get('/', getAllCourses);
 router.get('/:id', getCourseById);
-router.put('/:id', upload.array('videos'), updateCourse);
-router.delete('/:id', deleteCourse);
+router.put('/:id', authenticate, upload.array('videos'), updateCourse);
+router.delete('/:id', authenticate, deleteCourse);
 router.get('/search', searchCourses);
-router.post('/pay', processPayment);
-router.post('/rate', rateCourse);
+router.post('/pay', authenticate, processPayment);
+router.post('/rate', authenticate, rateCourse);
 router.post('/comments/create', authenticate, createComment);
 router.get('/comments/list', getComments);
-router.post('/discussion/create', createDiscussionMessage);
-router.get('/discussion/list', getDiscussionMessages);
+router.post('/discussion/create', authenticate, createDiscussionMessage);
+router.get('/discussion/list', authenticate, getDiscussionMessages);
 router.post('/quiz-certificate', authenticate, generateQuizCertificate);
-router.get('/quiz/:courseId', generateQuiz);
-router.post('/generate-description', generateCourseDescription);
+router.get('/quiz/:courseId', authenticate, generateQuiz);
+router.post('/generate-description', authenticate, generateCourseDescription);
 
 module.exports = router;

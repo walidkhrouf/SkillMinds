@@ -462,9 +462,16 @@ const getVideo = async (req, res) => {
 const createComment = async (req, res) => {
   try {
     const { courseId, userId, content } = req.body;
+    console.log('Received comment request:', { courseId, userId, content });
 
     if (!courseId || !userId || !content) {
       return res.status(400).json({ message: 'courseId, userId, and content are required' });
+    }
+
+    // Vérifier si l'utilisateur est inscrit au cours
+    const enrollment = await CourseEnrollment.findOne({ userId, courseId });
+    if (!enrollment) {
+      return res.status(403).json({ message: 'You must be enrolled in the course to comment' });
     }
 
     const prompt = `
@@ -474,18 +481,17 @@ const createComment = async (req, res) => {
       Text to analyze: "${content}"
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let responseText = response.text();
-
-    responseText = responseText.replace(/```json\n|```/g, '').trim();
-
-    let moderationResult;
+    let moderationResult = { isInappropriate: false, message: '' };
     try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let responseText = response.text().trim();
+      responseText = responseText.replace(/```json\n|```/g, '');
+
       moderationResult = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError, responseText);
-      return res.status(500).json({ message: 'Failed to parse moderation response' });
+    } catch (apiError) {
+      console.error('Gemini API error:', apiError);
+      return res.status(500).json({ message: 'Failed to moderate comment due to API error' });
     }
 
     if (moderationResult.isInappropriate) {
@@ -506,7 +512,7 @@ const createComment = async (req, res) => {
     res.status(201).json(populatedComment);
   } catch (error) {
     console.error('Error creating comment:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
 
@@ -615,10 +621,28 @@ const getDiscussionMessages = async (req, res) => {
 const generateQuiz = async (req, res) => {
   try {
     const { courseId } = req.params;
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required' });
+    }
 
     const course = await Course.findById(courseId).populate('skillId', 'name');
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // MODIFICATION: Vérifier si l'utilisateur est inscrit ou créateur
+    const isCreator = course.createdBy.toString() === userId;
+    const enrollment = await CourseEnrollment.findOne({ userId, courseId });
+    if (!isCreator && !enrollment) {
+      return res.status(403).json({ message: 'You must be enrolled or the creator to access the quiz' });
+    }
+    // FIN DE LA MODIFICATION
+
+    // Vérifier si un quiz existe déjà
+    if (course.quiz) {
+      return res.status(200).json({ quiz: course.quiz });
     }
 
     const prompt = `
@@ -674,6 +698,10 @@ const generateQuiz = async (req, res) => {
         return res.status(500).json({ message: 'Invalid question structure' });
       }
     }
+
+    // Enregistrer le quiz dans le document du cours
+    course.quiz = quiz;
+    await course.save();
 
     res.status(200).json({ quiz });
   } catch (error) {

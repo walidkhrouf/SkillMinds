@@ -17,6 +17,7 @@ const CourseDetails = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [playingIndex, setPlayingIndex] = useState(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRefs = useRef([]);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
@@ -66,6 +67,10 @@ const CourseDetails = () => {
   }, [error]);
 
   const handleEnroll = async () => {
+    if (!currentUser._id) {
+      setError('You must be logged in to enroll');
+      return;
+    }
     try {
       await axios.post('http://localhost:5000/api/courses/enroll', {
         courseId: id,
@@ -130,23 +135,34 @@ const CourseDetails = () => {
   };
 
   const submitComment = async () => {
+    if (!currentUser._id) {
+      setError('You must be logged in to comment');
+      return;
+    }
     if (!newComment.trim()) {
       setError('Comment cannot be empty');
       return;
     }
+    if (isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const response = await axios.post('http://localhost:5000/api/courses/comments/create', {
         courseId: id,
         userId: currentUser._id,
         content: newComment
+      }, {
+        params: { userId: currentUser._id }
       });
       setComments([response.data, ...comments]);
       setNewComment('');
       setError('');
     } catch (err) {
-      const errorMessage = err.response?.data.message || 'Error submitting comment';
+      const errorMessage = err.response?.data?.message || 'Error submitting comment';
       setError(errorMessage);
+      console.error('Comment submission error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -251,19 +267,22 @@ const CourseDetails = () => {
 
       <div className="comments-section">
         <h3>Comments</h3>
-        {currentUser._id && (
+        {isEnrolled && currentUser._id ? (
           <>
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
               rows="3"
+              disabled={isSubmitting}
             />
             {error && <p className="error">{error}</p>}
-            <button onClick={submitComment} className="comment-submit-btn">
-              Submit Comment
+            <button onClick={submitComment} className="comment-submit-btn" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Comment'}
             </button>
           </>
+        ) : (
+          <p>You must be enrolled in the course to add a comment.</p>
         )}
         {comments.length === 0 ? (
           <p>No comments yet. Be the first to comment!</p>
@@ -295,7 +314,7 @@ const CourseDetails = () => {
         </>
       )}
 
-      {showQuiz && (
+{showQuiz && (
         <CourseQuiz
           courseId={id}
           onClose={() => setShowQuiz(false)}

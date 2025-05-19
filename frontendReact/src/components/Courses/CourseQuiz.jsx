@@ -9,19 +9,31 @@ const CourseQuiz = ({ courseId, onClose }) => {
   const [score, setScore] = useState(null);
   const [showCorrections, setShowCorrections] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
 
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/courses/quiz/${courseId}`);
+        setIsLoading(true);
+        const response = await axios.get(`http://localhost:5000/api/courses/quiz/${courseId}`, {
+          params: { userId: currentUser._id }
+        });
         setQuiz(response.data.quiz);
+        setError('');
       } catch (err) {
-        setError(err.response?.data.message || 'Error fetching quiz');
+        setError(err.response?.data.message || 'Error fetching quiz. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchQuiz();
-  }, [courseId]);
+    if (currentUser._id) {
+      fetchQuiz();
+    } else {
+      setError('You must be logged in to access the quiz.');
+      setIsLoading(false);
+    }
+  }, [courseId, currentUser._id]);
 
   const handleAnswerChange = (questionIndex, answerIndex) => {
     setAnswers(prev => ({
@@ -31,7 +43,7 @@ const CourseQuiz = ({ courseId, onClose }) => {
   };
 
   const handleSubmit = async () => {
-    if (Object.keys(answers).length !== quiz.questions.length) {
+    if (!quiz || Object.keys(answers).length !== quiz.questions.length) {
       setError('Please answer all questions');
       return;
     }
@@ -45,7 +57,7 @@ const CourseQuiz = ({ courseId, onClose }) => {
 
     const finalScore = (correctCount / quiz.questions.length) * 100;
     setScore(finalScore);
-    setShowCorrections(true); // Afficher les corrections quel que soit le score
+    setShowCorrections(true);
     setError('');
 
     if (finalScore >= 80 && finalScore <= 100) {
@@ -75,7 +87,35 @@ const CourseQuiz = ({ courseId, onClose }) => {
     onClose();
   };
 
-  if (!quiz) return <div className="loading">Loading quiz...</div>;
+  if (!currentUser._id) {
+    return (
+      <div className="quiz-popup">
+        <div className="error">You must be logged in to access the quiz.</div>
+        <button onClick={handleClose} className="close-quiz-btn">
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="quiz-popup">
+        <div className="loading">Generating quiz, please wait...</div>
+      </div>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <div className="quiz-popup">
+        <div className="error">{error || 'Failed to load quiz. Please try again.'}</div>
+        <button onClick={handleClose} className="close-quiz-btn">
+          Close
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="quiz-popup">

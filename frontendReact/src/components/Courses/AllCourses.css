@@ -61,6 +61,13 @@ h1 {
   margin: 5px 0;
 }
 
+.course-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 .update-btn,
 .delete-btn,
 .view-btn,
@@ -73,26 +80,24 @@ h1 {
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
+  color: white;
 }
 
 .update-btn {
   background-color: #a47f18;
-  color: white;
 }
 
 .delete-btn {
   background-color: #dc3545;
-  color: white;
+  font-weight: bold;
 }
 
 .view-btn {
   background-color: rgb(78, 49, 6);
-  color: white;
 }
 
 .pay-btn {
   background-color: rgb(78, 49, 6);
-  color: white;
 }
 
 .pay-btn:hover {
@@ -102,12 +107,10 @@ h1 {
 
 .enroll-free-btn {
   background-color: #e6be52;
-  color: white;
 }
 
 .cancel-btn {
   background-color: #6c757d;
-  color: white;
 }
 
 .error {
@@ -183,7 +186,7 @@ h1 {
 }
 
 .confirm-btn {
-  background-color: #28a745; /* Vert pour confirmer, comme dans l'image */
+  background-color: #28a745;
   color: white;
   padding: 8px 12px;
   border: none;
@@ -191,15 +194,15 @@ h1 {
   cursor: pointer;
   margin: 5px;
   font-size: 16px;
-  min-width: 100px; /* Largeur minimale pour éviter le troncage du texte */
+  min-width: 100px;
 }
 
 .confirm-btn:hover {
-  background-color: #218838; /* Une teinte plus foncée pour le survol */
+  background-color: #218838;
 }
 
 .cancel-btn {
-  background-color: #dc3545; /* Rouge pour annuler, comme dans l'image */
+  background-color: #6c757d;
   color: white;
   padding: 8px 12px;
   border: none;
@@ -207,11 +210,11 @@ h1 {
   cursor: pointer;
   margin: 5px;
   font-size: 16px;
-  min-width: 100px; /* Largeur minimale pour éviter le troncage du texte */
+  min-width: 100px;
 }
 
 .cancel-btn:hover {
-  background-color: #c82333; /* Une teinte plus foncée pour le survol */
+  background-color: #c82333;
 }
 
 /* ---------- Responsive Design ---------- */
@@ -252,6 +255,11 @@ h1 {
     font-size: 14px;
   }
 
+  .course-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+
   .pagination-btn,
   .update-btn,
   .delete-btn,
@@ -262,6 +270,6 @@ h1 {
   .confirm-btn {
     padding: 6px 10px;
     font-size: 14px;
-    min-width: 80px; /* Ajustement pour les petits écrans */
+    min-width: 80px;
   }
 }
