@@ -49,7 +49,7 @@ const ApplyToJob = () => {
 
 
   return (
-    <div className="signup-container3" style={{height:'100%'}}> <br /> 
+    <div className="signup-container3" > <br /> 
       <div className="left-box3" style={{ height: '650px', width: '60%' }}>
         <h2 style={{ textAlign: 'center' }} className='form-title'>Apply to Job</h2>
         {error && <p className="message error">{error}</p>}

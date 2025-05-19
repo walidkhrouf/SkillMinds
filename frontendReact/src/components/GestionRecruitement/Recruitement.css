@@ -800,7 +800,7 @@ form button:hover {
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   align-items: stretch;
-  height: 1150px;
+  height: 1300px;
 }
 
 
@@ -827,7 +827,6 @@ form button:hover {
 
 
 
-
 .signup-container2 {
   display: flex;
   width: 1300px;
@@ -837,7 +836,7 @@ form button:hover {
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   align-items: stretch;
-  height: 1000px;
+  height: 1150px;
 }
 
 
@@ -872,7 +871,7 @@ form button:hover {
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   align-items: stretch;
-  height: 520px;
+  height: 750px;
 }
 
 
