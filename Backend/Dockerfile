@@ -1,20 +1,23 @@
-# Use the official Node.js image.
+# Use the official Node.js image (v20 LTS)
 FROM node:20
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if present).
+# Copy package.json and package-lock.json (if present)
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci 
+RUN npm install
 
-# Copy the rest of the application code.
+# Copy the rest of the application code
 COPY . .
 
-# Expose the application port.
+# (Optionnel) Définir la variable d’environnement PORT utilisée par votre app
+ENV PORT=5000
+
+# Expose the application port
 EXPOSE 5000
 
-# Start the application with npm start.
+# Start the application
 CMD ["npm", "start"]
