@@ -94,6 +94,9 @@ if you want to run this app just enter to the folder of backend and run npm star
 * Notification schema covers account updates, enrollments, verifications, reminders, etc.
 
 
+Collaborators: Saif Hlaimi, Mohamed Yassine Mighri, Feryel Yahyaoui, Ela soubi, Walid Khrouf
+
+
 📄 License
 MIT © Esprit School of Engineering
 
