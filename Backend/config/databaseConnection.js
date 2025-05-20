@@ -6,7 +6,7 @@ require("dotenv").config({ path: __dirname + "/../.env" });
 const mongoURI =
     process.env.NODE_ENV === "test"
         ? process.env.MONGO_URL
-        : process.env.MONGO_URI || "mongodb://127.0.0.1:27017/devminds_db";
+        : process.env.MONGO_URI || "mongodb+srv://DevMinds:DevMinds@devminds.vqec0vs.mongodb.net/";
 
 
 const connectDB = async () => {
