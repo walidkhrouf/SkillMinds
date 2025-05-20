@@ -281,20 +281,33 @@ exports.getDashboardStats = async (req, res) => {
 exports.getAllGroupsAdmin = async (req, res) => {
   try {
     const groups = await Group.find()
-        .populate("createdBy", "username")
+        .populate({
+          path: "createdBy",
+          select: "username",
+          // Skip if createdBy references a non-existent user
+          match: { _id: { $exists: true } },
+        })
         .lean();
 
     const groupDetails = await Promise.all(
         groups.map(async (group) => {
           const memberCount = await GroupMember.countDocuments({ groupId: group._id });
           const members = await GroupMember.find({ groupId: group._id })
-              .populate("userId", "username")
+              .populate({
+                path: "userId",
+                select: "username",
+                match: { _id: { $exists: true } },
+              })
               .lean();
           const posts = await GroupPost.find({ groupId: group._id })
-              .populate("userId", "username")
+              .populate({
+                path: "userId",
+                select: "username",
+                match: { _id: { $exists: true } },
+              })
               .lean();
           const postCount = posts.length;
-          const reportCount = group.reports.length;
+          const reportCount = group.reports ? group.reports.length : 0;
 
           const postsWithStats = await Promise.all(
               posts.map(async (post) => {
@@ -303,6 +316,7 @@ exports.getAllGroupsAdmin = async (req, res) => {
                 const commentsCount = await GroupPostComment.countDocuments({ groupPostId: post._id });
                 return {
                   ...post,
+                  userId: post.userId || { username: "Unknown" }, // Fallback for null userId
                   likesCount,
                   dislikesCount,
                   commentsCount,
@@ -312,8 +326,14 @@ exports.getAllGroupsAdmin = async (req, res) => {
 
           return {
             ...group,
+            createdBy: group.createdBy || { username: "Unknown" }, // Fallback for null createdBy
             memberCount,
-            members: members.map((m) => ({ id: m.userId._id, username: m.userId.username })),
+            members: members
+                .filter((m) => m.userId) // Skip members with null userId
+                .map((m) => ({
+                  id: m.userId._id,
+                  username: m.userId.username || "Unknown",
+                })),
             postCount,
             reportCount,
             posts: postsWithStats,

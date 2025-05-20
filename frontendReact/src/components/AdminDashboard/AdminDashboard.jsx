@@ -170,27 +170,6 @@ const UserManager = () => {
 
 
 
-useEffect(() => {
-  async function fetchSkills() {
-    try {
-      const response = await fetch("http://localhost:5000/api/admin/skills");
-      if (response.ok) {
-        const data = await response.json();
-        const map = {};
-        // Créer un objet skillsMap où chaque skill ID est une clé et son nom est la valeur
-        data.forEach(skill => {
-          map[skill._id] = skill.name;
-        });
-        setSkillsMap(map); // Met à jour l'état skillsMap
-      }
-    } catch (err) {
-      console.error("Erreur lors de la récupération des compétences", err);
-    }
-  }
-
-  fetchSkills(); // Appel de la fonction fetchSkills lors du montage du composant
-}, []);
-
 
   
 
@@ -2665,6 +2644,13 @@ const saveJobEdits = async (jobId) => {
         );
 
 
+      case "groups":
+        return (
+            <div className="section-content">
+              <h2>Groups</h2>
+              <GroupManager />
+            </div>
+        );
 
       case "users":
         return (

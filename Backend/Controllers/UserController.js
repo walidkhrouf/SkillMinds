@@ -21,10 +21,21 @@ const uploadFileToGridFS = (file) => {
     const uploadStream = gfs.openUploadStream(file.originalname, {
       contentType: file.mimetype,
     });
-    uploadStream.end(file.buffer, (error) => {
-      if (error) return reject(error);
-      resolve(uploadStream.id);
+
+    // Handle errors
+    uploadStream.on('error', (error) => {
+      reject(error);
     });
+
+    // Write the buffer to the stream
+    uploadStream.write(file.buffer);
+
+    // When done, convert ObjectId to string to avoid BSON conflicts
+    uploadStream.on('finish', () => {
+      resolve(uploadStream.id.toString());
+    });
+
+    uploadStream.end();
   });
 };
 

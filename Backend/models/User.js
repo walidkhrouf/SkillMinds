@@ -5,14 +5,14 @@ const profileImageSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId }
+  fileId: { type: String}
 }, { _id: false });
 
 const certificateImageSchema = new Schema({
   filename: String,
   contentType: String,
   length: Number,
-  fileId: { type: Schema.Types.ObjectId }
+  fileId: { type: String}
 }, { _id: false });
 
 const userSchema = new Schema({

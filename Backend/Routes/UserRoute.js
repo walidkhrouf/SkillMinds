@@ -18,7 +18,6 @@ const {
 const User = require("../models/User");
 const multer = require("multer");
 const Skill = require("../models/Skill");
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = express.Router();
@@ -43,6 +42,7 @@ router.get("/skills", async (req, res) => {
     res.status(500).json({ message: "Error fetching skills" });
   }
 });
+
 
 
 router.post("/signin", signin);
