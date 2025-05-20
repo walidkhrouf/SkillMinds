@@ -1,6 +1,3 @@
-// Charge le .env pour récupérer PORT si défini
-require('dotenv').config();
-
 const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
@@ -39,13 +36,12 @@ describe('GroupController', () => {
     let group;
 
     beforeAll(async () => {
-        jest.setTimeout(10000); // Increase Jest timeout to 10s
-
-        // Crée une instance Express minimale
+        jest.setTimeout(10000); // Increase timeout to 10s
+        // Create a minimal Express app for testing
         app = express();
         app.use(express.json());
 
-        // Mock des routes API
+        // Mock the API routes
         app.post('/api/groups/create', (req, res) => {
             res.status(201).json({
                 message: 'Group created successfully',
@@ -69,22 +65,18 @@ describe('GroupController', () => {
             });
         });
 
-        // Récupère le port depuis .env ou fallback 5000
-        const port = parseInt(process.env.PORT, 10) || 5000;
-        // Démarre le serveur sur 0.0.0.0 pour accepter toutes les interfaces
-        server = app.listen(port, '0.0.0.0', () => {
-            console.log(`Test server listening on http://0.0.0.0:${port}`);
-        });
+        // Start Express server
+        server = app.listen(0); // Use random port
     });
 
     afterAll(async () => {
-        jest.setTimeout(10000);
-        // Ferme le serveur Express
+        jest.setTimeout(10000); // Increase timeout to 10s
+        // Close Express server
         await new Promise((resolve) => server.close(resolve));
     });
 
     beforeEach(async () => {
-        // Données mockées pour l'utilisateur
+        // Mock user and group data
         user = {
             _id: 'mockedUserId',
             username: 'testuser',
@@ -93,12 +85,12 @@ describe('GroupController', () => {
             role: 'learner',
         };
 
-        // Génère un JWT
+        // Generate a JWT token for the user
         token = jwt.sign({ id: user._id }, 'your_jwt_secret', {
             expiresIn: '1h',
         });
 
-        // Données mockées pour le groupe
+        // Mock group data
         group = {
             _id: 'mockedGroupId',
             name: 'Test Group',
@@ -109,7 +101,7 @@ describe('GroupController', () => {
     });
 
     afterEach(async () => {
-        // Pas de nettoyage nécessaire, tout est mocké
+        // No database cleanup needed since we're mocking
     });
 
     // Test createGroup
@@ -155,8 +147,8 @@ describe('GroupController', () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('message', 'Group deleted successfully');
 
-            // Vérifie que l'ID mocké a bien été utilisé
-            expect(group._id).toBe('mockedGroupId');
+            // Mock the findById to return null (group deleted)
+            expect(group._id).toBe('mockedGroupId'); // Just verify the ID was used
         });
     });
 });
