@@ -1,5 +1,4 @@
 SkillMinds – Skill Exchange Platform
-#Esprit_school_of_engineering
 
 📖 Overview
 SkillMinds is a modular web platform that enables peer‑to‑peer skill exchange, personalized learning and seamless community interaction. Leveraging AI‑driven recommendations and a robust data model, it supports:
@@ -37,7 +36,7 @@ OAuth Credentials for Google/LinkedIn signIn
 
 🚀 Installation
 1 Clone the repo
-git clone https://github.com/Saif-Hlaimi/DevMinds_4TWIN5_pidev
+git clone https://github.com/walidkhrouf/SkillMinds
 
 then open the project in the terminal 
 cd DevMinds_4TWIN5_pidev
@@ -94,10 +93,6 @@ if you want to run this app just enter to the folder of backend and run npm star
 * Notification schema covers account updates, enrollments, verifications, reminders, etc.
 
 
-Collaborators: Saif Hlaimi, Mohamed Yassine Mighri, Feryel Yahyaoui, Ela soubi, Walid Khrouf
+Collaborators: Walid Khrouf, Saif Hlaimi, Mohamed Yassine Mighri, Feryel Yahyaoui, Ela soubi
 
 
-📄 License
-MIT © Esprit School of Engineering
-
-#Esprit_school_of_engineering
